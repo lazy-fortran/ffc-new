@@ -1,6 +1,7 @@
 module ffc_lowering
     use, intrinsic :: iso_fortran_env, only: int64
-    use ffc_mir, only: mir_function_body_t, mir_make_function_witness
+    use ffc_mir, only: mir_function_body_t, mir_make_function_witness, &
+        mir_validate_function_body, opcode_add, opcode_return
     implicit none
     private
 
@@ -16,6 +17,7 @@ module ffc_lowering
     end type frontend_v0_input_t
 
     public :: ffc_lower_frontend_v0
+    public :: ffc_validate_lowered_frontend_v0
 
 contains
 
@@ -44,6 +46,34 @@ contains
         body%instructions(2)%source_rule = 'frontend-v0/program'
         lowered = .true.
     end function ffc_lower_frontend_v0
+
+    logical function ffc_validate_lowered_frontend_v0(body, message) result(valid)
+        type(mir_function_body_t), intent(in) :: body
+        character(len=:), allocatable, intent(out), optional :: message
+
+        call clear_message(message)
+        valid = .false.
+        if (.not. mir_validate_function_body(body, message)) return
+        if (body%function%name /= 'main' .or. body%function%entry_block /= 0) then
+            call set_message(message, 'lowered frontend-v0 function shape changed')
+            return
+        end if
+        if (body%function%instruction_count /= 2) then
+            call set_message(message, 'lowered frontend-v0 instruction shape changed')
+            return
+        end if
+        if (body%instructions(1)%opcode /= opcode_add .or. &
+            body%instructions(2)%opcode /= opcode_return) then
+            call set_message(message, 'lowered frontend-v0 opcode shape changed')
+            return
+        end if
+        if (body%instructions(1)%source_rule /= 'frontend-v0/program' .or. &
+            body%instructions(2)%source_rule /= 'frontend-v0/program') then
+            call set_message(message, 'lowered frontend-v0 source provenance changed')
+            return
+        end if
+        valid = .true.
+    end function ffc_validate_lowered_frontend_v0
 
     subroutine clear_message(message)
         character(len=:), allocatable, intent(out), optional :: message

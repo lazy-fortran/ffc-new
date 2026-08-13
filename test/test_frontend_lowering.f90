@@ -1,9 +1,10 @@
 program test_frontend_lowering
     use, intrinsic :: iso_fortran_env, only: int32, int64
     use ffc_lowering, only: frontend_root_kind_program, frontend_status_accepted, &
-        frontend_v0_input_t, ffc_lower_frontend_v0
+        frontend_v0_input_t, ffc_lower_frontend_v0, &
+        ffc_validate_lowered_frontend_v0
     use ffc_mir, only: mir_function_body_t, mir_validate_function_body, &
-        mir_validate_function_witness, opcode_add, opcode_return, value_kind_integer
+        opcode_add, opcode_return, value_kind_integer
     implicit none
 
     type(frontend_v0_input_t) :: input
@@ -18,6 +19,8 @@ program test_frontend_lowering
     call assert_false(allocated(message), 'accepted input produced a diagnostic')
     call assert_true(mir_validate_function_body(body, message), &
         'lowering produced an invalid mir-v0 body')
+    call assert_true(ffc_validate_lowered_frontend_v0(body, message), &
+        'lowering did not produce the bounded frontend-v0 body')
     call assert_equal(body%function%name, 'main', 'lowered function name changed')
     call assert_equal_integer(body%function%entry_block, 0_int32, &
         'lowered entry block changed')
@@ -52,9 +55,9 @@ program test_frontend_lowering
     call assert_true(ffc_lower_frontend_v0(input, body, message), &
         'restored frontend-v0 input was rejected')
     body%instructions(1)%source_rule = 'target/isa'
-    call assert_false(mir_validate_function_witness(body, message), &
+    call assert_false(ffc_validate_lowered_frontend_v0(body, message), &
         'source provenance mutation was accepted')
-    call assert_equal(message, 'function witness add source rule changed', &
+    call assert_equal(message, 'lowered frontend-v0 source provenance changed', &
         'source provenance mutation diagnostic changed')
 
 contains
