@@ -4,8 +4,8 @@ program test_frontend_lowering
         frontend_v0_input_t, ffc_lower_frontend_v0, &
         ffc_frontend_v0_input_from_sx, ffc_lower_frontend_v0_from_sx, &
         ffc_validate_frontend_v0_input, ffc_validate_lowered_frontend_v0, &
-        ffc_lower_program_root, ffc_validate_program_root, ffc_validate_lowered_program_root, &
-        ffc_program_root_t
+        ffc_lower_program_root, ffc_program_root_from_sx, ffc_lower_program_root_from_sx, &
+        ffc_validate_program_root, ffc_validate_lowered_program_root, ffc_program_root_t
     use ffc_mir, only: mir_function_body_t, mir_validate_function_body, &
         opcode_add, opcode_return, value_kind_integer
     implicit none
@@ -136,6 +136,40 @@ program test_frontend_lowering
     call assert_equal(message, 'lowered program-root source provenance changed', &
         'program-root provenance mutation diagnostic changed')
 
+    serialized = '(program-root (name unit) (span (file unit.f90) '// &
+        '(start-byte 0) (end-byte 16) (source-hash hash-positive)))'
+    call assert_true(ffc_program_root_from_sx(serialized, root, message), &
+        'canonical program-root SX was rejected')
+    call assert_equal(root%name, 'unit', 'program-root SX lost the name')
+    call assert_equal(root%source_file, 'unit.f90', 'program-root SX lost the source file')
+    call assert_equal(root%source_hash, 'hash-positive', 'program-root SX lost the source hash')
+    call assert_equal_int64(root%start_byte, 0_int64, 'program-root SX lost the start byte')
+    call assert_equal_int64(root%end_byte, 16_int64, 'program-root SX lost the end byte')
+    call assert_true(ffc_lower_program_root_from_sx(serialized, body, message), &
+        'canonical program-root SX was not lowered')
+    call assert_true(ffc_validate_lowered_program_root(body, message), &
+        'program-root SX produced an invalid MIR witness')
+    call assert_equal(body%function%name, 'unit', 'program-root SX name was not lowered')
+    call assert_equal(body%instructions(1)%source_rule, 'program-root', &
+        'program-root SX provenance was not preserved')
+
+    call assert_invalid_program_root_sx('(program-root (name unit) '// &
+        '(span (file unit.f90) (start-byte 0) (end-byte 16) '// &
+        '(source-hash hash-positive))', 'malformed-sx-record')
+    call assert_invalid_program_root_sx(serialized//' (extra x)', 'malformed-program-root')
+    call assert_invalid_program_root_sx('(program-root (name unit) '// &
+        '(span (file ) (start-byte 0) (end-byte 16) '// &
+        '(source-hash hash-positive)))', 'malformed-sx-record')
+    call assert_invalid_program_root_sx('(program-root (name unit) '// &
+        '(span (file unit.f90) (start-byte 0) (end-byte 16) (source-hash )))', &
+        'malformed-sx-record')
+    call assert_invalid_program_root_sx('(program-root (name unit) '// &
+        '(span (file unit.f90) (start-byte -1) (end-byte 16) '// &
+        '(source-hash hash-positive)))', 'program root span is invalid')
+    call assert_invalid_program_root_sx('(program-root (name unit) '// &
+        '(span (file unit.f90) (start-byte 17) (end-byte 16) '// &
+        '(source-hash hash-positive)))', 'program root span is invalid')
+
 contains
 
     subroutine assert_rejected(candidate, expected_message, description)
@@ -173,6 +207,13 @@ contains
         call assert_true(actual == expected, description)
     end subroutine assert_equal_integer
 
+    subroutine assert_equal_int64(actual, expected, description)
+        integer(int64), intent(in) :: actual, expected
+        character(len=*), intent(in) :: description
+
+        call assert_true(actual == expected, description)
+    end subroutine assert_equal_int64
+
     subroutine assert_invalid_sx(serialized, expected_message)
         character(len=*), intent(in) :: serialized, expected_message
 
@@ -184,5 +225,14 @@ contains
             error stop 'frontend SX diagnostic changed'
         end if
     end subroutine assert_invalid_sx
+
+    subroutine assert_invalid_program_root_sx(serialized, expected_message)
+        character(len=*), intent(in) :: serialized, expected_message
+
+        call assert_false(ffc_lower_program_root_from_sx(serialized, body, message), &
+            'invalid program-root SX was lowered')
+        call assert_equal(message, expected_message, &
+            'program-root SX diagnostic changed')
+    end subroutine assert_invalid_program_root_sx
 
 end program test_frontend_lowering

@@ -30,6 +30,8 @@ module ffc_lowering
     public :: ffc_lower_frontend_v0_from_sx
     public :: ffc_validate_lowered_frontend_v0
     public :: ffc_lower_program_root
+    public :: ffc_program_root_from_sx
+    public :: ffc_lower_program_root_from_sx
     public :: ffc_validate_program_root
     public :: ffc_validate_lowered_program_root
 
@@ -82,6 +84,78 @@ contains
         end if
         valid = .true.
     end function ffc_validate_program_root
+
+    logical function ffc_program_root_from_sx(serialized, root, message) result(parsed)
+        character(len=*), intent(in) :: serialized
+        type(ffc_program_root_t), intent(out) :: root
+        character(len=:), allocatable, intent(out), optional :: message
+
+        character(len=256) :: token(32)
+        character(len=128) :: name, source_hash
+        character(len=256) :: source_file
+        character(len=64) :: start_text, end_text
+        integer :: token_count, position
+        integer(int64) :: start_byte, end_byte
+
+        root = ffc_program_root_t()
+        call clear_message(message)
+        parsed = tokenize_frontend_sx(serialized, token, token_count, message)
+        if (.not. parsed) return
+
+        position = 1
+        parsed = expect_frontend_token(token, token_count, position, '(', message)
+        if (.not. parsed) return
+        parsed = expect_frontend_token(token, token_count, position, 'program-root', message)
+        if (.not. parsed) return
+        parsed = read_frontend_atom(token, token_count, position, 'name', name, message)
+        if (.not. parsed) return
+        parsed = expect_frontend_token(token, token_count, position, '(', message)
+        if (.not. parsed) return
+        parsed = expect_frontend_token(token, token_count, position, 'span', message)
+        if (.not. parsed) return
+        parsed = read_frontend_atom(token, token_count, position, 'file', source_file, message)
+        if (.not. parsed) return
+        parsed = read_frontend_atom(token, token_count, position, 'start-byte', start_text, message)
+        if (.not. parsed) return
+        parsed = parse_program_root_integer(start_text, start_byte, message)
+        if (.not. parsed) return
+        parsed = read_frontend_atom(token, token_count, position, 'end-byte', end_text, message)
+        if (.not. parsed) return
+        parsed = parse_program_root_integer(end_text, end_byte, message)
+        if (.not. parsed) return
+        parsed = read_frontend_atom(token, token_count, position, 'source-hash', source_hash, message)
+        if (.not. parsed) return
+        parsed = expect_frontend_token(token, token_count, position, ')', message)
+        if (.not. parsed) return
+        parsed = expect_frontend_token(token, token_count, position, ')', message)
+        if (.not. parsed) return
+        if (position <= token_count) then
+            call set_message(message, 'malformed-program-root')
+            parsed = .false.
+            return
+        end if
+
+        root%name = name
+        root%source_file = source_file
+        root%source_hash = source_hash
+        root%start_byte = start_byte
+        root%end_byte = end_byte
+        parsed = ffc_validate_program_root(root, message)
+    end function ffc_program_root_from_sx
+
+    logical function ffc_lower_program_root_from_sx(serialized, body, message) result(lowered)
+        character(len=*), intent(in) :: serialized
+        type(mir_function_body_t), intent(out) :: body
+        character(len=:), allocatable, intent(out), optional :: message
+
+        type(ffc_program_root_t) :: root
+
+        call clear_message(message)
+        lowered = ffc_program_root_from_sx(serialized, root, message)
+        if (.not. lowered) return
+        lowered = ffc_lower_program_root(root%name, root%source_file, root%source_hash, &
+            root%start_byte, root%end_byte, body, message)
+    end function ffc_lower_program_root_from_sx
 
     logical function ffc_validate_lowered_program_root(body, message) result(valid)
         type(mir_function_body_t), intent(in) :: body
@@ -396,6 +470,49 @@ contains
         end do
         ok = .true.
     end function parse_frontend_count
+
+    logical function parse_program_root_integer(text, value, message) result(ok)
+        character(len=*), intent(in) :: text
+        integer(int64), intent(out) :: value
+        character(len=:), allocatable, intent(out), optional :: message
+
+        integer :: index, first_digit, sign
+        integer(int64) :: digit
+
+        value = 0_int64
+        call clear_message(message)
+        first_digit = 1
+        sign = 1
+        if (len_trim(text) > 0) then
+            if (text(1:1) == '-') then
+                sign = -1
+                first_digit = 2
+            else if (text(1:1) == '+') then
+                first_digit = 2
+            end if
+        end if
+        if (first_digit > len_trim(text)) then
+            call set_message(message, 'malformed-program-root-span')
+            ok = .false.
+            return
+        end if
+        do index = first_digit, len_trim(text)
+            if (text(index:index) < '0' .or. text(index:index) > '9') then
+                call set_message(message, 'malformed-program-root-span')
+                ok = .false.
+                return
+            end if
+            digit = int(iachar(text(index:index)) - iachar('0'), int64)
+            if (value > (huge(value) - digit) / 10_int64) then
+                call set_message(message, 'malformed-program-root-span')
+                ok = .false.
+                return
+            end if
+            value = value * 10_int64 + digit
+        end do
+        if (sign < 0) value = -value
+        ok = .true.
+    end function parse_program_root_integer
 
     subroutine clear_message(message)
         character(len=:), allocatable, intent(out), optional :: message
