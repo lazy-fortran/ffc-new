@@ -44,6 +44,8 @@ module ffc_mir
     end type mir_function_body_t
 
     public :: mir_make_function_witness
+    public :: mir_function_body_to_sx
+    public :: mir_function_body_from_sx
     public :: mir_validate_function_body
     public :: mir_validate_function_witness
     public :: mir_validate_value
@@ -212,6 +214,319 @@ contains
         end if
         valid = .true.
     end function mir_validate_function_witness
+
+    subroutine mir_function_body_to_sx(body, output, ok, message)
+        type(mir_function_body_t), intent(in) :: body
+        character(len=*), intent(out) :: output
+        logical, intent(out) :: ok
+        character(len=:), allocatable, intent(out) :: message
+
+        character(len=32) :: count_text, id_text
+        character(len=32) :: opcode_text
+        character(len=:), allocatable :: canonical
+        integer :: index
+
+        output = ''
+        message = ''
+        ok = mir_validate_function_body(body, message)
+        if (.not. ok) return
+
+        write (count_text, '(i0)') body%function%instruction_count
+        canonical = '(mir-function (name '//trim(body%function%name)//') '// &
+            '(entry-block '//trim(adjustl(itoa(body%function%entry_block)))//') '// &
+            '(instruction-count '//trim(count_text)//') (instructions'
+        do index = 1, size(body%instructions)
+            write (id_text, '(i0)') body%instructions(index)%id
+            opcode_text = mir_opcode_name(body%instructions(index)%opcode)
+            canonical = trim(canonical)//' (instruction (id '//trim(id_text)//') '// &
+                '(opcode '//trim(opcode_text)//') (source-rule '// &
+                trim(body%instructions(index)%source_rule)//'))'
+        end do
+        canonical = trim(canonical)//'))'
+        if (len_trim(canonical) > len(output)) then
+            ok = .false.
+            message = 'sx-output-too-short'
+            output = ''
+        else
+            output(:len_trim(canonical)) = canonical
+        end if
+    end subroutine mir_function_body_to_sx
+
+    subroutine mir_function_body_from_sx(input, body, ok, message)
+        character(len=*), intent(in) :: input
+        type(mir_function_body_t), intent(out) :: body
+        logical, intent(out) :: ok
+        character(len=:), allocatable, intent(out) :: message
+
+        character(len=256) :: token(128)
+        integer :: token_count, position, index
+        integer(int32) :: count
+
+        call reset_body(body)
+        message = ''
+        ok = tokenize_sx(input, token, token_count, message)
+        if (.not. ok) return
+        position = 1
+        ok = expect_token(token, token_count, position, '(', message)
+        if (.not. ok) return
+        ok = expect_token(token, token_count, position, 'mir-function', message)
+        if (.not. ok) return
+        ok = read_named_atom(token, token_count, position, 'name', body%function%name, message)
+        if (.not. ok) return
+        ok = read_named_integer(token, token_count, position, 'entry-block', &
+            body%function%entry_block, message)
+        if (.not. ok) return
+        ok = read_named_integer(token, token_count, position, 'instruction-count', &
+            count, message)
+        if (.not. ok) return
+        if (count < 0_int32) then
+            ok = .false.
+            message = 'negative instruction count'
+            return
+        end if
+        ok = expect_token(token, token_count, position, '(', message)
+        if (.not. ok) return
+        ok = expect_token(token, token_count, position, 'instructions', message)
+        if (.not. ok) return
+        allocate (body%instructions(count))
+        body%function%instruction_count = count
+        do index = 1, count
+            ok = read_instruction(token, token_count, position, index - 1, &
+                body%instructions(index), message)
+            if (.not. ok) return
+        end do
+        ok = expect_token(token, token_count, position, ')', message)
+        if (.not. ok) return
+        ok = expect_token(token, token_count, position, ')', message)
+        if (.not. ok) return
+        if (position <= token_count) then
+            ok = .false.
+            message = 'trailing SX input'
+            return
+        end if
+        ok = mir_validate_function_body(body, message)
+    end subroutine mir_function_body_from_sx
+
+    character(len=32) function itoa(value)
+        integer(int32), intent(in) :: value
+
+        write (itoa, '(i0)') value
+    end function itoa
+
+    character(len=32) function mir_opcode_name(opcode)
+        integer(int32), intent(in) :: opcode
+
+        select case (opcode)
+        case (opcode_add); mir_opcode_name = 'add'
+        case (opcode_sub); mir_opcode_name = 'sub'
+        case (opcode_mul); mir_opcode_name = 'mul'
+        case (opcode_div); mir_opcode_name = 'div'
+        case (opcode_load); mir_opcode_name = 'load'
+        case (opcode_store); mir_opcode_name = 'store'
+        case (opcode_compare); mir_opcode_name = 'compare'
+        case (opcode_branch); mir_opcode_name = 'branch'
+        case (opcode_call); mir_opcode_name = 'call'
+        case (opcode_return); mir_opcode_name = 'return'
+        case default; mir_opcode_name = ''
+        end select
+    end function mir_opcode_name
+
+    integer(int32) function mir_opcode_value(name)
+        character(len=*), intent(in) :: name
+
+        select case (trim(name))
+        case ('add'); mir_opcode_value = opcode_add
+        case ('sub'); mir_opcode_value = opcode_sub
+        case ('mul'); mir_opcode_value = opcode_mul
+        case ('div'); mir_opcode_value = opcode_div
+        case ('load'); mir_opcode_value = opcode_load
+        case ('store'); mir_opcode_value = opcode_store
+        case ('compare'); mir_opcode_value = opcode_compare
+        case ('branch'); mir_opcode_value = opcode_branch
+        case ('call'); mir_opcode_value = opcode_call
+        case ('return'); mir_opcode_value = opcode_return
+        case default; mir_opcode_value = 0_int32
+        end select
+    end function mir_opcode_value
+
+    logical function tokenize_sx(input, token, token_count, message) result(ok)
+        character(len=*), intent(in) :: input
+        character(len=*), intent(out) :: token(:)
+        integer, intent(out) :: token_count
+        character(len=*), intent(out) :: message
+
+        integer :: start, position, input_length
+        character :: current
+
+        token = ''
+        token_count = 0
+        message = ''
+        position = 1
+        input_length = len_trim(input)
+        do while (position <= input_length)
+            current = input(position:position)
+            if (current == ' ' .or. current == char(9) .or. current == char(10) .or. &
+                current == char(13)) then
+                position = position + 1
+            else if (current == '(' .or. current == ')') then
+                if (.not. append_token(input(position:position), token, token_count, message)) then
+                    ok = .false.
+                    return
+                end if
+                position = position + 1
+            else
+                start = position
+                do while (position <= input_length)
+                    current = input(position:position)
+                    if (current == ' ' .or. current == char(9) .or. current == char(10) .or. &
+                        current == char(13) .or. current == '(' .or. current == ')') exit
+                    position = position + 1
+                end do
+                if (.not. append_token(input(start:position - 1), token, token_count, message)) then
+                    ok = .false.
+                    return
+                end if
+            end if
+        end do
+        ok = token_count > 0
+        if (.not. ok) message = 'empty SX input'
+    end function tokenize_sx
+
+    logical function append_token(value, token, token_count, message) result(ok)
+        character(len=*), intent(in) :: value
+        character(len=*), intent(inout) :: token(:)
+        integer, intent(inout) :: token_count
+        character(len=*), intent(out) :: message
+
+        message = ''
+        if (token_count == size(token)) then
+            message = 'SX input has too many tokens'
+            ok = .false.
+            return
+        end if
+        if (len_trim(value) > len(token(1))) then
+            message = 'SX atom is too long'
+            ok = .false.
+            return
+        end if
+        token_count = token_count + 1
+        token(token_count) = value
+        ok = .true.
+    end function append_token
+
+    logical function expect_token(token, token_count, position, expected, message) result(ok)
+        character(len=*), intent(in) :: token(:), expected
+        integer, intent(in) :: token_count
+        integer, intent(inout) :: position
+        character(len=*), intent(out) :: message
+
+        if (position > token_count) then
+            message = 'unexpected end of SX input'
+            ok = .false.
+            return
+        end if
+        if (trim(token(position)) /= expected) then
+            message = 'unexpected SX token'
+            ok = .false.
+            return
+        end if
+        position = position + 1
+        message = ''
+        ok = .true.
+    end function expect_token
+
+    logical function read_named_atom(token, token_count, position, name, value, message) result(ok)
+        character(len=*), intent(in) :: token(:), name
+        integer, intent(in) :: token_count
+        integer, intent(inout) :: position
+        character(len=:), allocatable, intent(out) :: value
+        character(len=*), intent(out) :: message
+
+        ok = expect_token(token, token_count, position, '(', message)
+        if (.not. ok) return
+        ok = expect_token(token, token_count, position, name, message)
+        if (.not. ok) return
+        if (position > token_count) then
+            message = 'missing SX atom'
+            ok = .false.
+            return
+        end if
+        if (trim(token(position)) == '(' .or. trim(token(position)) == ')') then
+            message = 'missing SX atom'
+            ok = .false.
+            return
+        end if
+        value = trim(token(position))
+        position = position + 1
+        ok = expect_token(token, token_count, position, ')', message)
+    end function read_named_atom
+
+    logical function read_named_integer(token, token_count, position, name, value, message) result(ok)
+        character(len=*), intent(in) :: token(:), name
+        integer, intent(in) :: token_count
+        integer, intent(inout) :: position
+        integer(int32), intent(out) :: value
+        character(len=*), intent(out) :: message
+        integer :: ios
+        character(len=:), allocatable :: integer_text
+
+        ok = read_named_atom(token, token_count, position, name, integer_text, message)
+        if (.not. ok) return
+        read (integer_text, *, iostat=ios) value
+        if (ios /= 0) then
+            message = 'SX integer is invalid'
+            ok = .false.
+        else
+            message = ''
+            ok = .true.
+        end if
+    end function read_named_integer
+
+    logical function read_instruction(token, token_count, position, id, instruction, message) result(ok)
+        character(len=*), intent(in) :: token(:)
+        integer, intent(in) :: token_count, id
+        integer, intent(inout) :: position
+        type(mir_instruction_t), intent(out) :: instruction
+        character(len=*), intent(out) :: message
+        character(len=:), allocatable :: opcode_name
+        integer(int32) :: serialized_id
+
+        ok = expect_token(token, token_count, position, '(', message)
+        if (.not. ok) return
+        ok = expect_token(token, token_count, position, 'instruction', message)
+        if (.not. ok) return
+        ok = read_named_integer(token, token_count, position, 'id', serialized_id, message)
+        if (.not. ok) return
+        if (serialized_id /= int(id, int32)) then
+            message = 'instruction id does not match body slot'
+            ok = .false.
+            return
+        end if
+        instruction%id = int(id, int32)
+        ok = read_named_atom(token, token_count, position, 'opcode', opcode_name, message)
+        if (.not. ok) return
+        instruction%opcode = mir_opcode_value(opcode_name)
+        if (instruction%opcode == 0_int32) then
+            message = 'unknown mir-v0 opcode'
+            ok = .false.
+            return
+        end if
+        ok = read_named_atom(token, token_count, position, 'source-rule', &
+            instruction%source_rule, message)
+        if (.not. ok) return
+        instruction%result%id = 0_int32
+        instruction%result%kind = value_kind_integer
+        instruction%result%type_name = 'i32'
+        ok = expect_token(token, token_count, position, ')', message)
+    end function read_instruction
+
+    subroutine reset_body(body)
+        type(mir_function_body_t), intent(out) :: body
+
+        body%function%name = ''
+        body%function%entry_block = 0_int32
+        body%function%instruction_count = 0_int32
+    end subroutine reset_body
 
     subroutine clear_message(message)
         character(len=:), allocatable, intent(out), optional :: message

@@ -4,6 +4,7 @@ program test_mir_v0
         mir_value_t, mir_make_function_witness, mir_validate_function, &
         mir_validate_function_body, mir_validate_function_witness, &
         mir_validate_instruction, mir_validate_value, &
+        mir_function_body_to_sx, mir_function_body_from_sx, &
         opcode_add, opcode_return, value_kind_integer
     implicit none
 
@@ -12,6 +13,8 @@ program test_mir_v0
     type(mir_function_t) :: function
     type(mir_function_body_t) :: body
     character(len=:), allocatable :: message
+    character(len=1024) :: serialized
+    logical :: ok
 
     value%id = 1_int32
     value%kind = value_kind_integer
@@ -74,6 +77,32 @@ program test_mir_v0
         "source-rule mutation accepted")
     call assert_equal(message, "function witness add source rule changed", &
         "source-rule mutation diagnostic")
+
+    call mir_make_function_witness(body)
+    call mir_function_body_to_sx(body, serialized, ok, message)
+    call assert_true(ok, "valid function witness was not serialized")
+    call assert_equal(trim(serialized), &
+        '(mir-function (name main) (entry-block 0) (instruction-count 2) '// &
+        '(instructions (instruction (id 0) (opcode add) (source-rule expr/add)) '// &
+        '(instruction (id 1) (opcode return) (source-rule stmt/return))))', &
+        "function witness SX is not canonical")
+
+    call mir_function_body_from_sx(serialized, body, ok, message)
+    call assert_true(ok, "function witness SX did not round-trip: "//trim(message))
+    call assert_true(mir_validate_function_witness(body, message), &
+        "round-tripped function witness is invalid")
+
+    call mir_function_body_from_sx('(mir-function (name main) '// &
+        '(entry-block 0) (instruction-count 2) (instructions '// &
+        '(instruction (id 0) (opcode return) (source-rule stmt/return))))', &
+        body, ok, message)
+    call assert_false(ok, "count-inconsistent SX was accepted")
+
+    call mir_function_body_from_sx('(mir-function (name main) '// &
+        '(entry-block 0) (instruction-count 1) (instructions '// &
+        '(instruction (id 0) (opcode bogus) (source-rule stmt/return))))', &
+        body, ok, message)
+    call assert_false(ok, "malformed opcode SX was accepted")
 
 contains
 
