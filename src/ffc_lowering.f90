@@ -34,6 +34,8 @@ module ffc_lowering
     public :: ffc_lower_program_root_from_sx
     public :: ffc_program_declaration_from_sx
     public :: ffc_lower_program_declaration_from_sx
+    public :: ffc_program_unit_from_sx
+    public :: ffc_lower_program_unit_from_sx
     public :: ffc_validate_program_root
     public :: ffc_validate_lowered_program_root
 
@@ -276,6 +278,211 @@ contains
         lowered = ffc_lower_program_root(root%name, root%source_file, root%source_hash, &
             root%start_byte, root%end_byte, body, message)
     end function ffc_lower_program_declaration_from_sx
+
+    logical function ffc_program_unit_from_sx(serialized, root, declaration_count, message) &
+            result(parsed)
+        character(len=*), intent(in) :: serialized
+        type(ffc_program_root_t), intent(out) :: root
+        integer(int64), intent(out) :: declaration_count
+        character(len=:), allocatable, intent(out), optional :: message
+
+        character(len=256) :: token(256)
+        character(len=256) :: root_sx
+        character(len=256) :: declaration_sx
+        character(len=64) :: count_text
+        integer :: token_count, position, index
+        integer(int64) :: parsed_count
+        type(ffc_program_root_t) :: declaration_root
+
+        root = ffc_program_root_t()
+        declaration_count = 0_int64
+        call clear_message(message)
+        parsed = tokenize_frontend_sx(serialized, token, token_count, message)
+        if (.not. parsed) return
+
+        position = 1
+        parsed = expect_frontend_token(token, token_count, position, '(', message)
+        if (.not. parsed) return
+        parsed = expect_frontend_token(token, token_count, position, 'program-unit', message)
+        if (.not. parsed) return
+        parsed = read_frontend_expression(token, token_count, position, root_sx, message)
+        if (.not. parsed) then
+            call set_message(message, 'malformed-program-unit-root')
+            return
+        end if
+        parsed = parse_program_unit_root_field(root_sx, root, message)
+        if (.not. parsed) return
+        parsed = read_frontend_atom(token, token_count, position, 'declaration-count', &
+            count_text, message)
+        if (.not. parsed) then
+            call set_message(message, 'malformed-program-unit')
+            return
+        end if
+        parsed = parse_program_unit_count(count_text, parsed_count, message)
+        if (.not. parsed) return
+        parsed = expect_frontend_token(token, token_count, position, '(', message)
+        if (.not. parsed) then
+            call set_message(message, 'malformed-program-unit-declarations')
+            return
+        end if
+        parsed = expect_frontend_token(token, token_count, position, 'declarations', message)
+        if (.not. parsed) then
+            call set_message(message, 'malformed-program-unit-declarations')
+            return
+        end if
+
+        index = 0
+        do
+            if (position > token_count) then
+                call set_message(message, 'malformed-program-unit-declarations')
+                parsed = .false.
+                return
+            end if
+            if (trim(token(position)) == ')') exit
+            index = index + 1
+            parsed = read_frontend_expression(token, token_count, position, declaration_sx, &
+                message)
+            if (.not. parsed) then
+                call set_message(message, 'malformed-program-unit-declaration')
+                return
+            end if
+            parsed = ffc_program_declaration_from_sx(trim(declaration_sx), declaration_root, &
+                message)
+            if (.not. parsed) return
+        end do
+        position = position + 1
+        parsed = expect_frontend_token(token, token_count, position, ')', message)
+        if (.not. parsed) then
+            call set_message(message, 'malformed-program-unit')
+            return
+        end if
+        if (position <= token_count) then
+            call set_message(message, 'malformed-program-unit')
+            parsed = .false.
+            return
+        end if
+        if (parsed_count /= int(index, int64)) then
+            call set_message(message, 'program-unit-declaration-count-mismatch')
+            parsed = .false.
+            return
+        end if
+        declaration_count = parsed_count
+    end function ffc_program_unit_from_sx
+
+    logical function parse_program_unit_root_field(serialized, root, message) result(parsed)
+        character(len=*), intent(in) :: serialized
+        type(ffc_program_root_t), intent(out) :: root
+        character(len=:), allocatable, intent(out), optional :: message
+
+        character(len=256) :: token(32)
+        character(len=256) :: root_sx
+        integer :: token_count, position
+
+        root = ffc_program_root_t()
+        call clear_message(message)
+        parsed = tokenize_frontend_sx(serialized, token, token_count, message)
+        if (.not. parsed) then
+            call set_message(message, 'malformed-program-unit-root')
+            return
+        end if
+        position = 1
+        parsed = expect_frontend_token(token, token_count, position, '(', message)
+        if (.not. parsed) return
+        parsed = expect_frontend_token(token, token_count, position, 'root', message)
+        if (.not. parsed) return
+        parsed = read_frontend_expression(token, token_count, position, root_sx, message)
+        if (.not. parsed) return
+        parsed = expect_frontend_token(token, token_count, position, ')', message)
+        if (.not. parsed) return
+        if (position <= token_count) then
+            call set_message(message, 'malformed-program-unit-root')
+            parsed = .false.
+            return
+        end if
+        parsed = ffc_program_root_from_sx(trim(root_sx), root, message)
+    end function parse_program_unit_root_field
+
+    logical function read_frontend_expression(token, token_count, position, expression, &
+            message) result(ok)
+        character(len=*), intent(in) :: token(:)
+        integer, intent(in) :: token_count
+        integer, intent(inout) :: position
+        character(len=*), intent(out) :: expression
+        character(len=:), allocatable, intent(out), optional :: message
+
+        integer :: depth, start, index
+
+        expression = ''
+        call clear_message(message)
+        if (position > token_count) then
+            call set_message(message, 'malformed-sx-record')
+            ok = .false.
+            return
+        end if
+        if (trim(token(position)) /= '(') then
+            call set_message(message, 'malformed-sx-record')
+            ok = .false.
+            return
+        end if
+        start = position
+        depth = 0
+        do index = position, token_count
+            if (trim(token(index)) == '(') then
+                depth = depth + 1
+            else if (trim(token(index)) == ')') then
+                depth = depth - 1
+            end if
+            if (depth == 0) then
+                expression = trim(token(start))
+                do start = position + 1, index
+                    if (len_trim(expression) + len_trim(token(start)) + 1 > len(expression)) then
+                        call set_message(message, 'malformed-sx-record')
+                        ok = .false.
+                        return
+                    end if
+                    expression = trim(expression)//' '//trim(token(start))
+                end do
+                position = index + 1
+                ok = .true.
+                return
+            end if
+        end do
+        call set_message(message, 'malformed-sx-record')
+        ok = .false.
+    end function read_frontend_expression
+
+    logical function parse_program_unit_count(text, value, message) result(ok)
+        character(len=*), intent(in) :: text
+        integer(int64), intent(out) :: value
+        character(len=:), allocatable, intent(out), optional :: message
+
+        ok = parse_frontend_count(text, value, message)
+        if (ok) return
+        if (present(message)) then
+            if (trim(message) == 'negative-diagnostic-count') then
+                call set_message(message, 'negative-program-unit-declaration-count')
+            else if (trim(message) == 'diagnostic-count-too-large') then
+                call set_message(message, 'program-unit-declaration-count-too-large')
+            else
+                call set_message(message, 'malformed-program-unit-declaration-count')
+            end if
+        end if
+    end function parse_program_unit_count
+
+    logical function ffc_lower_program_unit_from_sx(serialized, body, message) result(lowered)
+        character(len=*), intent(in) :: serialized
+        type(mir_function_body_t), intent(out) :: body
+        character(len=:), allocatable, intent(out), optional :: message
+
+        type(ffc_program_root_t) :: root
+        integer(int64) :: declaration_count
+
+        call clear_message(message)
+        lowered = ffc_program_unit_from_sx(serialized, root, declaration_count, message)
+        if (.not. lowered) return
+        lowered = ffc_lower_program_root(root%name, root%source_file, root%source_hash, &
+            root%start_byte, root%end_byte, body, message)
+    end function ffc_lower_program_unit_from_sx
 
     logical function ffc_validate_lowered_program_root(body, message) result(valid)
         type(mir_function_body_t), intent(in) :: body
