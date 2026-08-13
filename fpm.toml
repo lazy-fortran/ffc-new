@@ -10,3 +10,7 @@ source-dir = "src"
 [[test]]
 name = "mir_v0"
 source-dir = "test"
+
+[[test]]
+name = "frontend_lowering"
+source-dir = "test"
