@@ -19,6 +19,8 @@ module ffc_mir
     integer(int32), parameter, public :: opcode_call = 9_int32
     integer(int32), parameter, public :: opcode_return = 10_int32
 
+    integer(int32), parameter :: mir_witness_max_instructions = 2_int32
+
     type, public :: mir_value_t
         integer(int32) :: id = 0_int32
         integer(int32) :: kind = 0_int32
@@ -44,8 +46,8 @@ module ffc_mir
     end type mir_function_body_t
 
     public :: mir_make_function_witness
-    public :: mir_function_body_to_sx
-    public :: mir_function_body_from_sx
+    public :: mir_function_witness_to_sx
+    public :: mir_function_witness_from_sx
     public :: mir_validate_function_body
     public :: mir_validate_function_witness
     public :: mir_validate_value
@@ -215,7 +217,7 @@ contains
         valid = .true.
     end function mir_validate_function_witness
 
-    subroutine mir_function_body_to_sx(body, output, ok, message)
+    subroutine mir_function_witness_to_sx(body, output, ok, message)
         type(mir_function_body_t), intent(in) :: body
         character(len=*), intent(out) :: output
         logical, intent(out) :: ok
@@ -228,7 +230,7 @@ contains
 
         output = ''
         message = ''
-        ok = mir_validate_function_body(body, message)
+        ok = mir_validate_function_witness(body, message)
         if (.not. ok) return
 
         write (count_text, '(i0)') body%function%instruction_count
@@ -250,9 +252,9 @@ contains
         else
             output(:len_trim(canonical)) = canonical
         end if
-    end subroutine mir_function_body_to_sx
+    end subroutine mir_function_witness_to_sx
 
-    subroutine mir_function_body_from_sx(input, body, ok, message)
+    subroutine mir_function_witness_from_sx(input, body, ok, message)
         character(len=*), intent(in) :: input
         type(mir_function_body_t), intent(out) :: body
         logical, intent(out) :: ok
@@ -284,6 +286,11 @@ contains
             message = 'negative instruction count'
             return
         end if
+        if (count > mir_witness_max_instructions) then
+            ok = .false.
+            message = 'instruction count exceeds witness bound'
+            return
+        end if
         ok = expect_token(token, token_count, position, '(', message)
         if (.not. ok) return
         ok = expect_token(token, token_count, position, 'instructions', message)
@@ -304,8 +311,8 @@ contains
             message = 'trailing SX input'
             return
         end if
-        ok = mir_validate_function_body(body, message)
-    end subroutine mir_function_body_from_sx
+        ok = mir_validate_function_witness(body, message)
+    end subroutine mir_function_witness_from_sx
 
     character(len=32) function itoa(value)
         integer(int32), intent(in) :: value
