@@ -14,3 +14,7 @@ source-dir = "test"
 [[test]]
 name = "frontend_lowering"
 source-dir = "test"
+
+[[test]]
+name = "program_declaration_bridge"
+source-dir = "test"

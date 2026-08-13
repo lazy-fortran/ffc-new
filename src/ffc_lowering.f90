@@ -32,6 +32,8 @@ module ffc_lowering
     public :: ffc_lower_program_root
     public :: ffc_program_root_from_sx
     public :: ffc_lower_program_root_from_sx
+    public :: ffc_program_declaration_from_sx
+    public :: ffc_lower_program_declaration_from_sx
     public :: ffc_validate_program_root
     public :: ffc_validate_lowered_program_root
 
@@ -157,6 +159,124 @@ contains
             root%start_byte, root%end_byte, body, message)
     end function ffc_lower_program_root_from_sx
 
+    logical function ffc_program_declaration_from_sx(serialized, root, message) result(parsed)
+        character(len=*), intent(in) :: serialized
+        type(ffc_program_root_t), intent(out) :: root
+        character(len=:), allocatable, intent(out), optional :: message
+
+        character(len=256) :: token(64)
+        character(len=32) :: declaration_kind
+        character(len=128) :: name, source_hash
+        character(len=256) :: source_file
+        character(len=64) :: start_text, end_text
+        integer :: token_count, position
+        integer(int64) :: start_byte, end_byte
+
+        root = ffc_program_root_t()
+        call clear_message(message)
+        parsed = tokenize_frontend_sx(serialized, token, token_count, message)
+        if (.not. parsed) return
+
+        position = 1
+        parsed = expect_frontend_token(token, token_count, position, '(', message)
+        if (.not. parsed) then
+            call set_message(message, 'malformed-program-declaration')
+            return
+        end if
+        parsed = expect_frontend_token(token, token_count, position, 'program-declaration', message)
+        if (.not. parsed) then
+            call set_message(message, 'malformed-program-declaration')
+            return
+        end if
+        parsed = read_frontend_atom(token, token_count, position, 'declaration-kind', &
+            declaration_kind, message)
+        if (.not. parsed) then
+            call set_message(message, 'malformed-program-declaration-kind')
+            return
+        end if
+        parsed = read_frontend_atom(token, token_count, position, 'name', name, message)
+        if (.not. parsed) then
+            call set_message(message, 'malformed-program-declaration-name')
+            return
+        end if
+        parsed = expect_frontend_token(token, token_count, position, '(', message)
+        if (.not. parsed) then
+            call set_message(message, 'malformed-program-declaration-span')
+            return
+        end if
+        parsed = expect_frontend_token(token, token_count, position, 'span', message)
+        if (.not. parsed) then
+            call set_message(message, 'malformed-program-declaration-span')
+            return
+        end if
+        parsed = read_frontend_atom(token, token_count, position, 'file', source_file, message)
+        if (.not. parsed) then
+            call set_message(message, 'malformed-program-declaration-file')
+            return
+        end if
+        parsed = read_frontend_atom(token, token_count, position, 'start-byte', start_text, message)
+        if (.not. parsed) then
+            call set_message(message, 'malformed-program-declaration-span')
+            return
+        end if
+        parsed = parse_program_declaration_integer(start_text, start_byte, message)
+        if (.not. parsed) return
+        parsed = read_frontend_atom(token, token_count, position, 'end-byte', end_text, message)
+        if (.not. parsed) then
+            call set_message(message, 'malformed-program-declaration-span')
+            return
+        end if
+        parsed = parse_program_declaration_integer(end_text, end_byte, message)
+        if (.not. parsed) return
+        parsed = read_frontend_atom(token, token_count, position, 'source-hash', source_hash, message)
+        if (.not. parsed) then
+            call set_message(message, 'malformed-program-declaration-source-hash')
+            return
+        end if
+        parsed = expect_frontend_token(token, token_count, position, ')', message)
+        if (.not. parsed) then
+            call set_message(message, 'malformed-program-declaration-span')
+            return
+        end if
+        parsed = expect_frontend_token(token, token_count, position, ')', message)
+        if (.not. parsed) then
+            call set_message(message, 'malformed-program-declaration')
+            return
+        end if
+        if (position <= token_count) then
+            call set_message(message, 'malformed-program-declaration')
+            parsed = .false.
+            return
+        end if
+
+        if (trim(declaration_kind) /= frontend_root_kind_program) then
+            call set_message(message, 'invalid-program-declaration-kind')
+            parsed = .false.
+            return
+        end if
+        root%name = name
+        root%source_file = source_file
+        root%source_hash = source_hash
+        root%start_byte = start_byte
+        root%end_byte = end_byte
+        parsed = ffc_validate_program_root(root, message)
+    end function ffc_program_declaration_from_sx
+
+    logical function ffc_lower_program_declaration_from_sx(serialized, body, message) &
+            result(lowered)
+        character(len=*), intent(in) :: serialized
+        type(mir_function_body_t), intent(out) :: body
+        character(len=:), allocatable, intent(out), optional :: message
+
+        type(ffc_program_root_t) :: root
+
+        call clear_message(message)
+        lowered = ffc_program_declaration_from_sx(serialized, root, message)
+        if (.not. lowered) return
+        lowered = ffc_lower_program_root(root%name, root%source_file, root%source_hash, &
+            root%start_byte, root%end_byte, body, message)
+    end function ffc_lower_program_declaration_from_sx
+
     logical function ffc_validate_lowered_program_root(body, message) result(valid)
         type(mir_function_body_t), intent(in) :: body
         character(len=:), allocatable, intent(out), optional :: message
@@ -210,7 +330,8 @@ contains
         character(len=:), allocatable, intent(out), optional :: message
 
         character(len=64) :: token(32)
-        character(len=32) :: status, root_kind
+        character(len=8) :: status
+        character(len=32) :: root_kind
         character(len=64) :: count_text
         integer :: token_count, position
         integer(int64) :: diagnostic_count
@@ -513,6 +634,15 @@ contains
         if (sign < 0) value = -value
         ok = .true.
     end function parse_program_root_integer
+
+    logical function parse_program_declaration_integer(text, value, message) result(ok)
+        character(len=*), intent(in) :: text
+        integer(int64), intent(out) :: value
+        character(len=:), allocatable, intent(out), optional :: message
+
+        ok = parse_program_root_integer(text, value, message)
+        if (.not. ok) call set_message(message, 'malformed-program-declaration-span')
+    end function parse_program_declaration_integer
 
     subroutine clear_message(message)
         character(len=:), allocatable, intent(out), optional :: message
