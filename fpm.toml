@@ -1,0 +1,12 @@
+name = "ffc-new"
+version = "0.1.0"
+license = "MIT"
+author = "Lazy Fortran contributors"
+description = "Target-independent Lazy Fortran middle end"
+
+[build]
+source-dir = "src"
+
+[[test]]
+name = "mir_v0"
+source-dir = "test"

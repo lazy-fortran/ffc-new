@@ -1,0 +1,69 @@
+program test_mir_v0
+    use, intrinsic :: iso_fortran_env, only: int32
+    use ffc_mir, only: mir_function_t, mir_instruction_t, mir_value_t, &
+        mir_validate_function, mir_validate_instruction, mir_validate_value, &
+        opcode_add, opcode_return, value_kind_integer
+    implicit none
+
+    type(mir_value_t) :: value
+    type(mir_instruction_t) :: instruction
+    type(mir_function_t) :: function
+    character(len=:), allocatable :: message
+
+    value%id = 1_int32
+    value%kind = value_kind_integer
+    value%type_name = "i32"
+    call assert_true(mir_validate_value(value, message), "valid value rejected")
+    call assert_true(.not. allocated(message), "valid value produced a diagnostic")
+
+    value%kind = 0_int32
+    call assert_false(mir_validate_value(value, message), "invalid value accepted")
+    call assert_equal(message, "value kind is outside mir-v0", "value diagnostic")
+
+    instruction%id = 2_int32
+    instruction%opcode = opcode_add
+    instruction%result = value
+    instruction%result%kind = value_kind_integer
+    instruction%source_rule = "expr/add"
+    call assert_true(mir_validate_instruction(instruction, message), &
+        "valid instruction rejected")
+
+    instruction%opcode = opcode_return + 1_int32
+    call assert_false(mir_validate_instruction(instruction, message), &
+        "invalid instruction accepted")
+
+    function%name = "main"
+    function%entry_block = 0_int32
+    function%instruction_count = 3_int32
+    call assert_true(mir_validate_function(function, message), "valid function rejected")
+
+    function%instruction_count = -1_int32
+    call assert_false(mir_validate_function(function, message), "invalid function accepted")
+    call assert_equal(message, "function instruction count must be non-negative", &
+        "function diagnostic")
+
+contains
+
+    subroutine assert_true(condition, description)
+        logical, intent(in) :: condition
+        character(len=*), intent(in) :: description
+
+        if (.not. condition) error stop description
+    end subroutine assert_true
+
+    subroutine assert_false(condition, description)
+        logical, intent(in) :: condition
+        character(len=*), intent(in) :: description
+
+        call assert_true(.not. condition, description)
+    end subroutine assert_false
+
+    subroutine assert_equal(actual, expected, description)
+        character(len=*), intent(in) :: actual
+        character(len=*), intent(in) :: expected
+        character(len=*), intent(in) :: description
+
+        call assert_true(actual == expected, description)
+    end subroutine assert_equal
+
+end program test_mir_v0
