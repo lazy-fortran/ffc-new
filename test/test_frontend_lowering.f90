@@ -3,7 +3,9 @@ program test_frontend_lowering
     use ffc_lowering, only: frontend_root_kind_program, frontend_status_accepted, &
         frontend_v0_input_t, ffc_lower_frontend_v0, &
         ffc_frontend_v0_input_from_sx, ffc_lower_frontend_v0_from_sx, &
-        ffc_validate_frontend_v0_input, ffc_validate_lowered_frontend_v0
+        ffc_validate_frontend_v0_input, ffc_validate_lowered_frontend_v0, &
+        ffc_lower_program_root, ffc_validate_program_root, ffc_validate_lowered_program_root, &
+        ffc_program_root_t
     use ffc_mir, only: mir_function_body_t, mir_validate_function_body, &
         opcode_add, opcode_return, value_kind_integer
     implicit none
@@ -13,6 +15,7 @@ program test_frontend_lowering
     character(len=:), allocatable :: message
     character(len=256) :: serialized
     logical :: ok
+    type(ffc_program_root_t) :: root
 
     input%status = frontend_status_accepted
     input%root_kind = frontend_root_kind_program
@@ -84,6 +87,54 @@ program test_frontend_lowering
         '(diagnostic-count 0))', 'invalid-accepted-result')
     call assert_invalid_sx('(frontend-result (status accepted) (root-kind program) '// &
         '(diagnostic-count 2))', 'invalid-accepted-result')
+
+    root%name = 'unit'
+    root%source_file = 'unit.f90'
+    root%source_hash = 'hash-positive'
+    root%start_byte = 0_int64
+    root%end_byte = 16_int64
+    call assert_true(ffc_validate_program_root(root, message), &
+        'valid program root was rejected')
+    call assert_true(ffc_lower_program_root(root%name, root%source_file, root%source_hash, &
+        root%start_byte, root%end_byte, body, message), &
+        'valid program root was not lowered')
+    call assert_true(ffc_validate_lowered_program_root(body, message), &
+        'program-root lowering produced an invalid witness')
+    call assert_equal(body%function%name, 'unit', 'program-root name was not lowered')
+    call assert_equal(body%instructions(1)%source_rule, 'program-root', &
+        'program-root source provenance was not preserved')
+    call assert_equal(body%instructions(2)%source_rule, 'program-root', &
+        'program-root return provenance was not preserved')
+
+    root%name = ''
+    call assert_false(ffc_validate_program_root(root, message), &
+        'empty program-root name was accepted')
+    call assert_equal(message, 'program root name must be non-empty', &
+        'empty program-root name diagnostic changed')
+    root%name = 'unit'
+    root%start_byte = -1_int64
+    call assert_false(ffc_validate_program_root(root, message), &
+        'negative program-root span was accepted')
+    call assert_equal(message, 'program root span is invalid', &
+        'negative program-root span diagnostic changed')
+    root%start_byte = 17_int64
+    root%end_byte = 16_int64
+    call assert_false(ffc_lower_program_root(root%name, root%source_file, root%source_hash, &
+        root%start_byte, root%end_byte, body, message), &
+        'reversed program-root span was accepted')
+    call assert_equal(message, 'program root span is invalid', &
+        'reversed program-root span diagnostic changed')
+
+    root%start_byte = 0_int64
+    root%end_byte = 16_int64
+    call assert_true(ffc_lower_program_root(root%name, root%source_file, root%source_hash, &
+        root%start_byte, root%end_byte, body, message), &
+        'restored program root was rejected')
+    body%instructions(1)%source_rule = 'target/isa'
+    call assert_false(ffc_validate_lowered_program_root(body, message), &
+        'program-root provenance mutation was accepted')
+    call assert_equal(message, 'lowered program-root source provenance changed', &
+        'program-root provenance mutation diagnostic changed')
 
 contains
 

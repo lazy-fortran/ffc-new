@@ -16,13 +16,93 @@ module ffc_lowering
         integer(int64) :: diagnostic_count = 0_int64
     end type frontend_v0_input_t
 
+    type, public :: ffc_program_root_t
+        character(len=128) :: name = ''
+        character(len=256) :: source_file = ''
+        character(len=128) :: source_hash = ''
+        integer(int64) :: start_byte = 0_int64
+        integer(int64) :: end_byte = 0_int64
+    end type ffc_program_root_t
+
     public :: ffc_lower_frontend_v0
     public :: ffc_frontend_v0_input_from_sx
     public :: ffc_validate_frontend_v0_input
     public :: ffc_lower_frontend_v0_from_sx
     public :: ffc_validate_lowered_frontend_v0
+    public :: ffc_lower_program_root
+    public :: ffc_validate_program_root
+    public :: ffc_validate_lowered_program_root
 
 contains
+
+    logical function ffc_lower_program_root(name, source_file, source_hash, start_byte, &
+            end_byte, body, message) result(lowered)
+        character(len=*), intent(in) :: name, source_file, source_hash
+        integer(int64), intent(in) :: start_byte, end_byte
+        type(mir_function_body_t), intent(out) :: body
+        character(len=:), allocatable, intent(out), optional :: message
+
+        type(ffc_program_root_t) :: root
+
+        root%name = name
+        root%source_file = source_file
+        root%source_hash = source_hash
+        root%start_byte = start_byte
+        root%end_byte = end_byte
+        lowered = ffc_validate_program_root(root, message)
+        if (.not. lowered) return
+
+        call mir_make_function_witness(body)
+        body%function%name = trim(root%name)
+        body%instructions(1)%source_rule = 'program-root'
+        body%instructions(2)%source_rule = 'program-root'
+    end function ffc_lower_program_root
+
+    logical function ffc_validate_program_root(root, message) result(valid)
+        type(ffc_program_root_t), intent(in) :: root
+        character(len=:), allocatable, intent(out), optional :: message
+
+        call clear_message(message)
+        valid = .false.
+        if (len_trim(root%name) == 0) then
+            call set_message(message, 'program root name must be non-empty')
+            return
+        end if
+        if (len_trim(root%source_file) == 0) then
+            call set_message(message, 'program root source file must be non-empty')
+            return
+        end if
+        if (len_trim(root%source_hash) == 0) then
+            call set_message(message, 'program root source hash must be non-empty')
+            return
+        end if
+        if (root%start_byte < 0_int64 .or. root%end_byte < root%start_byte) then
+            call set_message(message, 'program root span is invalid')
+            return
+        end if
+        valid = .true.
+    end function ffc_validate_program_root
+
+    logical function ffc_validate_lowered_program_root(body, message) result(valid)
+        type(mir_function_body_t), intent(in) :: body
+        character(len=:), allocatable, intent(out), optional :: message
+
+        call clear_message(message)
+        valid = .false.
+        if (.not. mir_validate_function_body(body, message)) return
+        if (body%function%instruction_count /= 2 .or. &
+            body%instructions(1)%opcode /= opcode_add .or. &
+            body%instructions(2)%opcode /= opcode_return) then
+            call set_message(message, 'lowered program-root witness shape changed')
+            return
+        end if
+        if (body%instructions(1)%source_rule /= 'program-root' .or. &
+            body%instructions(2)%source_rule /= 'program-root') then
+            call set_message(message, 'lowered program-root source provenance changed')
+            return
+        end if
+        valid = .true.
+    end function ffc_validate_lowered_program_root
 
     logical function ffc_lower_frontend_v0(input, body, message) result(lowered)
         type(frontend_v0_input_t), intent(in) :: input
