@@ -17,6 +17,9 @@ module ffc_lowering
     end type frontend_v0_input_t
 
     public :: ffc_lower_frontend_v0
+    public :: ffc_frontend_v0_input_from_sx
+    public :: ffc_validate_frontend_v0_input
+    public :: ffc_lower_frontend_v0_from_sx
     public :: ffc_validate_lowered_frontend_v0
 
 contains
@@ -47,6 +50,97 @@ contains
         lowered = .true.
     end function ffc_lower_frontend_v0
 
+    logical function ffc_frontend_v0_input_from_sx(serialized, input, message) result(parsed)
+        character(len=*), intent(in) :: serialized
+        type(frontend_v0_input_t), intent(out) :: input
+        character(len=:), allocatable, intent(out), optional :: message
+
+        character(len=64) :: token(32)
+        character(len=32) :: status, root_kind
+        character(len=64) :: count_text
+        integer :: token_count, position
+        integer(int64) :: diagnostic_count
+
+        input = frontend_v0_input_t()
+        call clear_message(message)
+        parsed = tokenize_frontend_sx(serialized, token, token_count, message)
+        if (.not. parsed) return
+
+        position = 1
+        parsed = expect_frontend_token(token, token_count, position, '(', message)
+        if (.not. parsed) return
+        parsed = expect_frontend_token(token, token_count, position, 'frontend-result', message)
+        if (.not. parsed) return
+        parsed = read_frontend_atom(token, token_count, position, 'status', status, message)
+        if (.not. parsed) return
+        parsed = read_frontend_atom(token, token_count, position, 'root-kind', root_kind, message)
+        if (.not. parsed) return
+        parsed = read_frontend_atom(token, token_count, position, 'diagnostic-count', &
+            count_text, message)
+        if (.not. parsed) return
+        parsed = parse_frontend_count(count_text, diagnostic_count, message)
+        if (.not. parsed) return
+        parsed = expect_frontend_token(token, token_count, position, ')', message)
+        if (.not. parsed) return
+        if (position <= token_count) then
+            call set_message(message, 'malformed-sx-record')
+            parsed = .false.
+            return
+        end if
+
+        input%status = status
+        input%root_kind = root_kind
+        input%diagnostic_count = diagnostic_count
+        parsed = ffc_validate_frontend_v0_input(input, message)
+    end function ffc_frontend_v0_input_from_sx
+
+    logical function ffc_validate_frontend_v0_input(input, message) result(valid)
+        type(frontend_v0_input_t), intent(in) :: input
+        character(len=:), allocatable, intent(out), optional :: message
+
+        call clear_message(message)
+        valid = .false.
+        if (input%status /= frontend_status_accepted .and. &
+            input%status /= frontend_status_rejected) then
+            call set_message(message, 'invalid-result-status')
+            return
+        end if
+        if (input%root_kind /= frontend_root_kind_program .and. &
+            input%root_kind /= frontend_root_kind_none) then
+            call set_message(message, 'invalid-result-root-kind')
+            return
+        end if
+        if (input%diagnostic_count < 0_int64) then
+            call set_message(message, 'negative-diagnostic-count')
+            return
+        end if
+        if (input%status == frontend_status_accepted) then
+            if (input%root_kind /= frontend_root_kind_program .or. &
+                input%diagnostic_count /= 0_int64) then
+                call set_message(message, 'invalid-accepted-result')
+                return
+            end if
+        else if (input%root_kind /= frontend_root_kind_none .or. &
+                input%diagnostic_count == 0_int64) then
+            call set_message(message, 'invalid-rejected-result')
+            return
+        end if
+        valid = .true.
+    end function ffc_validate_frontend_v0_input
+
+    logical function ffc_lower_frontend_v0_from_sx(serialized, body, message) result(lowered)
+        character(len=*), intent(in) :: serialized
+        type(mir_function_body_t), intent(out) :: body
+        character(len=:), allocatable, intent(out), optional :: message
+
+        type(frontend_v0_input_t) :: input
+
+        call clear_message(message)
+        lowered = ffc_frontend_v0_input_from_sx(serialized, input, message)
+        if (.not. lowered) return
+        lowered = ffc_lower_frontend_v0(input, body, message)
+    end function ffc_lower_frontend_v0_from_sx
+
     logical function ffc_validate_lowered_frontend_v0(body, message) result(valid)
         type(mir_function_body_t), intent(in) :: body
         character(len=:), allocatable, intent(out), optional :: message
@@ -74,6 +168,154 @@ contains
         end if
         valid = .true.
     end function ffc_validate_lowered_frontend_v0
+
+    logical function tokenize_frontend_sx(input, token, token_count, message) result(ok)
+        character(len=*), intent(in) :: input
+        character(len=*), intent(out) :: token(:)
+        integer, intent(out) :: token_count
+        character(len=:), allocatable, intent(out), optional :: message
+
+        integer :: position, start, input_length
+        character :: current
+
+        token = ''
+        token_count = 0
+        call clear_message(message)
+        position = 1
+        input_length = len_trim(input)
+        do while (position <= input_length)
+            current = input(position:position)
+            if (current == ' ' .or. current == char(9) .or. current == char(10) .or. &
+                current == char(13)) then
+                position = position + 1
+            else if (current == '(' .or. current == ')') then
+                if (.not. append_frontend_token(input(position:position), token, &
+                    token_count, message)) return
+                position = position + 1
+            else
+                start = position
+                do while (position <= input_length)
+                    current = input(position:position)
+                    if (current == ' ' .or. current == char(9) .or. current == char(10) .or. &
+                        current == char(13) .or. current == '(' .or. current == ')') exit
+                    position = position + 1
+                end do
+                if (.not. append_frontend_token(input(start:position - 1), token, &
+                    token_count, message)) return
+            end if
+        end do
+        ok = token_count > 0
+        if (.not. ok) call set_message(message, 'malformed-sx-record')
+    end function tokenize_frontend_sx
+
+    logical function append_frontend_token(value, token, token_count, message) result(ok)
+        character(len=*), intent(in) :: value
+        character(len=*), intent(inout) :: token(:)
+        integer, intent(inout) :: token_count
+        character(len=:), allocatable, intent(out), optional :: message
+
+        call clear_message(message)
+        if (token_count == size(token)) then
+            call set_message(message, 'malformed-sx-record')
+            ok = .false.
+            return
+        end if
+        if (len_trim(value) > len(token(1))) then
+            call set_message(message, 'malformed-sx-record')
+            ok = .false.
+            return
+        end if
+        token_count = token_count + 1
+        token(token_count) = value
+        ok = .true.
+    end function append_frontend_token
+
+    logical function expect_frontend_token(token, token_count, position, expected, &
+            message) result(ok)
+        character(len=*), intent(in) :: token(:), expected
+        integer, intent(in) :: token_count
+        integer, intent(inout) :: position
+        character(len=:), allocatable, intent(out), optional :: message
+
+        if (position > token_count) then
+            call set_message(message, 'malformed-sx-record')
+            ok = .false.
+            return
+        end if
+        if (trim(token(position)) /= expected) then
+            call set_message(message, 'malformed-sx-record')
+            ok = .false.
+            return
+        end if
+        position = position + 1
+        call clear_message(message)
+        ok = .true.
+    end function expect_frontend_token
+
+    logical function read_frontend_atom(token, token_count, position, name, value, &
+            message) result(ok)
+        character(len=*), intent(in) :: token(:), name
+        integer, intent(in) :: token_count
+        integer, intent(inout) :: position
+        character(len=*), intent(out) :: value
+        character(len=:), allocatable, intent(out), optional :: message
+
+        value = ''
+        ok = expect_frontend_token(token, token_count, position, '(', message)
+        if (.not. ok) return
+        ok = expect_frontend_token(token, token_count, position, name, message)
+        if (.not. ok) return
+        if (position > token_count) then
+            call set_message(message, 'malformed-sx-record')
+            ok = .false.
+            return
+        end if
+        if (trim(token(position)) == '(' .or. trim(token(position)) == ')') then
+            call set_message(message, 'malformed-sx-record')
+            ok = .false.
+            return
+        end if
+        value = token(position)
+        position = position + 1
+        ok = expect_frontend_token(token, token_count, position, ')', message)
+    end function read_frontend_atom
+
+    logical function parse_frontend_count(text, value, message) result(ok)
+        character(len=*), intent(in) :: text
+        integer(int64), intent(out) :: value
+        character(len=:), allocatable, intent(out), optional :: message
+
+        integer :: index
+        integer(int64) :: digit
+
+        value = 0_int64
+        call clear_message(message)
+        if (len_trim(text) == 0) then
+            call set_message(message, 'malformed-sx-count')
+            ok = .false.
+            return
+        end if
+        if (text(1:1) == '-') then
+            call set_message(message, 'negative-diagnostic-count')
+            ok = .false.
+            return
+        end if
+        do index = 1, len_trim(text)
+            if (text(index:index) < '0' .or. text(index:index) > '9') then
+                call set_message(message, 'malformed-sx-count')
+                ok = .false.
+                return
+            end if
+            digit = int(iachar(text(index:index)) - iachar('0'), int64)
+            if (value > (huge(value) - digit) / 10_int64) then
+                call set_message(message, 'diagnostic-count-too-large')
+                ok = .false.
+                return
+            end if
+            value = value * 10_int64 + digit
+        end do
+        ok = .true.
+    end function parse_frontend_count
 
     subroutine clear_message(message)
         character(len=:), allocatable, intent(out), optional :: message

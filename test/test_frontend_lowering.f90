@@ -2,7 +2,8 @@ program test_frontend_lowering
     use, intrinsic :: iso_fortran_env, only: int32, int64
     use ffc_lowering, only: frontend_root_kind_program, frontend_status_accepted, &
         frontend_v0_input_t, ffc_lower_frontend_v0, &
-        ffc_validate_lowered_frontend_v0
+        ffc_frontend_v0_input_from_sx, ffc_lower_frontend_v0_from_sx, &
+        ffc_validate_frontend_v0_input, ffc_validate_lowered_frontend_v0
     use ffc_mir, only: mir_function_body_t, mir_validate_function_body, &
         opcode_add, opcode_return, value_kind_integer
     implicit none
@@ -10,6 +11,8 @@ program test_frontend_lowering
     type(frontend_v0_input_t) :: input
     type(mir_function_body_t) :: body
     character(len=:), allocatable :: message
+    character(len=256) :: serialized
+    logical :: ok
 
     input%status = frontend_status_accepted
     input%root_kind = frontend_root_kind_program
@@ -60,6 +63,28 @@ program test_frontend_lowering
     call assert_equal(message, 'lowered frontend-v0 source provenance changed', &
         'source provenance mutation diagnostic changed')
 
+    serialized = '(frontend-result (status accepted) (root-kind program) '// &
+        '(diagnostic-count 0))'
+    call assert_true(ffc_lower_frontend_v0_from_sx(serialized, body, message), &
+        'canonical frontend SX was not lowered')
+    call assert_true(ffc_validate_lowered_frontend_v0(body, message), &
+        'canonical frontend SX produced an invalid lowering')
+    ok = ffc_frontend_v0_input_from_sx(serialized, input, message)
+    call assert_true(ffc_validate_frontend_v0_input(input, message), &
+        'canonical frontend SX fields were not validated')
+
+    call assert_invalid_sx('', 'malformed-sx-record')
+    call assert_invalid_sx('(frontend-result (status accepted) '// &
+        '(root-kind program) (diagnostic-count 0)', 'malformed-sx-record')
+    call assert_invalid_sx('(frontend-result (status rejected) (root-kind none) '// &
+        '(diagnostic-count 1) (extra x))', 'malformed-sx-record')
+    call assert_invalid_sx('(frontend-result (status rejected) (root-kind none) '// &
+        '(diagnostic-count 1))', 'frontend-v0 status must be accepted')
+    call assert_invalid_sx('(frontend-result (status accepted) (root-kind none) '// &
+        '(diagnostic-count 0))', 'invalid-accepted-result')
+    call assert_invalid_sx('(frontend-result (status accepted) (root-kind program) '// &
+        '(diagnostic-count 2))', 'invalid-accepted-result')
+
 contains
 
     subroutine assert_rejected(candidate, expected_message, description)
@@ -96,5 +121,17 @@ contains
 
         call assert_true(actual == expected, description)
     end subroutine assert_equal_integer
+
+    subroutine assert_invalid_sx(serialized, expected_message)
+        character(len=*), intent(in) :: serialized, expected_message
+
+        call assert_false(ffc_lower_frontend_v0_from_sx(serialized, body, message), &
+            'invalid frontend SX was lowered')
+        if (trim(message) /= trim(expected_message)) then
+            write (*, '(a)') 'unexpected frontend SX diagnostic: '//trim(message)// &
+                ' expected '//trim(expected_message)
+            error stop 'frontend SX diagnostic changed'
+        end if
+    end subroutine assert_invalid_sx
 
 end program test_frontend_lowering
