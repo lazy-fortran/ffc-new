@@ -1,13 +1,16 @@
 program test_mir_v0
     use, intrinsic :: iso_fortran_env, only: int32
-    use ffc_mir, only: mir_function_t, mir_instruction_t, mir_value_t, &
-        mir_validate_function, mir_validate_instruction, mir_validate_value, &
+    use ffc_mir, only: mir_function_body_t, mir_function_t, mir_instruction_t, &
+        mir_value_t, mir_make_function_witness, mir_validate_function, &
+        mir_validate_function_body, mir_validate_function_witness, &
+        mir_validate_instruction, mir_validate_value, &
         opcode_add, opcode_return, value_kind_integer
     implicit none
 
     type(mir_value_t) :: value
     type(mir_instruction_t) :: instruction
     type(mir_function_t) :: function
+    type(mir_function_body_t) :: body
     character(len=:), allocatable :: message
 
     value%id = 1_int32
@@ -41,6 +44,36 @@ program test_mir_v0
     call assert_false(mir_validate_function(function, message), "invalid function accepted")
     call assert_equal(message, "function instruction count must be non-negative", &
         "function diagnostic")
+
+    call mir_make_function_witness(body)
+    call assert_true(mir_validate_function_body(body, message), &
+        "valid function body rejected")
+    call assert_true(mir_validate_function_witness(body, message), &
+        "valid function witness rejected")
+    call assert_equal(body%instructions(1)%source_rule, "expr/add", &
+        "add source rule was not preserved")
+    call assert_equal(body%instructions(2)%source_rule, "stmt/return", &
+        "return source rule was not preserved")
+
+    body%function%instruction_count = 1_int32
+    call assert_false(mir_validate_function_body(body, message), &
+        "count mutation accepted")
+    call assert_equal(message, "function instruction count does not match body", &
+        "count mutation diagnostic")
+
+    call mir_make_function_witness(body)
+    body%instructions(2)%id = 0_int32
+    call assert_false(mir_validate_function_body(body, message), &
+        "ownership mutation accepted")
+    call assert_equal(message, "instruction is not owned by its body slot", &
+        "ownership mutation diagnostic")
+
+    call mir_make_function_witness(body)
+    body%instructions(1)%source_rule = "expr/changed"
+    call assert_false(mir_validate_function_witness(body, message), &
+        "source-rule mutation accepted")
+    call assert_equal(message, "function witness add source rule changed", &
+        "source-rule mutation diagnostic")
 
 contains
 
