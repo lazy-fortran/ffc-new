@@ -55,6 +55,7 @@ module ffc_mir
     public :: mir_function_instruction_opcode_at
     public :: mir_function_instruction_result_kind_at
     public :: mir_function_instruction_source_rule_at
+    public :: mir_function_block_at
     public :: mir_validate_function_witness
     public :: mir_validate_value
     public :: mir_validate_instruction
@@ -270,6 +271,31 @@ contains
         if (.not. valid) return
         source_rule = instruction%source_rule
     end function mir_function_instruction_source_rule_at
+
+    logical function mir_function_block_at(body, block_index, first_instruction, &
+            instruction_count, message) result(valid)
+        type(mir_function_body_t), intent(in) :: body
+        integer(int32), intent(in) :: block_index
+        integer(int32), intent(out) :: first_instruction
+        integer(int32), intent(out) :: instruction_count
+        character(len=:), allocatable, intent(out), optional :: message
+
+        first_instruction = 0_int32
+        instruction_count = 0_int32
+        call clear_message(message)
+        valid = .false.
+        if (.not. mir_validate_function_body(body, message)) return
+        if (block_index < 0_int32) then
+            call set_message(message, "block index must be non-negative")
+            return
+        end if
+        if (block_index /= body%function%entry_block) then
+            call set_message(message, "block index is outside function body")
+            return
+        end if
+        instruction_count = body%function%instruction_count
+        valid = .true.
+    end function mir_function_block_at
 
     logical function mir_validate_function_witness(body, message) result(valid)
         type(mir_function_body_t), intent(in) :: body

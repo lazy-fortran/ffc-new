@@ -32,5 +32,9 @@ name = "mir_source_rule_query"
 source-dir = "test"
 
 [[test]]
+name = "mir_block_query"
+source-dir = "test"
+
+[[test]]
 name = "mir_frontend_handoff"
 source-dir = "test"
