@@ -58,6 +58,7 @@ module ffc_mir
     public :: mir_function_at
     public :: mir_function_body_at
     public :: mir_function_block_at
+    public :: mir_function_block_instruction_at
     public :: mir_function_block_count_at
     public :: mir_validate_function_witness
     public :: mir_validate_value
@@ -332,6 +333,37 @@ contains
         instruction_count = body%function%instruction_count
         valid = .true.
     end function mir_function_block_at
+
+    logical function mir_function_block_instruction_at(body, block_index, instruction_index, &
+            instruction, message) result(valid)
+        type(mir_function_body_t), intent(in) :: body
+        integer(int32), intent(in) :: block_index
+        integer(int32), intent(in) :: instruction_index
+        type(mir_instruction_t), intent(out) :: instruction
+        character(len=:), allocatable, intent(out), optional :: message ! text-policy: diagnostic boundary
+
+        integer(int32) :: first_instruction
+        integer(int32) :: block_instruction_count
+
+        instruction%id = 0_int32
+        instruction%opcode = 0_int32
+        instruction%result%id = 0_int32
+        instruction%result%kind = 0_int32
+        call clear_message(message)
+        valid = .false.
+        if (.not. mir_function_block_at(body, block_index, first_instruction, &
+            block_instruction_count, message)) return
+        if (instruction_index < 0_int32) then
+            call set_message(message, "instruction index must be non-negative")
+            return
+        end if
+        if (instruction_index >= block_instruction_count) then
+            call set_message(message, "instruction index is outside block")
+            return
+        end if
+        valid = mir_function_instruction_at(body, first_instruction + instruction_index, &
+            instruction, message)
+    end function mir_function_block_instruction_at
 
     logical function mir_function_block_count_at(body, block_count, message) result(valid)
         type(mir_function_body_t), intent(in) :: body
