@@ -46,6 +46,8 @@ module ffc_mir
     end type mir_function_body_t
 
     public :: mir_make_function_witness
+    public :: mir_function_body_to_sx
+    public :: mir_function_body_from_sx
     public :: mir_function_witness_to_sx
     public :: mir_function_witness_from_sx
     public :: mir_validate_function_body
@@ -311,6 +313,25 @@ contains
         logical, intent(out) :: ok
         character(len=:), allocatable, intent(out) :: message
 
+        call write_function_sx(body, output, ok, message, .true.)
+    end subroutine mir_function_witness_to_sx
+
+    subroutine mir_function_body_to_sx(body, output, ok, message)
+        type(mir_function_body_t), intent(in) :: body
+        character(len=*), intent(out) :: output
+        logical, intent(out) :: ok
+        character(len=:), allocatable, intent(out) :: message
+
+        call write_function_sx(body, output, ok, message, .false.)
+    end subroutine mir_function_body_to_sx
+
+    subroutine write_function_sx(body, output, ok, message, witness)
+        type(mir_function_body_t), intent(in) :: body
+        character(len=*), intent(out) :: output
+        logical, intent(out) :: ok
+        character(len=:), allocatable, intent(out) :: message
+        logical, intent(in) :: witness
+
         character(len=32) :: count_text, id_text, result_id_text
         character(len=32) :: opcode_text, result_kind_text
         character(len=:), allocatable :: canonical
@@ -318,7 +339,11 @@ contains
 
         output = ''
         message = ''
-        ok = mir_validate_function_witness(body, message)
+        if (witness) then
+            ok = mir_validate_function_witness(body, message)
+        else
+            ok = mir_validate_function_body(body, message)
+        end if
         if (.not. ok) return
 
         write (count_text, '(i0)') body%function%instruction_count
@@ -345,7 +370,7 @@ contains
         else
             output(:len_trim(canonical)) = canonical
         end if
-    end subroutine mir_function_witness_to_sx
+    end subroutine write_function_sx
 
     subroutine mir_function_witness_from_sx(input, body, ok, message)
         character(len=*), intent(in) :: input
@@ -353,12 +378,31 @@ contains
         logical, intent(out) :: ok
         character(len=:), allocatable, intent(out) :: message
 
+        call read_function_sx(input, body, ok, message, .true.)
+    end subroutine mir_function_witness_from_sx
+
+    subroutine mir_function_body_from_sx(input, body, ok, message)
+        character(len=*), intent(in) :: input
+        type(mir_function_body_t), intent(out) :: body
+        logical, intent(out) :: ok
+        character(len=:), allocatable, intent(out) :: message
+
+        call read_function_sx(input, body, ok, message, .false.)
+    end subroutine mir_function_body_from_sx
+
+    subroutine read_function_sx(input, body, ok, message, witness)
+        character(len=*), intent(in) :: input
+        type(mir_function_body_t), intent(out) :: body
+        logical, intent(out) :: ok
+        character(len=:), allocatable, intent(out) :: message
+        logical, intent(in) :: witness
+
         character(len=256) :: token(128)
         integer :: token_count, position, index
         integer(int32) :: count
 
         call reset_body(body)
-        message = ''
+        message = repeat(' ', 256)
         ok = tokenize_sx(input, token, token_count, message)
         if (.not. ok) return
         position = 1
@@ -379,9 +423,14 @@ contains
             message = 'negative instruction count'
             return
         end if
-        if (count > mir_witness_max_instructions) then
+        if (witness .and. count > mir_witness_max_instructions) then
             ok = .false.
             message = 'instruction count exceeds witness bound'
+            return
+        end if
+        if (count > int(token_count, int32)) then
+            ok = .false.
+            message = 'instruction count exceeds SX token capacity'
             return
         end if
         ok = expect_token(token, token_count, position, '(', message)
@@ -404,8 +453,13 @@ contains
             message = 'trailing SX input'
             return
         end if
-        ok = mir_validate_function_witness(body, message)
-    end subroutine mir_function_witness_from_sx
+        if (witness) then
+            ok = mir_validate_function_witness(body, message)
+        else
+            ok = mir_validate_function_body(body, message)
+        end if
+        if (ok) message = ''
+    end subroutine read_function_sx
 
     character(len=32) function itoa(value)
         integer(int32), intent(in) :: value
