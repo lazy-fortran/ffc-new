@@ -632,59 +632,100 @@ contains
         call reset_body(body)
         message = repeat(' ', 256)
         ok = tokenize_sx(input, token, token_count, message)
-        if (.not. ok) return
+        if (.not. ok) then
+            call reset_body(body)
+            return
+        end if
         position = 1
         ok = expect_token(token, token_count, position, '(', message)
-        if (.not. ok) return
+        if (.not. ok) then
+            call reset_body(body)
+            return
+        end if
         ok = expect_token(token, token_count, position, 'mir-function', message)
-        if (.not. ok) return
+        if (.not. ok) then
+            call reset_body(body)
+            return
+        end if
         ok = read_named_atom(token, token_count, position, 'name', body%function%name, message)
-        if (.not. ok) return
+        if (.not. ok) then
+            call reset_body(body)
+            return
+        end if
         ok = read_named_integer(token, token_count, position, 'entry-block', &
             body%function%entry_block, message)
-        if (.not. ok) return
+        if (.not. ok) then
+            call reset_body(body)
+            return
+        end if
         ok = read_named_integer(token, token_count, position, 'instruction-count', &
             count, message)
-        if (.not. ok) return
+        if (.not. ok) then
+            call reset_body(body)
+            return
+        end if
         if (count < 0_int32) then
             ok = .false.
             message = 'negative instruction count'
+            call reset_body(body)
             return
         end if
         if (witness .and. count > mir_witness_max_instructions) then
             ok = .false.
             message = 'instruction count exceeds witness bound'
+            call reset_body(body)
             return
         end if
         if (count > int(token_count, int32)) then
             ok = .false.
             message = 'instruction count exceeds SX token capacity'
+            call reset_body(body)
             return
         end if
         ok = expect_token(token, token_count, position, '(', message)
-        if (.not. ok) return
+        if (.not. ok) then
+            call reset_body(body)
+            return
+        end if
         ok = expect_token(token, token_count, position, 'instructions', message)
-        if (.not. ok) return
+        if (.not. ok) then
+            call reset_body(body)
+            return
+        end if
         allocate (body%instructions(count))
         body%function%instruction_count = count
         do index = 1, count
             ok = read_instruction(token, token_count, position, index - 1, &
                 body%instructions(index), message)
-            if (.not. ok) return
+            if (.not. ok) then
+                call reset_body(body)
+                return
+            end if
         end do
         ok = expect_token(token, token_count, position, ')', message)
-        if (.not. ok) return
+        if (.not. ok) then
+            call reset_body(body)
+            return
+        end if
         ok = expect_token(token, token_count, position, ')', message)
-        if (.not. ok) return
+        if (.not. ok) then
+            call reset_body(body)
+            return
+        end if
         if (position <= token_count) then
             ok = .false.
             message = 'trailing SX input'
+            call reset_body(body)
             return
         end if
         if (witness) then
             ok = mir_validate_function_witness(body, message)
         else
             ok = mir_validate_function_body(body, message)
+        end if
+        if (.not. ok) then
+            call reset_body(body)
+            return
         end if
         if (ok) message = ''
     end subroutine read_function_sx

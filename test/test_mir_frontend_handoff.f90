@@ -75,6 +75,8 @@ program test_mir_frontend_handoff
         '(result (id 1) (kind integer) (type i32))))) extra', &
         'trailing SX input')
 
+    call mir_function_body_from_sx(serialized, body, ok, message)
+    call assert_true(ok, 'valid body was not restored for export control')
     body%instructions(1)%source_rule = 'frontend-v0(program)'
     call mir_function_body_to_sx(body, serialized, ok, message)
     call assert_false(ok, 'invalid source identity was exported')

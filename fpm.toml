@@ -68,6 +68,10 @@ name = "mir_body_query"
 source-dir = "test"
 
 [[test]]
+name = "mir_body_roundtrip"
+source-dir = "test"
+
+[[test]]
 name = "mir_block_count_query"
 source-dir = "test"
 
