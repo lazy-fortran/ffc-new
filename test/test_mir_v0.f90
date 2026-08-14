@@ -5,6 +5,7 @@ program test_mir_v0
         mir_validate_function_body, mir_validate_function_witness, &
         mir_validate_instruction, mir_validate_value, &
         mir_function_instruction_at, &
+        mir_function_instruction_opcode_at, &
         mir_function_witness_to_sx, mir_function_witness_from_sx, &
         opcode_add, opcode_return, value_kind_integer
     implicit none
@@ -14,6 +15,7 @@ program test_mir_v0
     type(mir_instruction_t) :: selected_instruction
     type(mir_function_t) :: function
     type(mir_function_body_t) :: body
+    integer(int32) :: selected_opcode
     character(len=:), allocatable :: message
     character(len=1024) :: serialized
     character(len=1024) :: roundtrip
@@ -110,11 +112,31 @@ program test_mir_v0
     call assert_equal(selected_instruction%source_rule, "expr/add", &
         "round-tripped first instruction source rule changed")
 
+    call assert_true(mir_function_instruction_opcode_at(body, 0_int32, selected_opcode, &
+        message), "round-tripped first instruction opcode was not queryable")
+    call assert_true(selected_opcode == opcode_add, &
+        "typed first instruction opcode query changed")
+
     call assert_true(mir_function_instruction_at(body, 1_int32, selected_instruction, &
         message), &
         "round-tripped second instruction was not accessible")
     call assert_true(selected_instruction%opcode == opcode_return, &
         "round-tripped second instruction opcode changed")
+
+    call assert_true(mir_function_instruction_opcode_at(body, 1_int32, selected_opcode, &
+        message), "round-tripped second instruction opcode was not queryable")
+    call assert_true(selected_opcode == opcode_return, &
+        "typed second instruction opcode query changed")
+
+    call assert_false(mir_function_instruction_opcode_at(body, -1_int32, selected_opcode, &
+        message), "negative typed instruction index was accepted")
+    call assert_equal(message, "instruction index must be non-negative", &
+        "negative typed instruction index diagnostic")
+
+    call assert_false(mir_function_instruction_opcode_at(body, 2_int32, selected_opcode, &
+        message), "out-of-range typed instruction index was accepted")
+    call assert_equal(message, "instruction index is outside function body", &
+        "out-of-range typed instruction index diagnostic")
 
     call assert_false(mir_function_instruction_at(body, -1_int32, selected_instruction, &
         message), &
@@ -134,6 +156,11 @@ program test_mir_v0
         "inconsistent function body was accepted by accessor")
     call assert_equal(message, "function instruction count does not match body", &
         "inconsistent function body diagnostic")
+
+    call assert_false(mir_function_instruction_opcode_at(body, 0_int32, selected_opcode, &
+        message), "inconsistent function body was accepted by typed opcode query")
+    call assert_equal(message, "function instruction count does not match body", &
+        "inconsistent typed opcode query diagnostic")
 
     call mir_function_witness_from_sx('(mir-function (name main) '// &
         '(entry-block 0) (instruction-count 2) (instructions '// &
