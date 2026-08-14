@@ -40,5 +40,9 @@ name = "mir_function_query"
 source-dir = "test"
 
 [[test]]
+name = "mir_body_query"
+source-dir = "test"
+
+[[test]]
 name = "mir_frontend_handoff"
 source-dir = "test"

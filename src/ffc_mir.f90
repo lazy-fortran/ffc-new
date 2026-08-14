@@ -56,6 +56,7 @@ module ffc_mir
     public :: mir_function_instruction_result_kind_at
     public :: mir_function_instruction_source_rule_at
     public :: mir_function_at
+    public :: mir_function_body_at
     public :: mir_function_block_at
     public :: mir_validate_function_witness
     public :: mir_validate_value
@@ -292,6 +293,19 @@ contains
         instruction_count = body%function%instruction_count
         valid = .true.
     end function mir_function_at
+
+    logical function mir_function_body_at(body, selected_body, message) result(valid)
+        type(mir_function_body_t), intent(in) :: body
+        type(mir_function_body_t), intent(out) :: selected_body
+        character(len=:), allocatable, intent(out), optional :: message
+
+        call reset_body(selected_body)
+        call clear_message(message)
+        valid = .false.
+        if (.not. mir_validate_function_body(body, message)) return
+        selected_body = body
+        valid = .true.
+    end function mir_function_body_at
 
     logical function mir_function_block_at(body, block_index, first_instruction, &
             instruction_count, message) result(valid)
