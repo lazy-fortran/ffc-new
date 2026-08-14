@@ -28,6 +28,10 @@ name = "mir_result_kind_query"
 source-dir = "test"
 
 [[test]]
+name = "mir_opcode_count_query"
+source-dir = "test"
+
+[[test]]
 name = "mir_result_id_query"
 source-dir = "test"
 

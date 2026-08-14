@@ -53,6 +53,7 @@ module ffc_mir
     public :: mir_validate_function_body
     public :: mir_function_instruction_at
     public :: mir_function_instruction_opcode_at
+    public :: mir_function_opcode_count_at
     public :: mir_function_instruction_result_id_at
     public :: mir_function_instruction_result_kind_at
     public :: mir_function_instruction_result_type_at
@@ -245,6 +246,35 @@ contains
         if (.not. valid) return
         opcode = instruction%opcode
     end function mir_function_instruction_opcode_at
+
+    logical function mir_function_opcode_count_at(body, opcode, count, message) &
+            result(valid)
+        type(mir_function_body_t), intent(in) :: body
+        integer(int32), intent(in) :: opcode
+        integer(int32), intent(out) :: count
+        character(len=:), allocatable, intent(out), optional :: message
+
+        integer(int32) :: index
+        integer(int32) :: instruction_opcode
+
+        count = 0_int32
+        call clear_message(message)
+        valid = .false.
+        if (opcode < opcode_add .or. opcode > opcode_return) then
+            call set_message(message, "opcode is outside mir-v0")
+            return
+        end if
+        if (.not. mir_validate_function_body(body, message)) return
+        do index = 0_int32, body%function%instruction_count - 1_int32
+            if (.not. mir_function_instruction_opcode_at(body, index, instruction_opcode, &
+                message)) then
+                count = 0_int32
+                return
+            end if
+            if (instruction_opcode == opcode) count = count + 1_int32
+        end do
+        valid = .true.
+    end function mir_function_opcode_count_at
 
     logical function mir_function_instruction_result_id_at(body, index, result_id, message) &
             result(valid)
