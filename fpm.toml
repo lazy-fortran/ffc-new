@@ -28,5 +28,9 @@ name = "mir_result_kind_query"
 source-dir = "test"
 
 [[test]]
+name = "mir_source_rule_query"
+source-dir = "test"
+
+[[test]]
 name = "mir_frontend_handoff"
 source-dir = "test"
