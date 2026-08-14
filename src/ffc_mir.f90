@@ -54,6 +54,7 @@ module ffc_mir
     public :: mir_function_instruction_at
     public :: mir_function_instruction_opcode_at
     public :: mir_function_instruction_result_kind_at
+    public :: mir_function_instruction_result_type_at
     public :: mir_function_instruction_source_rule_at
     public :: mir_function_at
     public :: mir_function_body_at
@@ -259,6 +260,22 @@ contains
         if (.not. valid) return
         kind = instruction%result%kind
     end function mir_function_instruction_result_kind_at
+
+    logical function mir_function_instruction_result_type_at(body, index, type_name, &
+            message) result(valid)
+        type(mir_function_body_t), intent(in) :: body
+        integer(int32), intent(in) :: index
+        character(len=:), allocatable, intent(out) :: type_name
+        character(len=:), allocatable, intent(out), optional :: message
+
+        type(mir_instruction_t) :: instruction
+
+        type_name = ''
+        call clear_message(message)
+        valid = mir_function_instruction_at(body, index, instruction, message)
+        if (.not. valid) return
+        type_name = instruction%result%type_name
+    end function mir_function_instruction_result_type_at
 
     logical function mir_function_instruction_source_rule_at(body, index, source_rule, message) &
             result(valid)
