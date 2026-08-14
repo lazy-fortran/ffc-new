@@ -55,6 +55,7 @@ module ffc_mir
     public :: mir_function_instruction_opcode_at
     public :: mir_function_instruction_result_kind_at
     public :: mir_function_instruction_source_rule_at
+    public :: mir_function_at
     public :: mir_function_block_at
     public :: mir_validate_function_witness
     public :: mir_validate_value
@@ -271,6 +272,26 @@ contains
         if (.not. valid) return
         source_rule = instruction%source_rule
     end function mir_function_instruction_source_rule_at
+
+    logical function mir_function_at(body, name, entry_block, instruction_count, message) &
+            result(valid)
+        type(mir_function_body_t), intent(in) :: body
+        character(len=:), allocatable, intent(out) :: name
+        integer(int32), intent(out) :: entry_block
+        integer(int32), intent(out) :: instruction_count
+        character(len=:), allocatable, intent(out), optional :: message
+
+        name = ''
+        entry_block = 0_int32
+        instruction_count = 0_int32
+        call clear_message(message)
+        valid = .false.
+        if (.not. mir_validate_function_body(body, message)) return
+        name = body%function%name
+        entry_block = body%function%entry_block
+        instruction_count = body%function%instruction_count
+        valid = .true.
+    end function mir_function_at
 
     logical function mir_function_block_at(body, block_index, first_instruction, &
             instruction_count, message) result(valid)
