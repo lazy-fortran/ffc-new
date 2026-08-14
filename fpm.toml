@@ -18,3 +18,7 @@ source-dir = "test"
 [[test]]
 name = "program_declaration_bridge"
 source-dir = "test"
+
+[[test]]
+name = "mir_typed_sx"
+source-dir = "test"

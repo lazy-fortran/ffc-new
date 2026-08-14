@@ -83,8 +83,10 @@ program test_mir_v0
     call assert_true(ok, "valid function witness was not serialized")
     call assert_equal(trim(serialized), &
         '(mir-function (name main) (entry-block 0) (instruction-count 2) '// &
-        '(instructions (instruction (id 0) (opcode add) (source-rule expr/add)) '// &
-        '(instruction (id 1) (opcode return) (source-rule stmt/return))))', &
+        '(instructions (instruction (id 0) (opcode add) (source-rule expr/add) '// &
+        '(result (id 1) (kind integer) (type i32))) '// &
+        '(instruction (id 1) (opcode return) (source-rule stmt/return) '// &
+        '(result (id 1) (kind integer) (type i32)))))', &
         "function witness SX is not canonical")
 
     call mir_function_witness_from_sx(serialized, body, ok, message)
@@ -94,13 +96,15 @@ program test_mir_v0
 
     call mir_function_witness_from_sx('(mir-function (name main) '// &
         '(entry-block 0) (instruction-count 2) (instructions '// &
-        '(instruction (id 0) (opcode return) (source-rule stmt/return))))', &
+        '(instruction (id 0) (opcode return) (source-rule stmt/return) '// &
+        '(result (id 1) (kind integer) (type i32)))))', &
         body, ok, message)
     call assert_false(ok, "count-inconsistent SX was accepted")
 
     call mir_function_witness_from_sx('(mir-function (name main) '// &
         '(entry-block 0) (instruction-count 1) (instructions '// &
-        '(instruction (id 0) (opcode bogus) (source-rule stmt/return))))', &
+        '(instruction (id 0) (opcode bogus) (source-rule stmt/return) '// &
+        '(result (id 1) (kind integer) (type i32)))))', &
         body, ok, message)
     call assert_false(ok, "malformed opcode SX was accepted")
 

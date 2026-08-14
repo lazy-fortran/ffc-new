@@ -223,8 +223,8 @@ contains
         logical, intent(out) :: ok
         character(len=:), allocatable, intent(out) :: message
 
-        character(len=32) :: count_text, id_text
-        character(len=32) :: opcode_text
+        character(len=32) :: count_text, id_text, result_id_text
+        character(len=32) :: opcode_text, result_kind_text
         character(len=:), allocatable :: canonical
         integer :: index
 
@@ -239,10 +239,15 @@ contains
             '(instruction-count '//trim(count_text)//') (instructions'
         do index = 1, size(body%instructions)
             write (id_text, '(i0)') body%instructions(index)%id
+            write (result_id_text, '(i0)') body%instructions(index)%result%id
             opcode_text = mir_opcode_name(body%instructions(index)%opcode)
+            result_kind_text = mir_value_kind_name(body%instructions(index)%result%kind)
             canonical = trim(canonical)//' (instruction (id '//trim(id_text)//') '// &
                 '(opcode '//trim(opcode_text)//') (source-rule '// &
-                trim(body%instructions(index)%source_rule)//'))'
+                trim(body%instructions(index)%source_rule)//') (result (id '// &
+                trim(result_id_text)//') (kind '//trim(result_kind_text)//') (type '// &
+                trim(body%instructions(index)%result%type_name)// &
+                ')))'
         end do
         canonical = trim(canonical)//'))'
         if (len_trim(canonical) > len(output)) then
@@ -521,11 +526,61 @@ contains
         ok = read_named_atom(token, token_count, position, 'source-rule', &
             instruction%source_rule, message)
         if (.not. ok) return
-        instruction%result%id = 0_int32
-        instruction%result%kind = value_kind_integer
-        instruction%result%type_name = 'i32'
+        ok = read_value(token, token_count, position, instruction%result, message)
+        if (.not. ok) return
         ok = expect_token(token, token_count, position, ')', message)
     end function read_instruction
+
+    logical function read_value(token, token_count, position, value, message) result(ok)
+        character(len=*), intent(in) :: token(:)
+        integer, intent(in) :: token_count
+        integer, intent(inout) :: position
+        type(mir_value_t), intent(out) :: value
+        character(len=*), intent(out) :: message
+        character(len=:), allocatable :: kind_name
+
+        ok = expect_token(token, token_count, position, '(', message)
+        if (.not. ok) return
+        ok = expect_token(token, token_count, position, 'result', message)
+        if (.not. ok) return
+        ok = read_named_integer(token, token_count, position, 'id', value%id, message)
+        if (.not. ok) return
+        ok = read_named_atom(token, token_count, position, 'kind', kind_name, message)
+        if (.not. ok) return
+        value%kind = mir_value_kind_value(kind_name)
+        if (value%kind == 0_int32) then
+            message = 'unknown mir-v0 value kind'
+            ok = .false.
+            return
+        end if
+        ok = read_named_atom(token, token_count, position, 'type', value%type_name, message)
+        if (.not. ok) return
+        ok = expect_token(token, token_count, position, ')', message)
+    end function read_value
+
+    character(len=32) function mir_value_kind_name(kind)
+        integer(int32), intent(in) :: kind
+
+        select case (kind)
+        case (value_kind_integer); mir_value_kind_name = 'integer'
+        case (value_kind_real); mir_value_kind_name = 'real'
+        case (value_kind_logical); mir_value_kind_name = 'logical'
+        case (value_kind_address); mir_value_kind_name = 'address'
+        case default; mir_value_kind_name = ''
+        end select
+    end function mir_value_kind_name
+
+    integer(int32) function mir_value_kind_value(name)
+        character(len=*), intent(in) :: name
+
+        select case (trim(name))
+        case ('integer'); mir_value_kind_value = value_kind_integer
+        case ('real'); mir_value_kind_value = value_kind_real
+        case ('logical'); mir_value_kind_value = value_kind_logical
+        case ('address'); mir_value_kind_value = value_kind_address
+        case default; mir_value_kind_value = 0_int32
+        end select
+    end function mir_value_kind_value
 
     subroutine reset_body(body)
         type(mir_function_body_t), intent(out) :: body
