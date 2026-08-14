@@ -47,6 +47,15 @@ module ffc_mir
         type(mir_instruction_t), allocatable :: instructions(:)
     end type mir_function_body_t
 
+    type, public :: mir_block_range_t
+        integer(int32) :: first_instruction = 0_int32
+        integer(int32) :: instruction_count = 0_int32
+    end type mir_block_range_t
+
+    type, public :: mir_block_table_t
+        type(mir_block_range_t), allocatable :: ranges(:)
+    end type mir_block_table_t
+
     public :: mir_make_function_witness
     public :: mir_function_body_to_sx
     public :: mir_function_body_from_sx
@@ -67,6 +76,9 @@ module ffc_mir
     public :: mir_function_block_at
     public :: mir_function_block_instruction_at
     public :: mir_function_block_count_at
+    public :: mir_make_function_block_table
+    public :: mir_validate_function_block_table
+    public :: mir_function_block_table_range_at
     public :: mir_validate_function_witness
     public :: mir_validate_value
     public :: mir_validate_instruction
@@ -481,6 +493,86 @@ contains
         block_count = 1_int32
         valid = .true.
     end function mir_function_block_count_at
+
+    logical function mir_make_function_block_table(body, table, message) result(valid)
+        type(mir_function_body_t), intent(in) :: body
+        type(mir_block_table_t), intent(out) :: table
+        character(len=:), allocatable, intent(out), optional :: message
+
+        call reset_block_table(table)
+        call clear_message(message)
+        valid = .false.
+        if (.not. mir_validate_function_body(body, message)) return
+        allocate (table%ranges(1))
+        table%ranges(1)%first_instruction = 0_int32
+        table%ranges(1)%instruction_count = body%function%instruction_count
+        valid = .true.
+    end function mir_make_function_block_table
+
+    logical function mir_validate_function_block_table(body, table, message) result(valid)
+        type(mir_function_body_t), intent(in) :: body
+        type(mir_block_table_t), intent(in) :: table
+        character(len=:), allocatable, intent(out), optional :: message
+
+        integer(int32) :: index
+        integer(int32) :: expected_first
+
+        call clear_message(message)
+        valid = .false.
+        if (.not. mir_validate_function_body(body, message)) return
+        if (.not. allocated(table%ranges)) then
+            call set_message(message, "block table ranges must be allocated")
+            return
+        end if
+        if (size(table%ranges) < 1) then
+            call set_message(message, "block table must contain at least one range")
+            return
+        end if
+        expected_first = 0_int32
+        do index = 1, int(size(table%ranges), int32)
+            if (table%ranges(index)%first_instruction /= expected_first) then
+                call set_message(message, "block table ranges are not contiguous")
+                return
+            end if
+            if (table%ranges(index)%instruction_count < 0_int32) then
+                call set_message(message, "block range instruction count must be non-negative")
+                return
+            end if
+            expected_first = expected_first + table%ranges(index)%instruction_count
+        end do
+        if (expected_first /= body%function%instruction_count) then
+            call set_message(message, "block table does not cover function body")
+            return
+        end if
+        valid = .true.
+    end function mir_validate_function_block_table
+
+    logical function mir_function_block_table_range_at(body, table, block_index, &
+            first_instruction, instruction_count, message) result(valid)
+        type(mir_function_body_t), intent(in) :: body
+        type(mir_block_table_t), intent(in) :: table
+        integer(int32), intent(in) :: block_index
+        integer(int32), intent(out) :: first_instruction
+        integer(int32), intent(out) :: instruction_count
+        character(len=:), allocatable, intent(out), optional :: message
+
+        first_instruction = 0_int32
+        instruction_count = 0_int32
+        call clear_message(message)
+        valid = .false.
+        if (.not. mir_validate_function_block_table(body, table, message)) return
+        if (block_index < 0_int32) then
+            call set_message(message, "block index must be non-negative")
+            return
+        end if
+        if (block_index >= int(size(table%ranges), int32)) then
+            call set_message(message, "block index is outside block table")
+            return
+        end if
+        first_instruction = table%ranges(block_index + 1_int32)%first_instruction
+        instruction_count = table%ranges(block_index + 1_int32)%instruction_count
+        valid = .true.
+    end function mir_function_block_table_range_at
 
     logical function mir_validate_function_witness(body, message) result(valid)
         type(mir_function_body_t), intent(in) :: body
@@ -1000,6 +1092,12 @@ contains
         body%function%entry_block = 0_int32
         body%function%instruction_count = 0_int32
     end subroutine reset_body
+
+    subroutine reset_block_table(table)
+        type(mir_block_table_t), intent(out) :: table
+
+        if (allocated(table%ranges)) deallocate (table%ranges)
+    end subroutine reset_block_table
 
     subroutine clear_message(message)
         character(len=:), allocatable, intent(out), optional :: message
