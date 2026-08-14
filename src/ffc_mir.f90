@@ -77,6 +77,7 @@ module ffc_mir
     public :: mir_function_block_instruction_at
     public :: mir_function_block_count_at
     public :: mir_make_function_block_table
+    public :: mir_make_function_block_table_from_lengths
     public :: mir_validate_function_block_table
     public :: mir_function_block_table_range_at
     public :: mir_validate_function_witness
@@ -508,6 +509,57 @@ contains
         table%ranges(1)%instruction_count = body%function%instruction_count
         valid = .true.
     end function mir_make_function_block_table
+
+    logical function mir_make_function_block_table_from_lengths(body, block_instruction_counts, &
+            table, message) result(valid)
+        type(mir_function_body_t), intent(in) :: body
+        integer(int32), intent(in) :: block_instruction_counts(:)
+        type(mir_block_table_t), intent(out) :: table
+        character(len=:), allocatable, intent(out), optional :: message
+
+        type(mir_block_range_t), allocatable :: ranges(:)
+        integer :: allocation_status
+        integer(int32) :: index
+        integer(int32) :: first_instruction
+
+        call reset_block_table(table)
+        call clear_message(message)
+        valid = .false.
+        if (.not. mir_validate_function_body(body, message)) return
+        if (size(block_instruction_counts) < 1) then
+            call set_message(message, "block partition must contain at least one block")
+            return
+        end if
+        allocate (ranges(size(block_instruction_counts)), stat=allocation_status)
+        if (allocation_status /= 0) then
+            call set_message(message, "block table allocation failed")
+            return
+        end if
+        first_instruction = 0_int32
+        do index = 1, int(size(block_instruction_counts), int32)
+            if (block_instruction_counts(index) <= 0_int32) then
+                call set_message(message, "block instruction count must be positive")
+                deallocate (ranges)
+                return
+            end if
+            if (block_instruction_counts(index) > body%function%instruction_count - &
+                first_instruction) then
+                call set_message(message, "block partition exceeds function body")
+                deallocate (ranges)
+                return
+            end if
+            ranges(index)%first_instruction = first_instruction
+            ranges(index)%instruction_count = block_instruction_counts(index)
+            first_instruction = first_instruction + block_instruction_counts(index)
+        end do
+        if (first_instruction /= body%function%instruction_count) then
+            call set_message(message, "block partition does not cover function body")
+            deallocate (ranges)
+            return
+        end if
+        call move_alloc(ranges, table%ranges)
+        valid = .true.
+    end function mir_make_function_block_table_from_lengths
 
     logical function mir_validate_function_block_table(body, table, message) result(valid)
         type(mir_function_body_t), intent(in) :: body
