@@ -32,6 +32,10 @@ name = "mir_opcode_count_query"
 source-dir = "test"
 
 [[test]]
+name = "mir_opcode_histogram"
+source-dir = "test"
+
+[[test]]
 name = "mir_instruction_count_query"
 source-dir = "test"
 

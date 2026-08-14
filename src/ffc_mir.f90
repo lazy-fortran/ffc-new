@@ -18,6 +18,8 @@ module ffc_mir
     integer(int32), parameter, public :: opcode_branch = 8_int32
     integer(int32), parameter, public :: opcode_call = 9_int32
     integer(int32), parameter, public :: opcode_return = 10_int32
+    integer(int32), parameter, public :: mir_opcode_histogram_size = &
+        opcode_return - opcode_add + 1_int32
 
     integer(int32), parameter :: mir_witness_max_instructions = 2_int32
 
@@ -55,6 +57,7 @@ module ffc_mir
     public :: mir_function_instruction_opcode_at
     public :: mir_function_instruction_count_at
     public :: mir_function_opcode_count_at
+    public :: mir_function_opcode_histogram_at
     public :: mir_function_instruction_result_id_at
     public :: mir_function_instruction_result_kind_at
     public :: mir_function_instruction_result_type_at
@@ -289,6 +292,29 @@ contains
         end do
         valid = .true.
     end function mir_function_opcode_count_at
+
+    logical function mir_function_opcode_histogram_at(body, histogram, total, message) &
+            result(valid)
+        type(mir_function_body_t), intent(in) :: body
+        integer(int32), intent(out) :: histogram(mir_opcode_histogram_size)
+        integer(int32), intent(out) :: total
+        character(len=:), allocatable, intent(out), optional :: message
+
+        integer(int32) :: index
+        integer(int32) :: opcode
+
+        histogram = 0_int32
+        total = 0_int32
+        call clear_message(message)
+        valid = .false.
+        if (.not. mir_validate_function_body(body, message)) return
+        do index = 1, int(size(body%instructions), int32)
+            opcode = body%instructions(index)%opcode
+            histogram(opcode) = histogram(opcode) + 1_int32
+            total = total + 1_int32
+        end do
+        valid = .true.
+    end function mir_function_opcode_histogram_at
 
     logical function mir_function_instruction_result_id_at(body, index, result_id, message) &
             result(valid)
