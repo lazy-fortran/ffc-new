@@ -4,16 +4,19 @@ program test_mir_v0
         mir_value_t, mir_make_function_witness, mir_validate_function, &
         mir_validate_function_body, mir_validate_function_witness, &
         mir_validate_instruction, mir_validate_value, &
+        mir_function_instruction_at, &
         mir_function_witness_to_sx, mir_function_witness_from_sx, &
         opcode_add, opcode_return, value_kind_integer
     implicit none
 
     type(mir_value_t) :: value
     type(mir_instruction_t) :: instruction
+    type(mir_instruction_t) :: selected_instruction
     type(mir_function_t) :: function
     type(mir_function_body_t) :: body
     character(len=:), allocatable :: message
     character(len=1024) :: serialized
+    character(len=1024) :: roundtrip
     logical :: ok
 
     value%id = 1_int32
@@ -93,6 +96,44 @@ program test_mir_v0
     call assert_true(ok, "function witness SX did not round-trip: "//trim(message))
     call assert_true(mir_validate_function_witness(body, message), &
         "round-tripped function witness is invalid")
+
+    call mir_function_witness_to_sx(body, roundtrip, ok, message)
+    call assert_true(ok, "round-tripped function witness was not serializable")
+    call assert_equal(trim(roundtrip), trim(serialized), &
+        "function witness SX round-trip is not canonical")
+
+    call assert_true(mir_function_instruction_at(body, 0_int32, selected_instruction, &
+        message), &
+        "round-tripped first instruction was not accessible")
+    call assert_true(selected_instruction%opcode == opcode_add, &
+        "round-tripped first instruction opcode changed")
+    call assert_equal(selected_instruction%source_rule, "expr/add", &
+        "round-tripped first instruction source rule changed")
+
+    call assert_true(mir_function_instruction_at(body, 1_int32, selected_instruction, &
+        message), &
+        "round-tripped second instruction was not accessible")
+    call assert_true(selected_instruction%opcode == opcode_return, &
+        "round-tripped second instruction opcode changed")
+
+    call assert_false(mir_function_instruction_at(body, -1_int32, selected_instruction, &
+        message), &
+        "negative instruction index was accepted")
+    call assert_equal(message, "instruction index must be non-negative", &
+        "negative instruction index diagnostic")
+
+    call assert_false(mir_function_instruction_at(body, 2_int32, selected_instruction, &
+        message), &
+        "out-of-range instruction index was accepted")
+    call assert_equal(message, "instruction index is outside function body", &
+        "out-of-range instruction index diagnostic")
+
+    body%function%instruction_count = 1_int32
+    call assert_false(mir_function_instruction_at(body, 0_int32, selected_instruction, &
+        message), &
+        "inconsistent function body was accepted by accessor")
+    call assert_equal(message, "function instruction count does not match body", &
+        "inconsistent function body diagnostic")
 
     call mir_function_witness_from_sx('(mir-function (name main) '// &
         '(entry-block 0) (instruction-count 2) (instructions '// &

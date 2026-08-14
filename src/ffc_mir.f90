@@ -49,6 +49,7 @@ module ffc_mir
     public :: mir_function_witness_to_sx
     public :: mir_function_witness_from_sx
     public :: mir_validate_function_body
+    public :: mir_function_instruction_at
     public :: mir_validate_function_witness
     public :: mir_validate_value
     public :: mir_validate_instruction
@@ -190,6 +191,32 @@ contains
         end do
         valid = .true.
     end function mir_validate_function_body
+
+    logical function mir_function_instruction_at(body, index, instruction, message) &
+            result(valid)
+        type(mir_function_body_t), intent(in) :: body
+        integer(int32), intent(in) :: index
+        type(mir_instruction_t), intent(out) :: instruction
+        character(len=:), allocatable, intent(out), optional :: message
+
+        instruction%id = 0_int32
+        instruction%opcode = 0_int32
+        instruction%result%id = 0_int32
+        instruction%result%kind = 0_int32
+        call clear_message(message)
+        valid = .false.
+        if (.not. mir_validate_function_body(body, message)) return
+        if (index < 0_int32) then
+            call set_message(message, "instruction index must be non-negative")
+            return
+        end if
+        if (index >= body%function%instruction_count) then
+            call set_message(message, "instruction index is outside function body")
+            return
+        end if
+        instruction = body%instructions(index + 1_int32)
+        valid = .true.
+    end function mir_function_instruction_at
 
     logical function mir_validate_function_witness(body, message) result(valid)
         type(mir_function_body_t), intent(in) :: body
