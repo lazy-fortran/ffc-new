@@ -53,6 +53,7 @@ module ffc_mir
     public :: mir_validate_function_body
     public :: mir_function_instruction_at
     public :: mir_function_instruction_opcode_at
+    public :: mir_function_instruction_result_id_at
     public :: mir_function_instruction_result_kind_at
     public :: mir_function_instruction_result_type_at
     public :: mir_function_instruction_source_rule_at
@@ -244,6 +245,22 @@ contains
         if (.not. valid) return
         opcode = instruction%opcode
     end function mir_function_instruction_opcode_at
+
+    logical function mir_function_instruction_result_id_at(body, index, result_id, message) &
+            result(valid)
+        type(mir_function_body_t), intent(in) :: body
+        integer(int32), intent(in) :: index
+        integer(int32), intent(out) :: result_id
+        character(len=:), allocatable, intent(out), optional :: message
+
+        type(mir_instruction_t) :: instruction
+
+        result_id = 0_int32
+        call clear_message(message)
+        valid = mir_function_instruction_at(body, index, instruction, message)
+        if (.not. valid) return
+        result_id = instruction%result%id
+    end function mir_function_instruction_result_id_at
 
     logical function mir_function_instruction_result_kind_at(body, index, kind, message) &
             result(valid)
