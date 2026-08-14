@@ -41,6 +41,20 @@ program test_mir_typed_sx
         '(result (id 1) (kind integer) (type i32)))))', body, ok, message)
     call assert_false(ok, 'unknown result kind was accepted')
 
+    call mir_make_function_witness(body)
+    body%instructions(1)%result%type_name = 'f 64'
+    call mir_function_witness_to_sx(body, serialized, ok, message)
+    call assert_false(ok, 'an SX-delimited type name was serialized')
+    call assert_equal(message, 'value type name is not a valid SX atom', &
+        'wrong invalid type-name diagnostic')
+
+    call mir_make_function_witness(body)
+    body%instructions(1)%source_rule = 'expr(add)'
+    call mir_function_witness_to_sx(body, serialized, ok, message)
+    call assert_false(ok, 'an SX-delimited source rule was serialized')
+    call assert_equal(message, 'instruction source rule is not a valid SX atom', &
+        'wrong invalid source-rule diagnostic')
+
 contains
 
     subroutine assert_true(condition, description)

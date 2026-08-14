@@ -78,6 +78,10 @@ contains
             call set_message(message, "value type name must be non-empty")
             return
         end if
+        if (.not. mir_is_sx_atom(value%type_name)) then
+            call set_message(message, "value type name is not a valid SX atom")
+            return
+        end if
         valid = .true.
     end function mir_validate_value
 
@@ -104,6 +108,10 @@ contains
             call set_message(message, "instruction source rule must be non-empty")
             return
         end if
+        if (.not. mir_is_sx_atom(instruction%source_rule)) then
+            call set_message(message, "instruction source rule is not a valid SX atom")
+            return
+        end if
         valid = .true.
     end function mir_validate_instruction
 
@@ -119,6 +127,10 @@ contains
         end if
         if (len_trim(function%name) == 0) then
             call set_message(message, "function name must be non-empty")
+            return
+        end if
+        if (.not. mir_is_sx_atom(function%name)) then
+            call set_message(message, "function name is not a valid SX atom")
             return
         end if
         if (function%entry_block < 0_int32) then
@@ -216,6 +228,21 @@ contains
         end if
         valid = .true.
     end function mir_validate_function_witness
+
+    logical function mir_is_sx_atom(value) result(valid)
+        character(len=*), intent(in) :: value
+        integer :: position
+
+        valid = len(value) > 0
+        if (.not. valid) return
+        do position = 1, len(value)
+            if (index(' '//char(9)//char(10)//char(13)//'()', &
+                value(position:position)) > 0) then
+                valid = .false.
+                return
+            end if
+        end do
+    end function mir_is_sx_atom
 
     subroutine mir_function_witness_to_sx(body, output, ok, message)
         type(mir_function_body_t), intent(in) :: body
