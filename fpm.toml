@@ -22,3 +22,7 @@ source-dir = "test"
 [[test]]
 name = "mir_typed_sx"
 source-dir = "test"
+
+[[test]]
+name = "mir_result_kind_query"
+source-dir = "test"
