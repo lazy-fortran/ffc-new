@@ -59,6 +59,7 @@ module ffc_mir
     public :: mir_make_function_witness
     public :: mir_function_body_to_sx
     public :: mir_function_body_from_sx
+    public :: mir_function_body_sx_size
     public :: mir_function_witness_to_sx
     public :: mir_function_witness_from_sx
     public :: mir_validate_function_body
@@ -696,6 +697,41 @@ contains
 
         call write_function_sx(body, output, ok, message, .false.)
     end subroutine mir_function_body_to_sx
+
+    logical function mir_function_body_sx_size(body, size, message) result(valid)
+        type(mir_function_body_t), intent(in) :: body
+        integer(int32), intent(out) :: size
+        character(len=:), allocatable, intent(out), optional :: message
+
+        character(len=32) :: id_text, result_id_text
+        character(len=32) :: opcode_text, result_kind_text
+        integer(int32) :: index
+
+        size = 0_int32
+        call clear_message(message)
+        valid = .false.
+        if (.not. mir_validate_function_body(body, message)) return
+
+        size = int(len('(mir-function (name ') + len_trim(body%function%name) + &
+            len(') (entry-block ') + len_trim(itoa(body%function%entry_block)) + &
+            len(') (instruction-count ') + &
+            len_trim(itoa(body%function%instruction_count)) + len(') (instructions'), int32)
+        do index = 1, body%function%instruction_count
+            write (id_text, '(i0)') body%instructions(index)%id
+            write (result_id_text, '(i0)') body%instructions(index)%result%id
+            opcode_text = mir_opcode_name(body%instructions(index)%opcode)
+            result_kind_text = mir_value_kind_name(body%instructions(index)%result%kind)
+            size = size + int(len(' (instruction (id ') + len_trim(id_text) + &
+                len(') (opcode ') + len_trim(opcode_text) + &
+                len(') (source-rule ') + len_trim(body%instructions(index)%source_rule) + &
+                len(') (result (id ') + len_trim(result_id_text) + &
+                len(') (kind ') + len_trim(result_kind_text) + &
+                len(') (type ') + &
+                len_trim(body%instructions(index)%result%type_name) + len(')))'), int32)
+        end do
+        size = size + int(len('))'), int32)
+        valid = .true.
+    end function mir_function_body_sx_size
 
     subroutine write_function_sx(body, output, ok, message, witness)
         type(mir_function_body_t), intent(in) :: body
