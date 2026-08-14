@@ -1,24 +1,22 @@
 program test_mir_frontend_handoff
-    use, intrinsic :: iso_fortran_env, only: int32, int64
-    use ffc_lowering, only: frontend_root_kind_program, frontend_status_accepted, &
-        frontend_v0_input_t, ffc_lower_frontend_v0
+    use, intrinsic :: iso_fortran_env, only: int32
+    use ffc_lowering, only: ffc_lower_frontend_v0_from_sx
     use ffc_mir, only: mir_function_body_from_sx, mir_function_body_to_sx, &
         mir_function_body_t, mir_function_instruction_opcode_at, &
         mir_function_instruction_result_kind_at, mir_validate_function_body, &
         opcode_add, opcode_return, value_kind_integer
     implicit none
 
-    type(frontend_v0_input_t) :: input
     type(mir_function_body_t) :: body
     character(len=4096) :: serialized
+    character(len=4096) :: roundtrip
     character(len=:), allocatable :: message
     integer(int32) :: opcode, kind
     logical :: ok
 
-    input%status = frontend_status_accepted
-    input%root_kind = frontend_root_kind_program
-    input%diagnostic_count = 0_int64
-    call assert_true(ffc_lower_frontend_v0(input, body, message), &
+    call assert_true(ffc_lower_frontend_v0_from_sx( &
+        '(frontend-result (status accepted) (root-kind program) '// &
+        '(diagnostic-count 0))', body, message), &
         'validated frontend handoff was rejected')
     call mir_function_body_to_sx(body, serialized, ok, message)
     call assert_true(ok, 'validated frontend handoff was not exported')
@@ -43,6 +41,15 @@ program test_mir_frontend_handoff
     call assert_true(opcode == opcode_return, 'imported return opcode changed')
     call assert_equal(body%instructions(2)%source_rule, 'frontend-v0/program', &
         'imported return source identity changed')
+    call mir_function_body_to_sx(body, roundtrip, ok, message)
+    call assert_true(ok, 'imported frontend MIR handoff was not re-exported')
+    call assert_equal(roundtrip, serialized, 'frontend MIR handoff was not canonical')
+
+    call assert_frontend_rejected('(frontend-result (status acceptedx) '// &
+        '(root-kind program) (diagnostic-count 0))', 'malformed-sx-record')
+    call assert_frontend_rejected('(frontend-result (status accepted) '// &
+        '(root-kind program) (diagnostic-count 0) (extra x))', &
+        'malformed-sx-record')
 
     call assert_rejected('(mir-function (name main) (entry-block 0) '// &
         '(instruction-count 1) (instructions '// &
@@ -83,6 +90,15 @@ contains
         call assert_false(ok, 'malformed MIR handoff was accepted')
         call assert_equal(message, expected_message, 'malformed MIR diagnostic changed')
     end subroutine assert_rejected
+
+    subroutine assert_frontend_rejected(input_text, expected_message)
+        character(len=*), intent(in) :: input_text, expected_message
+
+        call assert_false(ffc_lower_frontend_v0_from_sx(input_text, body, message), &
+            'incompatible frontend handoff was accepted')
+        call assert_equal(message, expected_message, &
+            'incompatible frontend handoff diagnostic changed')
+    end subroutine assert_frontend_rejected
 
     subroutine assert_true(condition, description)
         logical, intent(in) :: condition

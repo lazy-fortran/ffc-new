@@ -757,6 +757,11 @@ contains
             ok = .false.
             return
         end if
+        if (len_trim(token(position)) > len(value)) then
+            call set_message(message, 'malformed-sx-record')
+            ok = .false.
+            return
+        end if
         value = token(position)
         position = position + 1
         ok = expect_frontend_token(token, token_count, position, ')', message)
