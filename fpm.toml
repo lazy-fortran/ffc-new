@@ -103,3 +103,7 @@ source-dir = "test"
 [[test]]
 name = "frontend_mir_cli"
 source-dir = "test"
+
+[[test]]
+name = "dispatch_l2_mir_trace"
+source-dir = "test"
