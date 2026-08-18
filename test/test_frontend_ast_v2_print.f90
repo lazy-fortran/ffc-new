@@ -3,7 +3,8 @@ program test_frontend_ast_v2_print
     use ffc_frontend_ast, only: ffc_lower_frontend_ast_v2_from_sx, &
         ffc_validate_frontend_ast_v2_print_7_shape, &
         ffc_validate_frontend_ast_v2_print_7_8_shape, &
-        ffc_validate_frontend_ast_v2_print_7_8_9_shape
+        ffc_validate_frontend_ast_v2_print_7_8_9_shape, &
+        ffc_validate_frontend_ast_v2_print_7_8_9_10_shape
     use ffc_mir, only: mir_function_body_t, mir_validate_function_body, opcode_const, &
         opcode_output, opcode_return
     implicit none
@@ -72,6 +73,36 @@ program test_frontend_ast_v2_print
         replace_text(envelope_three_sx(), '(print-stmt ', '(write-stmt '), body, message), &
         'WRITE three-item mutation was accepted')
 
+    call assert_true(ffc_lower_frontend_ast_v2_from_sx(envelope_four_sx(), body, message), &
+        'PRINT star 7, 8, 9, 10 envelope was rejected')
+    call assert_true(ffc_validate_frontend_ast_v2_print_7_8_9_10_shape(body, message), &
+        'PRINT 7, 8, 9, 10 MIR shape was rejected')
+    call assert_equal(body%instructions(1)%opcode, opcode_const, 'fourth-route first const changed')
+    call assert_equal(body%instructions(2)%opcode, opcode_output, 'fourth-route first output missing')
+    call assert_equal(body%instructions(3)%opcode, opcode_const, 'fourth-route second const changed')
+    call assert_equal(body%instructions(4)%opcode, opcode_output, 'fourth-route second output missing')
+    call assert_equal(body%instructions(5)%opcode, opcode_const, 'fourth-route third const changed')
+    call assert_equal(body%instructions(6)%opcode, opcode_output, 'fourth-route third output missing')
+    call assert_equal(body%instructions(7)%opcode, opcode_const, 'fourth-route fourth const changed')
+    call assert_equal(body%instructions(8)%opcode, opcode_output, 'fourth-route fourth output missing')
+    call assert_equal(body%instructions(9)%opcode, opcode_return, 'fourth-route return changed')
+    call assert_equal(body%instructions(1)%literal_value, 7, 'fourth-route first literal changed')
+    call assert_equal(body%instructions(3)%literal_value, 8, 'fourth-route second literal changed')
+    call assert_equal(body%instructions(5)%literal_value, 9, 'fourth-route third literal changed')
+    call assert_equal(body%instructions(7)%literal_value, 10, 'fourth-route fourth literal changed')
+    call assert_true(.not. ffc_lower_frontend_ast_v2_from_sx(&
+        replace_text(envelope_four_sx(), '(output-value-4 10)', '(output-value-4 9)'), body, message), &
+        'PRINT wrong fourth item was accepted')
+    call assert_true(.not. ffc_lower_frontend_ast_v2_from_sx(&
+        replace_text(envelope_four_sx(), '(output-value-4 10)', '(output-value-4)'), body, message), &
+        'PRINT missing fourth item was accepted')
+    call assert_true(.not. ffc_lower_frontend_ast_v2_from_sx(&
+        replace_text(envelope_four_sx(), '(output-rule-4 R1217)', '(output-rule-4)'), body, message), &
+        'PRINT missing fourth rule was accepted')
+    call assert_true(.not. ffc_lower_frontend_ast_v2_from_sx(&
+        replace_text(envelope_four_sx(), '(print-stmt ', '(write-stmt '), body, message), &
+        'WRITE four-item mutation was accepted')
+
     write (*, '(a)') 'frontend AST v2 PRINT star 7 checks: ok'
 
 contains
@@ -126,6 +157,24 @@ contains
             '(statement-page 242) (format-page 244) (output-page 248) '// &
             '(source-hash print-test))))'
     end function envelope_three_sx
+
+    function envelope_four_sx() result(value)
+        character(len=4096) :: value
+
+        value = '(program-unit-v2 (root (program-root (name p) (span (source-span '// &
+            '(file main.f90) (start-byte 0) (end-byte 46) (source-hash print-test))))) '// &
+            '(declaration-count 0) (declaration) (variable-count 0) (variable) '// &
+            '(execution-part (print-stmt (format-kind default-char-expr) (format-value *) '// &
+            '(output-kind integer-literal) (output-value 7) (output-count 4) '// &
+            '(output-kind-2 integer-literal) (output-value-2 8) (output-rule-2 R1217) '// &
+            '(output-kind-3 integer-literal) (output-value-3 9) (output-rule-3 R1217) '// &
+            '(output-kind-4 integer-literal) (output-value-4 10) (output-rule-4 R1217) '// &
+            '(statement-rule R1212) (format-rule R1215) (output-rule R1217) '// &
+            '(source-document J3-24-007) (statement-clause 12.6.1) '// &
+            '(format-clause 12.6.2.2) (output-clause 12.6.3) '// &
+            '(statement-page 242) (format-page 244) (output-page 248) '// &
+            '(source-hash print-test))))'
+    end function envelope_four_sx
 
     function replace_text(value, old, new) result(replaced)
         character(len=*), intent(in) :: value, old, new
