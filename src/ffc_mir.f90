@@ -841,7 +841,7 @@ contains
         character(len=:), allocatable, intent(out) :: message
         logical, intent(in) :: witness
 
-        character(len=256) :: token(128)
+        character(len=256) :: token(256)
         integer :: token_count, position, index
         integer(int32) :: count
 

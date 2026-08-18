@@ -162,6 +162,10 @@ name = "frontend_ast_v2_print"
 source-dir = "test"
 
 [[test]]
+name = "frontend_ast_v2_print_generic_list"
+source-dir = "test"
+
+[[test]]
 name = "frontend_ast_v2_print_variable_expression"
 source-dir = "test"
 

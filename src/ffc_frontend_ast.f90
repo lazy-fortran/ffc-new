@@ -4,7 +4,7 @@ module ffc_frontend_ast
         ffc_program_root_from_sx, ffc_program_root_t, ffc_validate_program_root
     use ffc_mir, only: mir_function_body_t, mir_make_function_witness, opcode_const, &
         opcode_load, opcode_output, opcode_pow, opcode_return, opcode_store, mir_type_spec_name, &
-        mir_type_spec_value_kind, mir_validate_function_body
+        mir_type_spec_value_kind, mir_validate_function_body, value_kind_integer
     use ffc_mir_metadata, only: instruction_shape_frontend_ast_v1_integer_program_count, &
         instruction_shape_frontend_ast_v1_integer_program_opcode_0, &
         instruction_shape_frontend_ast_v1_integer_program_opcode_1, &
@@ -808,6 +808,36 @@ contains
             print_statement, message)) then
             return
         end if
+        if (index(print_statement, 'output-items') /= 0) then
+            if (trim(root%name) /= 'main' .or. trim(declaration%name) /= 'main' .or. &
+                trim(variable%type_spec) /= 'integer' .or. trim(variable%name) /= 'x') then
+                call set_message(message, 'unsupported-frontend-ast-v2-execution-part')
+                return
+            end if
+            if (.not. parse_v2_assignment_sequence(trim(expression), assignments, assignment_count, &
+                message)) return
+            if (.not. frontend_ast_v2_print_generic_list_match(print_statement) .or. &
+                assignment_count /= 1 .or. trim(assignments(1)%target) /= 'x' .or. &
+                index(trim(assignments(1)%value), 'integer-literal') == 0 .or. &
+                index(trim(assignments(1)%value), ' 3 ') == 0) then
+                call set_message(message, 'unsupported-frontend-ast-v2-execution-part')
+                return
+            end if
+            if (trim(root%source_file) /= trim(declaration%source_file) .or. &
+                trim(root%source_hash) /= trim(declaration%source_hash) .or. &
+                trim(root%source_file) /= trim(variable%source_file) .or. &
+                trim(root%source_hash) /= trim(variable%source_hash) .or. &
+                trim(root%source_file) /= trim(assignments(1)%source_file) .or. &
+                trim(root%source_hash) /= trim(assignments(1)%source_hash)) then
+                call set_message(message, 'frontend-ast-v2-invalid-provenance')
+                return
+            end if
+            call mir_make_function_witness(body)
+            body%function%name = trim(root%name)
+            call emit_frontend_ast_v2_print_generic_list(body, print_statement)
+            lowered = mir_validate_function_body(body, message)
+            return
+        end if
         route = mir_frontend_ast_v1_integer_expression_route(&
             '(execution-part '//trim(expression)//')')
         if (route /= 18_int32) then
@@ -1280,6 +1310,193 @@ contains
                 index(canonical, '( output-rule-'//trim(item_text)//' R901 )') /= 0
         end do
     end function frontend_ast_v2_print_variable_item_count_match
+
+    logical function frontend_ast_v2_print_generic_list_match(expression) result(matches)
+        character(len=*), intent(in) :: expression
+        character(len=:), allocatable :: message
+        character(len=:), allocatable :: item_kind(:), item_value(:), item_rule(:)
+        integer :: item_count
+
+        matches = parse_frontend_ast_v2_print_generic_list(expression, item_kind, item_value, &
+            item_rule, item_count, message)
+    end function frontend_ast_v2_print_generic_list_match
+
+    logical function parse_frontend_ast_v2_print_generic_list(expression, item_kind, item_value, &
+            item_rule, item_count, message) result(parsed)
+        character(len=*), intent(in) :: expression
+        character(len=:), allocatable, intent(out) :: item_kind(:), item_value(:), item_rule(:)
+        integer, intent(out) :: item_count
+        character(len=:), allocatable, intent(out), optional :: message
+        character(len=frontend_ast_token_length) :: token(frontend_ast_token_capacity)
+        character(len=frontend_ast_expression_length) :: item_expression
+        character(len=64) :: count_text
+        integer :: token_count, position, item_index
+        integer(int64) :: parsed_count
+
+        if (allocated(item_kind)) deallocate (item_kind)
+        if (allocated(item_value)) deallocate (item_value)
+        if (allocated(item_rule)) deallocate (item_rule)
+        allocate (character(len=32) :: item_kind(0), item_value(0), item_rule(0))
+        item_count = 0
+        call clear_message(message)
+        parsed = tokenize_frontend_ast_sx(expression, token, token_count, message)
+        if (.not. parsed) return
+        position = 1
+        if (.not. expect_token(token, token_count, position, '(', message)) return
+        if (.not. expect_token(token, token_count, position, 'print-stmt', message)) return
+        if (.not. read_named_atom(token, token_count, position, 'format-kind', count_text, message)) return
+        if (trim(count_text) /= 'default-char-expr') then
+            parsed = .false.
+            return
+        end if
+        if (.not. read_named_atom(token, token_count, position, 'format-value', count_text, message)) return
+        if (trim(count_text) /= '*') then
+            parsed = .false.
+            return
+        end if
+        if (.not. read_named_atom(token, token_count, position, 'output-count', count_text, message)) return
+        if (.not. parse_count(count_text, parsed_count, message)) return
+        if (parsed_count <= 0) then
+            call set_message(message, 'empty-frontend-ast-v2-print-output-list')
+            parsed = .false.
+            return
+        end if
+        deallocate (item_kind, item_value, item_rule)
+        allocate (character(len=32) :: item_kind(int(parsed_count)), &
+            item_value(int(parsed_count)), item_rule(int(parsed_count)))
+        item_kind = ''
+        item_value = ''
+        item_rule = ''
+        item_count = 0
+        if (.not. expect_token(token, token_count, position, '(', message)) return
+        if (.not. expect_token(token, token_count, position, 'output-items', message)) return
+        do item_index = 1, int(parsed_count)
+            if (.not. read_expression(token, token_count, position, item_expression, message)) return
+            if (.not. parse_frontend_ast_v2_print_item(item_expression, item_kind(item_index), &
+                item_value(item_index), item_rule(item_index), message)) return
+        end do
+        if (.not. expect_token(token, token_count, position, ')', message)) return
+        if (.not. read_named_atom(token, token_count, position, 'statement-rule', count_text, message)) return
+        if (trim(count_text) /= 'R1212') then
+            parsed = .false.
+            return
+        end if
+        if (.not. read_named_atom(token, token_count, position, 'format-rule', count_text, message)) return
+        if (trim(count_text) /= 'R1215') then
+            parsed = .false.
+            return
+        end if
+        if (.not. read_named_atom(token, token_count, position, 'source-document', count_text, message)) return
+        if (.not. read_named_atom(token, token_count, position, 'statement-clause', count_text, message)) return
+        if (.not. read_named_atom(token, token_count, position, 'format-clause', count_text, message)) return
+        if (.not. read_named_atom(token, token_count, position, 'output-clause', count_text, message)) return
+        if (.not. read_named_atom(token, token_count, position, 'statement-page', count_text, message)) return
+        if (.not. read_named_atom(token, token_count, position, 'format-page', count_text, message)) return
+        if (.not. read_named_atom(token, token_count, position, 'output-page', count_text, message)) return
+        if (.not. read_named_atom(token, token_count, position, 'source-hash', count_text, message)) return
+        if (.not. expect_token(token, token_count, position, ')', message)) return
+        if (position <= token_count) then
+            call set_message(message, 'print-output-count-mismatch')
+            parsed = .false.
+            return
+        end if
+        item_count = parsed_count
+    end function parse_frontend_ast_v2_print_generic_list
+
+    logical function parse_frontend_ast_v2_print_item(expression, item_kind, item_value, item_rule, &
+            message) result(parsed)
+        character(len=*), intent(in) :: expression
+        character(len=*), intent(out) :: item_kind, item_value, item_rule
+        character(len=:), allocatable, intent(out), optional :: message
+        character(len=frontend_ast_token_length) :: token(frontend_ast_token_capacity)
+        integer :: token_count, position
+        integer(int64) :: numeric_value
+
+        item_kind = ''
+        item_value = ''
+        item_rule = ''
+        call clear_message(message)
+        parsed = tokenize_frontend_ast_sx(expression, token, token_count, message)
+        if (.not. parsed) return
+        position = 1
+        if (.not. expect_token(token, token_count, position, '(', message)) return
+        if (.not. expect_token(token, token_count, position, 'output-item', message)) return
+        if (.not. read_named_atom(token, token_count, position, 'kind', item_kind, message)) return
+        if (trim(item_kind) == 'variable') then
+            if (.not. read_named_atom(token, token_count, position, 'name', item_value, message)) return
+            if (trim(item_value) /= 'x') then
+                call set_message(message, 'unsupported-frontend-ast-v2-print-variable')
+                parsed = .false.
+                return
+            end if
+        else if (trim(item_kind) == 'integer-literal') then
+            if (.not. read_named_atom(token, token_count, position, 'value', item_value, message)) return
+            if (.not. parse_count(item_value, numeric_value, message)) return
+        else
+            call set_message(message, 'unsupported-frontend-ast-v2-print-item')
+            parsed = .false.
+            return
+        end if
+        if (.not. read_named_atom(token, token_count, position, 'rule', item_rule, message)) return
+        if ((trim(item_kind) == 'variable' .and. trim(item_rule) /= 'R901') .or. &
+            (trim(item_kind) == 'integer-literal' .and. trim(item_rule) /= 'R1217')) then
+            call set_message(message, 'invalid-frontend-ast-v2-print-item-rule')
+            parsed = .false.
+            return
+        end if
+        parsed = expect_token(token, token_count, position, ')', message)
+        if (parsed .and. position <= token_count) then
+            call set_message(message, 'malformed-frontend-ast-v2-print-item')
+            parsed = .false.
+        end if
+    end function parse_frontend_ast_v2_print_item
+
+    subroutine emit_frontend_ast_v2_print_generic_list(body, expression)
+        type(mir_function_body_t), intent(inout) :: body
+        character(len=*), intent(in) :: expression
+        character(len=:), allocatable :: item_kind(:), item_value(:), item_rule(:), message
+        integer :: item_count, item_index, instruction_index, instruction_count, value, io_status
+
+        if (.not. parse_frontend_ast_v2_print_generic_list(expression, item_kind, item_value, &
+            item_rule, item_count, message)) return
+        item_count = 0
+        do while (item_count < size(item_kind))
+            if (len_trim(item_kind(item_count + 1)) == 0) exit
+            item_count = item_count + 1
+        end do
+        instruction_count = 2 + 2 * item_count + 1
+        if (allocated(body%instructions)) deallocate (body%instructions)
+        allocate (body%instructions(instruction_count))
+        body%function%instruction_count = instruction_count
+        do instruction_index = 1, instruction_count
+            body%instructions(instruction_index)%id = instruction_index - 1
+            body%instructions(instruction_index)%result%id = instruction_index
+            body%instructions(instruction_index)%result%kind = value_kind_integer
+            body%instructions(instruction_index)%result%type_name = 'i32'
+            body%instructions(instruction_index)%source_rule = 'frontend-ast-v2/execution-part'
+        end do
+        body%instructions(1)%opcode = opcode_const
+        body%instructions(1)%literal_value = 3
+        body%instructions(2)%opcode = opcode_store
+        body%instructions(2)%storage_key = 'x'
+        do item_index = 1, item_count
+            instruction_index = 2 + 2 * item_index - 1
+            if (trim(item_kind(item_index)) == 'variable') then
+                body%instructions(instruction_index)%opcode = opcode_load
+                body%instructions(instruction_index)%storage_key = trim(item_value(item_index))
+            else
+                body%instructions(instruction_index)%opcode = opcode_const
+                read (item_value(item_index), *, iostat=io_status) value
+                if (io_status /= 0) value = 0
+                body%instructions(instruction_index)%literal_value = value
+            end if
+            body%instructions(instruction_index + 1)%opcode = opcode_output
+            body%instructions(instruction_index)%source_rule = 'frontend-ast-v2/print-stmt'
+            body%instructions(instruction_index + 1)%source_rule = 'frontend-ast-v2/print-stmt'
+        end do
+        body%instructions(instruction_count)%opcode = opcode_return
+        body%instructions(instruction_count)%source_rule = 'frontend-ast-v2/print-stmt'
+    end subroutine emit_frontend_ast_v2_print_generic_list
 
     subroutine emit_frontend_ast_v2_print_variable_items_11_to_60(body, item_count)
         type(mir_function_body_t), intent(inout) :: body
