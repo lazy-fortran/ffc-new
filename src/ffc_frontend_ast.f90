@@ -37,6 +37,13 @@ module ffc_frontend_ast
         instruction_shape_frontend_ast_v1_int_div_assign_result_kind, &
         instruction_shape_frontend_ast_v1_int_div_assign_result_type, &
         instruction_shape_frontend_ast_v1_int_div_assign_source_rule, &
+        instruction_shape_frontend_ast_v1_int_sub_assign_count, &
+        instruction_shape_frontend_ast_v1_int_sub_assign_opcode_0, &
+        instruction_shape_frontend_ast_v1_int_sub_assign_opcode_1, &
+        instruction_shape_frontend_ast_v1_int_sub_assign_opcode_2, &
+        instruction_shape_frontend_ast_v1_int_sub_assign_result_kind, &
+        instruction_shape_frontend_ast_v1_int_sub_assign_result_type, &
+        instruction_shape_frontend_ast_v1_int_sub_assign_source_rule, &
         instruction_shape_frontend_ast_v1_logical_program_count, &
         instruction_shape_frontend_ast_v1_logical_program_opcode_0, &
         instruction_shape_frontend_ast_v1_logical_program_opcode_1, &
@@ -124,6 +131,7 @@ module ffc_frontend_ast
     public :: ffc_validate_frontend_ast_v1_int_expr_assignment_shape
     public :: ffc_validate_frontend_ast_v1_int_mul_expr_assignment_shape
     public :: ffc_validate_frontend_ast_v1_int_div_expr_assignment_shape
+    public :: ffc_validate_frontend_ast_v1_int_sub_expr_assignment_shape
     public :: ffc_validate_frontend_ast_v1_logical_program_shape
     public :: ffc_validate_frontend_ast_v1_real_program_shape
     public :: ffc_validate_frontend_ast_v1_double_precision_program_shape
@@ -347,6 +355,42 @@ contains
                     body%instructions(3)%source_rule = &
                         instruction_shape_frontend_ast_v1_int_mul_assign_source_rule
                     lowered = ffc_validate_frontend_ast_v1_int_mul_expr_assignment_shape(&
+                        body, message)
+                    return
+                end if
+                if (trim(ast%assignment%value) == &
+                    '( binary-expr ( operator – ) ( left 5 ) ( right 3 ) )') then
+                    deallocate (body%instructions)
+                    allocate (body%instructions(3))
+                    body%function%instruction_count = &
+                        instruction_shape_frontend_ast_v1_int_sub_assign_count
+                    body%instructions(1)%id = 0
+                    body%instructions(2)%id = 1
+                    body%instructions(3)%id = 2
+                    body%instructions(1)%opcode = &
+                        instruction_shape_frontend_ast_v1_int_sub_assign_opcode_0
+                    body%instructions(2)%opcode = &
+                        instruction_shape_frontend_ast_v1_int_sub_assign_opcode_1
+                    body%instructions(3)%opcode = &
+                        instruction_shape_frontend_ast_v1_int_sub_assign_opcode_2
+                    body%instructions(1)%result%id = 2
+                    body%instructions(1)%result%kind = &
+                        instruction_shape_frontend_ast_v1_int_sub_assign_result_kind
+                    body%instructions(1)%result%type_name = &
+                        instruction_shape_frontend_ast_v1_int_sub_assign_result_type
+                    body%instructions(2)%result%id = 1
+                    body%instructions(2)%result%kind = &
+                        instruction_shape_frontend_ast_v1_int_sub_assign_result_kind
+                    body%instructions(2)%result%type_name = &
+                        instruction_shape_frontend_ast_v1_int_sub_assign_result_type
+                    body%instructions(3)%result = body%instructions(2)%result
+                    body%instructions(1)%source_rule = &
+                        instruction_shape_frontend_ast_v1_int_sub_assign_source_rule
+                    body%instructions(2)%source_rule = &
+                        instruction_shape_frontend_ast_v1_int_sub_assign_source_rule
+                    body%instructions(3)%source_rule = &
+                        instruction_shape_frontend_ast_v1_int_sub_assign_source_rule
+                    lowered = ffc_validate_frontend_ast_v1_int_sub_expr_assignment_shape(&
                         body, message)
                     return
                 end if
@@ -753,6 +797,58 @@ contains
         end if
         valid = .true.
     end function ffc_validate_frontend_ast_v1_int_div_expr_assignment_shape
+
+    logical function ffc_validate_frontend_ast_v1_int_sub_expr_assignment_shape(&
+            body, message) result(valid)
+        type(mir_function_body_t), intent(in) :: body
+        character(len=:), allocatable, intent(out), optional :: message
+
+        call clear_message(message)
+        valid = .false.
+        if (.not. mir_validate_function_body(body, message)) return
+        if (body%function%instruction_count /= &
+            instruction_shape_frontend_ast_v1_int_sub_assign_count) then
+            call set_message(message, 'frontend-ast-v1 integer subtract expression instruction count changed')
+            return
+        end if
+        if (body%instructions(1)%opcode /= &
+            instruction_shape_frontend_ast_v1_int_sub_assign_opcode_0 .or. &
+            body%instructions(2)%opcode /= &
+            instruction_shape_frontend_ast_v1_int_sub_assign_opcode_1 .or. &
+            body%instructions(3)%opcode /= &
+            instruction_shape_frontend_ast_v1_int_sub_assign_opcode_2) then
+            call set_message(message, 'frontend-ast-v1 integer subtract expression opcode shape changed')
+            return
+        end if
+        if (body%instructions(1)%result%kind /= &
+            instruction_shape_frontend_ast_v1_int_sub_assign_result_kind .or. &
+            trim(body%instructions(1)%result%type_name) /= &
+            instruction_shape_frontend_ast_v1_int_sub_assign_result_type) then
+            call set_message(message, 'frontend-ast-v1 integer subtract expression result shape changed')
+            return
+        end if
+        if (body%instructions(2)%result%kind /= &
+            instruction_shape_frontend_ast_v1_int_sub_assign_result_kind .or. &
+            trim(body%instructions(2)%result%type_name) /= &
+            instruction_shape_frontend_ast_v1_int_sub_assign_result_type .or. &
+            body%instructions(3)%result%kind /= &
+            instruction_shape_frontend_ast_v1_int_sub_assign_result_kind .or. &
+            trim(body%instructions(3)%result%type_name) /= &
+            instruction_shape_frontend_ast_v1_int_sub_assign_result_type) then
+            call set_message(message, 'frontend-ast-v1 integer subtract expression return shape changed')
+            return
+        end if
+        if (trim(body%instructions(1)%source_rule) /= &
+            instruction_shape_frontend_ast_v1_int_sub_assign_source_rule .or. &
+            trim(body%instructions(2)%source_rule) /= &
+            instruction_shape_frontend_ast_v1_int_sub_assign_source_rule .or. &
+            trim(body%instructions(3)%source_rule) /= &
+            instruction_shape_frontend_ast_v1_int_sub_assign_source_rule) then
+            call set_message(message, 'frontend-ast-v1 integer subtract expression source rule changed')
+            return
+        end if
+        valid = .true.
+    end function ffc_validate_frontend_ast_v1_int_sub_expr_assignment_shape
 
     logical function ffc_validate_frontend_ast_v1_logical_program_shape(body, message) &
             result(valid)
@@ -1312,7 +1408,8 @@ contains
         if (trim(assignment%value) /= '1' .and. trim(assignment%value) /= &
             '( binary-expr ( operator + ) ( left 1 ) ( right 2 ) )' .and. &
             trim(assignment%value) /= '( binary-expr ( operator * ) ( left 2 ) ( right 3 ) )' &
-            .and. trim(assignment%value) /= '( binary-expr ( operator / ) ( left 6 ) ( right 2 ) )') then
+            .and. trim(assignment%value) /= '( binary-expr ( operator / ) ( left 6 ) ( right 2 ) )' &
+            .and. trim(assignment%value) /= '( binary-expr ( operator – ) ( left 5 ) ( right 3 ) )') then
             call set_message(message, 'unsupported-frontend-ast-v1-assignment')
             return
         end if
@@ -1401,13 +1498,15 @@ contains
                         if (.not. ok) return
                         if (trim(kind) /= 'binary-expression' .or. &
                             (trim(operator) /= '+' .and. trim(operator) /= '*' .and. &
-                            trim(operator) /= '/') .or. &
+                            trim(operator) /= '/' .and. trim(operator) /= '–') .or. &
                             (trim(operator) == '+' .and. (trim(left_operand) /= '1' .or. &
                             trim(right_operand) /= '2')) .or. &
                             (trim(operator) == '*' .and. (trim(left_operand) /= '2' .or. &
                             trim(right_operand) /= '3')) .or. &
                             (trim(operator) == '/' .and. (trim(left_operand) /= '6' .or. &
-                            trim(right_operand) /= '2'))) then
+                            trim(right_operand) /= '2')) .or. &
+                            (trim(operator) == '–' .and. (trim(left_operand) /= '5' .or. &
+                            trim(right_operand) /= '3'))) then
                             call set_message(message, &
                                 'unsupported-frontend-ast-v1-assignment-expression')
                             ok = .false.

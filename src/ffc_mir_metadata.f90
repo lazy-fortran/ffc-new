@@ -66,6 +66,14 @@ module ffc_mir_metadata
     character(len=3), parameter, public :: instruction_shape_frontend_ast_v1_int_div_assign_result_type = 'i32'
     character(len=26), parameter, public :: instruction_shape_frontend_ast_v1_int_div_assign_source_rule = 'frontend-ast-v1/expression'
 
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_int_sub_assign_count = 3_int32
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_int_sub_assign_opcode_0 = opcode_sub
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_int_sub_assign_opcode_1 = opcode_store
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_int_sub_assign_opcode_2 = opcode_return
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_int_sub_assign_result_kind = value_kind_integer
+    character(len=3), parameter, public :: instruction_shape_frontend_ast_v1_int_sub_assign_result_type = 'i32'
+    character(len=26), parameter, public :: instruction_shape_frontend_ast_v1_int_sub_assign_source_rule = 'frontend-ast-v1/expression'
+
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_logical_program_count = 2_int32
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_logical_program_opcode_0 = opcode_add
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_logical_program_opcode_1 = opcode_return
