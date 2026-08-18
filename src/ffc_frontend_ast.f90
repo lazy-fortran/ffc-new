@@ -10,6 +10,8 @@ module ffc_frontend_ast
         instruction_shape_frontend_ast_v1_integer_program_result_kind, &
         instruction_shape_frontend_ast_v1_integer_program_result_type, &
         instruction_shape_frontend_ast_v1_integer_program_source_rule
+    use ffc_lowering_policy, only: bounded_integer_declaration_count, &
+        bounded_integer_variable_count
     implicit none
     private
 
@@ -121,7 +123,8 @@ contains
         call clear_message(message)
         valid = .false.
         if (.not. ffc_validate_program_root(ast%root, message)) return
-        if (ast%declaration_count /= 1_int64 .or. ast%variable_count /= 1_int64) then
+        if (ast%declaration_count /= bounded_integer_declaration_count .or. &
+            ast%variable_count /= bounded_integer_variable_count) then
             call set_message(message, 'invalid-frontend-ast-v1-cardinality')
             return
         end if

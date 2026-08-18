@@ -1,6 +1,8 @@
 # Source of truth for the bounded integer frontend-ast-v1 lowering policy.
 
 [bounded_integer_program]
+declaration_count = 1
+variable_count = 1
 instruction_count = 2
 first_opcode = "add"
 last_opcode = "return"

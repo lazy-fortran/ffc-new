@@ -6,4 +6,6 @@ trap 'rm -f "$generated"' EXIT
 python3 "$repo_dir/tools/generate_lowering_policy.py" \
     --spec "$repo_dir/spec/lowering_policy.toml" --output "$generated"
 cmp -s "$generated" "$repo_dir/src/ffc_lowering_policy.f90"
+grep -q 'bounded_integer_declaration_count' "$generated"
+grep -q 'bounded_integer_variable_count' "$generated"
 echo 'lowering policy generator freshness: ok'
