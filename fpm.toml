@@ -9,6 +9,11 @@ name = "ffc-lower-frontend-v0"
 source-dir = "app"
 main = "ffc_lower_frontend_v0.f90"
 
+[[executable]]
+name = "ffc-lower-frontend-ast-v1"
+source-dir = "app"
+main = "ffc_lower_frontend_ast_v1.f90"
+
 [build]
 source-dir = "src"
 
