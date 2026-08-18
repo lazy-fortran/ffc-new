@@ -6,7 +6,8 @@ program test_frontend_ast_v2_print
         ffc_validate_frontend_ast_v2_print_7_8_9_shape, &
         ffc_validate_frontend_ast_v2_print_7_8_9_10_shape, &
         ffc_validate_frontend_ast_v2_print_7_8_9_10_11_shape, &
-        ffc_validate_frontend_ast_v2_print_7_8_9_10_11_12_shape
+        ffc_validate_frontend_ast_v2_print_7_8_9_10_11_12_shape, &
+        ffc_validate_frontend_ast_v2_print_seven_shape
     use ffc_mir, only: mir_function_body_t, mir_validate_function_body, opcode_const, &
         opcode_output, opcode_return
     implicit none
@@ -154,6 +155,30 @@ program test_frontend_ast_v2_print
         replace_text(envelope_six_sx(), '(print-stmt ', '(write-stmt '), body, message), &
         'WRITE six-item mutation was accepted')
 
+    call assert_true(ffc_lower_frontend_ast_v2_from_sx(envelope_seven_sx(), body, message), &
+        'PRINT star 7, 8, 9, 10, 11, 12, 13 envelope was rejected')
+    call assert_true(ffc_validate_frontend_ast_v2_print_seven_shape(body, message), &
+        'PRINT seven-item MIR shape was rejected')
+    call assert_equal(body%instructions(13)%opcode, opcode_const, 'seventh PRINT const missing')
+    call assert_equal(body%instructions(14)%opcode, opcode_output, 'seventh PRINT output missing')
+    call assert_equal(body%instructions(15)%opcode, opcode_return, 'seventh PRINT return changed')
+    call assert_equal(body%instructions(13)%literal_value, 13, 'seventh PRINT literal changed')
+    call assert_true(.not. ffc_lower_frontend_ast_v2_from_sx(&
+        replace_text(envelope_seven_sx(), '(output-value-7 13)', '(output-value-7 12)'), body, message), &
+        'PRINT wrong seventh item was accepted')
+    call assert_true(.not. ffc_lower_frontend_ast_v2_from_sx(&
+        replace_text(envelope_seven_sx(), '(output-value-7 13)', '(output-value-7)'), body, message), &
+        'PRINT missing seventh item was accepted')
+    call assert_true(.not. ffc_lower_frontend_ast_v2_from_sx(&
+        replace_text(envelope_seven_sx(), '(output-kind-7 integer-literal)', '(output-kind-7)'), body, message), &
+        'PRINT missing seventh kind was accepted')
+    call assert_true(.not. ffc_lower_frontend_ast_v2_from_sx(&
+        replace_text(envelope_seven_sx(), '(output-rule-7 R1217)', '(output-rule-7)'), body, message), &
+        'PRINT missing seventh rule was accepted')
+    call assert_true(.not. ffc_lower_frontend_ast_v2_from_sx(&
+        replace_text(envelope_seven_sx(), '(print-stmt ', '(write-stmt '), body, message), &
+        'WRITE seven-item mutation was accepted')
+
     write (*, '(a)') 'frontend AST v2 PRINT star 7 checks: ok'
 
 contains
@@ -265,6 +290,27 @@ contains
             '(statement-page 242) (format-page 244) (output-page 248) '// &
             '(source-hash print-test))))'
     end function envelope_six_sx
+
+    function envelope_seven_sx() result(value)
+        character(len=4096) :: value
+
+        value = '(program-unit-v2 (root (program-root (name p) (span (source-span '// &
+            '(file main.f90) (start-byte 0) (end-byte 52) (source-hash print-test))))) '// &
+            '(declaration-count 0) (declaration) (variable-count 0) (variable) '// &
+            '(execution-part (print-stmt (format-kind default-char-expr) (format-value *) '// &
+            '(output-kind integer-literal) (output-value 7) (output-count 7) '// &
+            '(output-kind-2 integer-literal) (output-value-2 8) (output-rule-2 R1217) '// &
+            '(output-kind-3 integer-literal) (output-value-3 9) (output-rule-3 R1217) '// &
+            '(output-kind-4 integer-literal) (output-value-4 10) (output-rule-4 R1217) '// &
+            '(output-kind-5 integer-literal) (output-value-5 11) (output-rule-5 R1217) '// &
+            '(output-kind-6 integer-literal) (output-value-6 12) (output-rule-6 R1217) '// &
+            '(output-kind-7 integer-literal) (output-value-7 13) (output-rule-7 R1217) '// &
+            '(statement-rule R1212) (format-rule R1215) (output-rule R1217) '// &
+            '(source-document J3-24-007) (statement-clause 12.6.1) '// &
+            '(format-clause 12.6.2.2) (output-clause 12.6.3) '// &
+            '(statement-page 242) (format-page 244) (output-page 248) '// &
+            '(source-hash print-test))))'
+    end function envelope_seven_sx
 
     function replace_text(value, old, new) result(replaced)
         character(len=*), intent(in) :: value, old, new

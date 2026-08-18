@@ -129,6 +129,26 @@ module ffc_mir_metadata
     character(len=3), parameter, public :: instruction_shape_frontend_ast_v2_print_six_result_type = 'i32'
     character(len=26), parameter, public :: instruction_shape_frontend_ast_v2_print_six_source_rule = 'frontend-ast-v2/print-stmt'
 
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_seven_count = 15_int32
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_seven_opcode_0 = opcode_const
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_seven_opcode_1 = opcode_output
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_seven_opcode_2 = opcode_const
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_seven_opcode_3 = opcode_output
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_seven_opcode_4 = opcode_const
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_seven_opcode_5 = opcode_output
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_seven_opcode_6 = opcode_const
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_seven_opcode_7 = opcode_output
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_seven_opcode_8 = opcode_const
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_seven_opcode_9 = opcode_output
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_seven_opcode_10 = opcode_const
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_seven_opcode_11 = opcode_output
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_seven_opcode_12 = opcode_const
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_seven_opcode_13 = opcode_output
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_seven_opcode_14 = opcode_return
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_seven_result_kind = value_kind_integer
+    character(len=3), parameter, public :: instruction_shape_frontend_ast_v2_print_seven_result_type = 'i32'
+    character(len=26), parameter, public :: instruction_shape_frontend_ast_v2_print_seven_source_rule = 'frontend-ast-v2/print-stmt'
+
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_int_assign_count = 2_int32
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_int_assign_opcode_0 = opcode_store
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_int_assign_opcode_1 = opcode_return
