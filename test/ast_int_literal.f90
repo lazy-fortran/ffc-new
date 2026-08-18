@@ -30,7 +30,7 @@ program test_ast_int_literal
 
     call mir_function_body_to_sx(body, serialized, ok, message)
     call assert_true(ok, 'literal MIR was not serialized: '//trim(message))
-    call assert_true(index(trim(serialized), '(literal-value 7)') > 0, &
+    call assert_true(index(trim(serialized), '(literal 7)') > 0, &
         'serialized MIR omitted literal value')
     call mir_function_body_from_sx(trim(serialized), roundtrip_body, ok, message)
     call assert_true(ok, 'serialized literal MIR was not readable: '//trim(message))

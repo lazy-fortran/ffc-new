@@ -726,7 +726,7 @@ contains
             size = size + int(len(' (instruction (id ') + len_trim(id_text) + &
                 len(') (opcode ') + len_trim(opcode_text) + &
                 len(')') + &
-                merge(len(' (literal-value ') + len_trim(itoa(body%instructions(index)%literal_value)) + &
+                merge(len(' (literal ') + len_trim(itoa(body%instructions(index)%literal_value)) + &
                 len(')'), 0, body%instructions(index)%opcode == opcode_const) + &
                 len(' (source-rule ') + len_trim(body%instructions(index)%source_rule) + &
                 len(') (result (id ') + len_trim(result_id_text) + &
@@ -771,7 +771,7 @@ contains
             canonical = trim(canonical)//' (instruction (id '//trim(id_text)//') '// &
                 '(opcode '//trim(opcode_text)//')'
             if (body%instructions(index)%opcode == opcode_const) then
-                canonical = trim(canonical)//' (literal-value '// &
+                canonical = trim(canonical)//' (literal '// &
                     trim(itoa(body%instructions(index)%literal_value))//')'
             end if
             canonical = trim(canonical)//' (source-rule '// &
@@ -1090,7 +1090,7 @@ contains
         end if
         instruction%literal_value = 0_int32
         if (instruction%opcode == opcode_const) then
-            ok = read_named_integer(token, token_count, position, 'literal-value', &
+            ok = read_named_integer(token, token_count, position, 'literal', &
                 instruction%literal_value, message)
             if (.not. ok) return
         end if
