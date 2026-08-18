@@ -114,6 +114,10 @@ name = "frontend_ast_v1_double_precision"
 source-dir = "test"
 
 [[test]]
+name = "frontend_ast_v1_complex"
+source-dir = "test"
+
+[[test]]
 name = "frontend_ast_v1_integer_policy"
 source-dir = "test"
 
