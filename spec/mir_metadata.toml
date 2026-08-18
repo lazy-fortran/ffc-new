@@ -41,6 +41,22 @@ name = "frontend_ast_v1_storage_sequence_6"
 value = "frontend-ast-v1/storage-sequence-6"
 
 [[source_rules]]
+name = "frontend_ast_v1_storage_sequence_7"
+value = "frontend-ast-v1/storage-sequence-7"
+
+[[source_rules]]
+name = "frontend_ast_v1_storage_sequence_8"
+value = "frontend-ast-v1/storage-sequence-8"
+
+[[source_rules]]
+name = "frontend_ast_v1_storage_sequence_9"
+value = "frontend-ast-v1/storage-sequence-9"
+
+[[source_rules]]
+name = "frontend_ast_v1_storage_sequence_10"
+value = "frontend-ast-v1/storage-sequence-10"
+
+[[source_rules]]
 name = "frontend_ast_v2_execution_part"
 value = "frontend-ast-v2/execution-part"
 
@@ -242,6 +258,34 @@ result_type = "i32"
 source_rule = "frontend-ast-v1/storage-sequence-6"
 
 [[instruction_shapes]]
+name = "frontend_ast_v1_int_seq_7"
+opcodes = ["const", "store", "load", "const", "add", "store", "load", "const", "add", "store", "load", "const", "add", "store", "load", "const", "add", "store", "load", "const", "add", "store", "load", "const", "add", "store", "return"]
+result_kind = "integer"
+result_type = "i32"
+source_rule = "frontend-ast-v1/storage-sequence-7"
+
+[[instruction_shapes]]
+name = "frontend_ast_v1_int_seq_8"
+opcodes = ["const", "store", "load", "const", "add", "store", "load", "const", "add", "store", "load", "const", "add", "store", "load", "const", "add", "store", "load", "const", "add", "store", "load", "const", "add", "store", "load", "const", "add", "store", "return"]
+result_kind = "integer"
+result_type = "i32"
+source_rule = "frontend-ast-v1/storage-sequence-8"
+
+[[instruction_shapes]]
+name = "frontend_ast_v1_int_seq_9"
+opcodes = ["const", "store", "load", "const", "add", "store", "load", "const", "add", "store", "load", "const", "add", "store", "load", "const", "add", "store", "load", "const", "add", "store", "load", "const", "add", "store", "load", "const", "add", "store", "load", "const", "add", "store", "return"]
+result_kind = "integer"
+result_type = "i32"
+source_rule = "frontend-ast-v1/storage-sequence-9"
+
+[[instruction_shapes]]
+name = "frontend_ast_v1_int_seq_10"
+opcodes = ["const", "store", "load", "const", "add", "store", "load", "const", "add", "store", "load", "const", "add", "store", "load", "const", "add", "store", "load", "const", "add", "store", "load", "const", "add", "store", "load", "const", "add", "store", "load", "const", "add", "store", "load", "const", "add", "store", "return"]
+result_kind = "integer"
+result_type = "i32"
+source_rule = "frontend-ast-v1/storage-sequence-10"
+
+[[instruction_shapes]]
 name = "frontend_ast_v2_int_exec"
 opcodes = ["const", "store", "load", "const", "add", "store", "return"]
 result_kind = "integer"
@@ -388,6 +432,38 @@ shape = "frontend_ast_v1_int_seq_6"
 literal_values = [7, 1, 1, 1, 1, 1]
 result_ids = [0, 1, 2, 3, 4, 4, 6, 7, 8, 8, 10, 11, 12, 12, 14, 15, 16, 16, 18, 19, 20, 20, 20]
 storage_keys = ["", "x", "x", "", "", "x", "x", "", "", "x", "x", "", "", "x", "x", "", "", "x", "x", "", "", "x", ""]
+
+[[integer_expression_routes]]
+name = "assignment_sequence_7"
+expression = "(assignment-sequence (assignment-count 7) (first x ( integer-literal 7 )) (second x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (third x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (fourth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (fifth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (sixth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (seventh x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))))"
+shape = "frontend_ast_v1_int_seq_7"
+literal_values = [7, 1, 1, 1, 1, 1, 1]
+result_ids = [0, 1, 2, 3, 4, 4, 6, 7, 8, 8, 10, 11, 12, 12, 14, 15, 16, 16, 18, 19, 20, 20, 22, 23, 24, 24, 24]
+storage_keys = ["", "x", "x", "", "", "x", "x", "", "", "x", "x", "", "", "x", "x", "", "", "x", "x", "", "", "x", "x", "", "", "x", ""]
+
+[[integer_expression_routes]]
+name = "assignment_sequence_8"
+expression = "(assignment-sequence (assignment-count 8) (first x ( integer-literal 7 )) (second x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (third x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (fourth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (fifth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (sixth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (seventh x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (eighth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))))"
+shape = "frontend_ast_v1_int_seq_8"
+literal_values = [7, 1, 1, 1, 1, 1, 1, 1]
+result_ids = [0, 1, 2, 3, 4, 4, 6, 7, 8, 8, 10, 11, 12, 12, 14, 15, 16, 16, 18, 19, 20, 20, 22, 23, 24, 24, 26, 27, 28, 28, 28]
+storage_keys = ["", "x", "x", "", "", "x", "x", "", "", "x", "x", "", "", "x", "x", "", "", "x", "x", "", "", "x", "x", "", "", "x", "x", "", "", "x", ""]
+
+[[integer_expression_routes]]
+name = "assignment_sequence_9"
+expression = "(assignment-sequence (assignment-count 9) (first x ( integer-literal 7 )) (second x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (third x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (fourth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (fifth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (sixth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (seventh x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (eighth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (ninth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))))"
+shape = "frontend_ast_v1_int_seq_9"
+literal_values = [7, 1, 1, 1, 1, 1, 1, 1, 1]
+result_ids = [0, 1, 2, 3, 4, 4, 6, 7, 8, 8, 10, 11, 12, 12, 14, 15, 16, 16, 18, 19, 20, 20, 22, 23, 24, 24, 26, 27, 28, 28, 30, 31, 32, 32, 32]
+storage_keys = ["", "x", "x", "", "", "x", "x", "", "", "x", "x", "", "", "x", "x", "", "", "x", "x", "", "", "x", "x", "", "", "x", "x", "", "", "x", "x", "", "", "x", ""]
+
+[[integer_expression_routes]]
+name = "assignment_sequence_10"
+expression = "(assignment-sequence (assignment-count 10) (first x ( integer-literal 7 )) (second x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (third x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (fourth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (fifth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (sixth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (seventh x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (eighth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (ninth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (tenth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))))"
+shape = "frontend_ast_v1_int_seq_10"
+literal_values = [7, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+result_ids = [0, 1, 2, 3, 4, 4, 6, 7, 8, 8, 10, 11, 12, 12, 14, 15, 16, 16, 18, 19, 20, 20, 22, 23, 24, 24, 26, 27, 28, 28, 30, 31, 32, 32, 34, 35, 36, 36, 36]
+storage_keys = ["", "x", "x", "", "", "x", "x", "", "", "x", "x", "", "", "x", "x", "", "", "x", "x", "", "", "x", "x", "", "", "x", "x", "", "", "x", "x", "", "", "x", "x", "", "", "x", ""]
 
 [[integer_expression_routes]]
 name = "program_unit_v2_execution_part_6"

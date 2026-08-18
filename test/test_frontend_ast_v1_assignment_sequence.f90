@@ -54,6 +54,10 @@ program test_frontend_ast_v1_assignment_sequence
     call assert_count4()
     call assert_count5()
     call assert_count6()
+    call assert_generated_count(7)
+    call assert_generated_count(8)
+    call assert_generated_count(9)
+    call assert_generated_count(10)
     write (*, '(a)') 'frontend AST v1 assignment sequence behavioral checks: ok'
 
 contains
@@ -243,6 +247,112 @@ contains
             end if
         end do
     end subroutine assert_count6
+
+    subroutine assert_generated_count(assignment_count)
+        integer, intent(in) :: assignment_count
+
+        integer :: index, instruction_count
+        integer(int32) :: expected_opcode, expected_result_id
+        character(len=64) :: expected_source_rule
+
+        instruction_count = 4 * assignment_count - 1
+        write (expected_source_rule, '(a,i0)') 'frontend-ast-v1/storage-sequence-', assignment_count
+        if (.not. ffc_lower_frontend_ast_v1_assignment_sequence_from_sx( &
+            sequence_n_sx(assignment_count), body, message)) then
+            error stop 'generated assignment sequence was rejected'
+        end if
+        call assert_true(mir_validate_function_body(body, message), 'generated sequence MIR is invalid')
+        call assert_true(body%function%instruction_count == instruction_count, &
+            'generated sequence instruction count changed')
+        do index = 1, instruction_count
+            expected_opcode = generated_opcode(index, assignment_count)
+            expected_result_id = generated_result_id(index, assignment_count)
+            call assert_true(body%instructions(index)%opcode == expected_opcode, &
+                'generated sequence opcode shape changed')
+            call assert_true(body%instructions(index)%result%id == expected_result_id, &
+                'generated sequence result IDs changed')
+            call assert_equal(body%instructions(index)%source_rule, expected_source_rule, &
+                'generated sequence source rule changed')
+            if (expected_opcode == opcode_load .or. expected_opcode == opcode_store) then
+                call assert_true(allocated(body%instructions(index)%storage_key), &
+                    'generated sequence storage key missing')
+                call assert_equal(body%instructions(index)%storage_key, 'x', &
+                    'generated sequence storage key changed')
+            else
+                call assert_true(.not. allocated(body%instructions(index)%storage_key), &
+                    'generated sequence storage key was unexpected')
+            end if
+        end do
+        call assert_rejected(replace_text(sequence_n_sx(assignment_count), '(operator +)', '(operator *)'), &
+            'mutated generated sequence was accepted')
+        call assert_rejected(replace_text(sequence_n_sx(assignment_count), &
+            '(assignment-count '//trim(adjustl(itoa(assignment_count)))//')', &
+            '(assignment-count '//trim(adjustl(itoa(assignment_count + 1)))//')'), &
+            'wrong-count generated sequence was accepted')
+    end subroutine assert_generated_count
+
+    integer(int32) function generated_opcode(index, assignment_count)
+        integer, intent(in) :: index, assignment_count
+
+        if (index == 1) then
+            generated_opcode = opcode_const
+        else if (index == 2) then
+            generated_opcode = opcode_store
+        else if (index == 4 * assignment_count - 1) then
+            generated_opcode = opcode_return
+        else
+            select case (mod(index - 3, 4))
+            case (0); generated_opcode = opcode_load
+            case (1); generated_opcode = opcode_const
+            case (2); generated_opcode = opcode_add
+            case default; generated_opcode = opcode_store
+            end select
+        end if
+    end function generated_opcode
+
+    integer(int32) function generated_result_id(index, assignment_count)
+        integer, intent(in) :: index, assignment_count
+
+        if (index == 1) then
+            generated_result_id = 0_int32
+        else if (index == 2) then
+            generated_result_id = 1_int32
+        else if (index == 4 * assignment_count - 1) then
+            generated_result_id = 4 * assignment_count - 4
+        else if (mod(index - 3, 4) == 3) then
+            generated_result_id = index - 2
+        else
+            generated_result_id = index - 1
+        end if
+    end function generated_result_id
+
+    function sequence_n_sx(assignment_count) result(value)
+        integer, intent(in) :: assignment_count
+        character(len=16384) :: value
+        character(len=32) :: count_text
+        integer :: index
+
+        write (count_text, '(i0)') assignment_count
+        value = '(assignment-sequence (assignment-count '//trim(count_text)//')'
+        value = trim(value)//' (assignment (assignment-stmt (variable x) (expression '// &
+            '(assignment-expression (kind integer-literal) (operator ) (left-operand 7) '// &
+            '(right-operand ))) (span (source-span (file sequence.f90) (start-byte 0) '// &
+            '(end-byte 1) (source-hash generated-sequence-v1)))))'
+        do index = 2, assignment_count
+            value = trim(value)//' (assignment (assignment-stmt (variable x) (expression '// &
+                '(assignment-expression (kind binary-expression) (operator +) (left-operand x) '// &
+                '(right-operand 1))) (span (source-span (file sequence.f90) (start-byte 0) '// &
+                '(end-byte 1) (source-hash generated-sequence-v1)))))'
+        end do
+        value = trim(value)//')'
+    end function sequence_n_sx
+
+    function itoa(value) result(text)
+        integer, intent(in) :: value
+        character(len=16) :: text
+
+        write (text, '(i0)') value
+    end function itoa
 
     subroutine assert_storage5(index)
         integer, intent(in) :: index
