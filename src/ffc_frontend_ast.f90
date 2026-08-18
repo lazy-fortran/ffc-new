@@ -318,7 +318,7 @@ contains
         character(len=64) :: count_text
         type(ffc_program_root_t) :: root, declaration
         type(ffc_frontend_variable_declaration_v1_t) :: variable
-        type(ffc_frontend_assignment_v1_t) :: assignments(5)
+        type(ffc_frontend_assignment_v1_t) :: assignments(6)
         character(len=frontend_ast_expression_length) :: route_key
         integer :: assignment_count, assignment_index, token_count, position
         integer(int64) :: declaration_count, variable_count
@@ -403,8 +403,13 @@ contains
                 call set_message(message, 'frontend-ast-v2-invalid-provenance')
                 return
             end if
-        else
+        else if (assignment_count == 5) then
             if (trim(assignments(1)%source_hash) /= 'l3-raw-program-five-assignment-v1') then
+                call set_message(message, 'frontend-ast-v2-invalid-provenance')
+                return
+            end if
+        else
+            if (trim(assignments(1)%source_hash) /= 'l3-raw-program-six-assignment-v1') then
                 call set_message(message, 'frontend-ast-v2-invalid-provenance')
                 return
             end if
@@ -451,7 +456,7 @@ contains
         if (.not. read_named_atom(token, token_count, position, 'assignment-count', count_text, &
             message)) return
         if (.not. parse_count(count_text, count, message)) return
-        if (count /= 2_int64 .and. count /= 5_int64) then
+        if (count /= 2_int64 .and. count /= 5_int64 .and. count /= 6_int64) then
             call set_message(message, 'invalid-frontend-ast-v2-assignment-count')
             parsed = .false.
             return

@@ -11,6 +11,8 @@ program test_frontend_ast_v2_execution_part
     integer(int32) :: expected_ids(7)
     integer(int32) :: expected_opcodes_5(19)
     integer(int32) :: expected_ids_5(19)
+    integer(int32) :: expected_opcodes_6(23)
+    integer(int32) :: expected_ids_6(23)
     integer :: instruction_index
 
     expected_opcodes = [opcode_const, opcode_store, opcode_load, opcode_const, opcode_add, &
@@ -69,6 +71,34 @@ program test_frontend_ast_v2_execution_part
     call assert_storage_indices([2, 3, 6, 7, 10, 11, 14, 15, 18])
     call assert_no_storage_indices([1, 4, 5, 8, 9, 12, 13, 16, 17, 19])
 
+    expected_opcodes_6 = [opcode_const, opcode_store, opcode_load, opcode_const, opcode_add, &
+        opcode_store, opcode_load, opcode_const, opcode_add, opcode_store, opcode_load, &
+        opcode_const, opcode_add, opcode_store, opcode_load, opcode_const, opcode_add, &
+        opcode_store, opcode_load, opcode_const, opcode_add, opcode_store, opcode_return]
+    expected_ids_6 = [0_int32, 1_int32, 2_int32, 3_int32, 4_int32, 4_int32, 6_int32, &
+        7_int32, 8_int32, 8_int32, 10_int32, 11_int32, 12_int32, 12_int32, 14_int32, &
+        15_int32, 16_int32, 16_int32, 18_int32, 19_int32, 20_int32, 20_int32, 20_int32]
+    if (.not. ffc_lower_frontend_ast_v2_from_sx(envelope_sx(6), body, message)) then
+        if (allocated(message)) write (*, '(a)') trim(message)
+        error stop 'exact six-assignment program-unit-v2 envelope was rejected'
+    end if
+    do instruction_index = 1, 23
+        call assert_true(body%instructions(instruction_index)%opcode == &
+            expected_opcodes_6(instruction_index), 'v2 count-6 opcode order changed')
+        call assert_true(body%instructions(instruction_index)%result%id == &
+            expected_ids_6(instruction_index), 'v2 count-6 SSA result ID changed')
+        call assert_equal(body%instructions(instruction_index)%source_rule, &
+            'frontend-ast-v2/execution-part-6', 'v2 count-6 source rule changed')
+    end do
+    call assert_true(body%instructions(1)%literal_value == 7 .and. &
+        body%instructions(4)%literal_value == 1 .and. &
+        body%instructions(8)%literal_value == 1 .and. &
+        body%instructions(12)%literal_value == 1 .and. &
+        body%instructions(16)%literal_value == 1 .and. &
+        body%instructions(20)%literal_value == 1, 'v2 count-6 literals changed')
+    call assert_storage_indices([2, 3, 6, 7, 10, 11, 14, 15, 18, 19, 22])
+    call assert_no_storage_indices([1, 4, 5, 8, 9, 12, 13, 16, 17, 20, 21, 23])
+
     call assert_rejected(replace_text(envelope_sx(), 'program-unit-v2', 'program-unit'), &
         'wrong envelope was accepted')
     call assert_rejected(replace_text(envelope_sx(), '(type-spec integer)', &
@@ -86,6 +116,9 @@ contains
         if (present(count)) then
             if (count == 5) then
                 value = envelope_sx_five()
+                return
+            else if (count == 6) then
+                value = envelope_sx_six()
                 return
             end if
         end if
@@ -142,6 +175,32 @@ contains
             '(source-hash l3-raw-program-five-assignment-v1))))))))'
     end function envelope_sx_five
 
+    function envelope_sx_six() result(value)
+        character(len=8192) :: value
+
+        value = envelope_sx_five()
+        value = replace_text(value, '(assignment-count 5)', '(assignment-count 6)')
+        value = replace_text(value, 'l3-raw-program-five-assignment-v1', &
+            'l3-raw-program-six-assignment-v1')
+        value = replace_text(value, 'l3-raw-program-five-assignment-v1', &
+            'l3-raw-program-six-assignment-v1')
+        value = replace_text(value, 'l3-raw-program-five-assignment-v1', &
+            'l3-raw-program-six-assignment-v1')
+        value = replace_text(value, 'l3-raw-program-five-assignment-v1', &
+            'l3-raw-program-six-assignment-v1')
+        value = replace_text(value, 'l3-raw-program-five-assignment-v1', &
+            'l3-raw-program-six-assignment-v1')
+        value = replace_last(value, &
+            '(span (source-span (file main.f90) (start-byte 72) (end-byte 82) '// &
+            '(source-hash l3-raw-program-six-assignment-v1)))))', &
+            '(span (source-span (file main.f90) (start-byte 72) (end-byte 82) '// &
+            '(source-hash l3-raw-program-six-assignment-v1))))) '// &
+            '(assignment (assignment-stmt (variable x) (expression (assignment-expression '// &
+            '(kind binary-expression) (operator +) (left-operand x) (right-operand 1))) '// &
+            '(span (source-span (file main.f90) (start-byte 84) (end-byte 94) '// &
+            '(source-hash l3-raw-program-six-assignment-v1)))))')
+    end function envelope_sx_six
+
     subroutine assert_storage_indices(indices)
         integer, intent(in) :: indices(:)
         integer :: index
@@ -191,6 +250,26 @@ contains
         start = index(replaced, old)
         if (start > 0) replaced = replaced(:start - 1)//new//replaced(start + len(old):)
     end function replace_text
+
+    function replace_last(value, old, new) result(replaced)
+        character(len=*), intent(in) :: value, old, new
+        character(len=8192) :: replaced
+        integer :: start, next, search_start
+
+        replaced = value
+        start = 0
+        search_start = 1
+        next = index(value(search_start:len_trim(value)), old)
+        do while (next > 0)
+            start = search_start + next - 1
+            search_start = start + 1
+            if (search_start > len_trim(value)) exit
+            next = index(value(search_start:len_trim(value)), old)
+        end do
+        if (start > 0) then
+            replaced = value(:start - 1)//new//value(start + len(old):)
+        end if
+    end function replace_last
 
     subroutine assert_true(value, description)
         logical, intent(in) :: value
