@@ -210,6 +210,29 @@ module ffc_frontend_ast
         instruction_shape_frontend_ast_v2_print_eight_result_kind, &
         instruction_shape_frontend_ast_v2_print_eight_result_type, &
         instruction_shape_frontend_ast_v2_print_eight_source_rule, &
+        instruction_shape_frontend_ast_v2_print_nine_count, &
+        instruction_shape_frontend_ast_v2_print_nine_opcode_0, &
+        instruction_shape_frontend_ast_v2_print_nine_opcode_1, &
+        instruction_shape_frontend_ast_v2_print_nine_opcode_2, &
+        instruction_shape_frontend_ast_v2_print_nine_opcode_3, &
+        instruction_shape_frontend_ast_v2_print_nine_opcode_4, &
+        instruction_shape_frontend_ast_v2_print_nine_opcode_5, &
+        instruction_shape_frontend_ast_v2_print_nine_opcode_6, &
+        instruction_shape_frontend_ast_v2_print_nine_opcode_7, &
+        instruction_shape_frontend_ast_v2_print_nine_opcode_8, &
+        instruction_shape_frontend_ast_v2_print_nine_opcode_9, &
+        instruction_shape_frontend_ast_v2_print_nine_opcode_10, &
+        instruction_shape_frontend_ast_v2_print_nine_opcode_11, &
+        instruction_shape_frontend_ast_v2_print_nine_opcode_12, &
+        instruction_shape_frontend_ast_v2_print_nine_opcode_13, &
+        instruction_shape_frontend_ast_v2_print_nine_opcode_14, &
+        instruction_shape_frontend_ast_v2_print_nine_opcode_15, &
+        instruction_shape_frontend_ast_v2_print_nine_opcode_16, &
+        instruction_shape_frontend_ast_v2_print_nine_opcode_17, &
+        instruction_shape_frontend_ast_v2_print_nine_opcode_18, &
+        instruction_shape_frontend_ast_v2_print_nine_result_kind, &
+        instruction_shape_frontend_ast_v2_print_nine_result_type, &
+        instruction_shape_frontend_ast_v2_print_nine_source_rule, &
         mir_frontend_ast_v1_integer_expression_route, &
         mir_frontend_ast_v1_integer_expression_instruction_count, &
         mir_frontend_ast_v1_integer_expression_opcode, &
@@ -295,6 +318,7 @@ module ffc_frontend_ast
     public :: ffc_validate_frontend_ast_v2_print_7_8_9_10_11_12_shape
     public :: ffc_validate_frontend_ast_v2_print_seven_shape
     public :: ffc_validate_frontend_ast_v2_print_eight_shape
+    public :: ffc_validate_frontend_ast_v2_print_nine_shape
 
 contains
 
@@ -517,6 +541,9 @@ contains
             else if (route == 26_int32) then
                 call emit_frontend_ast_v2_print_eight(body)
                 lowered = ffc_validate_frontend_ast_v2_print_eight_shape(body, message)
+            else if (route == 27_int32) then
+                call emit_frontend_ast_v2_print_nine(body)
+                lowered = ffc_validate_frontend_ast_v2_print_nine_shape(body, message)
             else if (route == 25_int32) then
                 call emit_frontend_ast_v2_print_seven(body)
                 lowered = ffc_validate_frontend_ast_v2_print_seven_shape(body, message)
@@ -2226,6 +2253,68 @@ contains
         valid = .true.
     end function ffc_validate_frontend_ast_v2_print_eight_shape
 
+    subroutine emit_frontend_ast_v2_print_nine(body)
+        type(mir_function_body_t), intent(inout) :: body
+        integer :: index
+
+        deallocate (body%instructions)
+        allocate (body%instructions(19))
+        body%function%instruction_count = 19
+        do index = 1, 19
+            body%instructions(index)%id = index - 1
+            body%instructions(index)%opcode = instruction_shape_frontend_ast_v2_print_nine_opcode_0
+            body%instructions(index)%result%id = 0
+            body%instructions(index)%result%kind = instruction_shape_frontend_ast_v2_print_nine_result_kind
+            body%instructions(index)%result%type_name = instruction_shape_frontend_ast_v2_print_nine_result_type
+            body%instructions(index)%source_rule = instruction_shape_frontend_ast_v2_print_nine_source_rule
+        end do
+        do index = 1, 9
+            body%instructions(2 * index - 1)%literal_value = index + 6
+            body%instructions(2 * index)%opcode = instruction_shape_frontend_ast_v2_print_nine_opcode_1
+        end do
+        body%instructions(19)%opcode = instruction_shape_frontend_ast_v2_print_nine_opcode_18
+    end subroutine emit_frontend_ast_v2_print_nine
+
+    logical function ffc_validate_frontend_ast_v2_print_nine_shape(body, message) result(valid)
+        type(mir_function_body_t), intent(in) :: body
+        character(len=:), allocatable, intent(out), optional :: message
+        integer :: index
+
+        call clear_message(message)
+        valid = .false.
+        if (.not. mir_validate_function_body(body, message)) return
+        if (body%function%instruction_count /= instruction_shape_frontend_ast_v2_print_nine_count) then
+            call set_message(message, 'frontend-ast-v2 print-nine instruction count changed')
+            return
+        end if
+        do index = 1, 19
+            if (index == 19) then
+                if (body%instructions(index)%opcode /= instruction_shape_frontend_ast_v2_print_nine_opcode_18) then
+                    call set_message(message, 'frontend-ast-v2 print-nine opcode shape changed')
+                    return
+                end if
+            else if (mod(index, 2) == 1) then
+                if (body%instructions(index)%opcode /= instruction_shape_frontend_ast_v2_print_nine_opcode_0 .or. &
+                    body%instructions(index)%literal_value /= (index + 13) / 2) then
+                    call set_message(message, 'frontend-ast-v2 print-nine literal shape changed')
+                    return
+                end if
+            else
+                if (body%instructions(index)%opcode /= instruction_shape_frontend_ast_v2_print_nine_opcode_1) then
+                    call set_message(message, 'frontend-ast-v2 print-nine opcode shape changed')
+                    return
+                end if
+            end if
+            if (body%instructions(index)%result%kind /= instruction_shape_frontend_ast_v2_print_nine_result_kind .or. &
+                trim(body%instructions(index)%result%type_name) /= instruction_shape_frontend_ast_v2_print_nine_result_type .or. &
+                trim(body%instructions(index)%source_rule) /= instruction_shape_frontend_ast_v2_print_nine_source_rule) then
+                call set_message(message, 'frontend-ast-v2 print-nine typed result shape changed')
+                return
+            end if
+        end do
+        valid = .true.
+    end function ffc_validate_frontend_ast_v2_print_nine_shape
+
     integer(int32) function frontend_ast_v2_stop_route(expression) result(route)
         character(len=*), intent(in) :: expression
         character(len=:), allocatable :: canonical
@@ -2266,6 +2355,26 @@ contains
             index(canonical, '( source-hash ') == 0) return
         if (index(canonical, 'write-stmt') /= 0 .or. index(canonical, 'control-list') /= 0 .or. &
             index(canonical, 'io-implied-do') /= 0) return
+        if (index(canonical, '( output-count 9 )') /= 0) then
+            if (index(canonical, '( output-kind-2 integer-literal )') == 0 .or. &
+                index(canonical, '( output-value-2 8 )') == 0 .or. index(canonical, '( output-rule-2 R1217 )') == 0 .or. &
+                index(canonical, '( output-kind-3 integer-literal )') == 0 .or. &
+                index(canonical, '( output-value-3 9 )') == 0 .or. index(canonical, '( output-rule-3 R1217 )') == 0 .or. &
+                index(canonical, '( output-kind-4 integer-literal )') == 0 .or. &
+                index(canonical, '( output-value-4 10 )') == 0 .or. index(canonical, '( output-rule-4 R1217 )') == 0 .or. &
+                index(canonical, '( output-kind-5 integer-literal )') == 0 .or. &
+                index(canonical, '( output-value-5 11 )') == 0 .or. index(canonical, '( output-rule-5 R1217 )') == 0 .or. &
+                index(canonical, '( output-kind-6 integer-literal )') == 0 .or. &
+                index(canonical, '( output-value-6 12 )') == 0 .or. index(canonical, '( output-rule-6 R1217 )') == 0 .or. &
+                index(canonical, '( output-kind-7 integer-literal )') == 0 .or. &
+                index(canonical, '( output-value-7 13 )') == 0 .or. index(canonical, '( output-rule-7 R1217 )') == 0 .or. &
+                index(canonical, '( output-kind-8 integer-literal )') == 0 .or. &
+                index(canonical, '( output-value-8 14 )') == 0 .or. index(canonical, '( output-rule-8 R1217 )') == 0 .or. &
+                index(canonical, '( output-kind-9 integer-literal )') == 0 .or. &
+                index(canonical, '( output-value-9 15 )') == 0 .or. index(canonical, '( output-rule-9 R1217 )') == 0) return
+            route = 27_int32
+            return
+        end if
         if (index(canonical, '( output-count 8 )') /= 0) then
             if (index(canonical, '( output-kind-2 integer-literal )') == 0 .or. &
                 index(canonical, '( output-value-2 8 )') == 0 .or. &

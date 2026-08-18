@@ -7,7 +7,8 @@ program test_frontend_ast_v2_print
         ffc_validate_frontend_ast_v2_print_7_8_9_10_shape, &
         ffc_validate_frontend_ast_v2_print_7_8_9_10_11_shape, &
         ffc_validate_frontend_ast_v2_print_7_8_9_10_11_12_shape, &
-        ffc_validate_frontend_ast_v2_print_seven_shape, ffc_validate_frontend_ast_v2_print_eight_shape
+        ffc_validate_frontend_ast_v2_print_seven_shape, ffc_validate_frontend_ast_v2_print_eight_shape, &
+        ffc_validate_frontend_ast_v2_print_nine_shape
     use ffc_mir, only: mir_function_body_t, mir_validate_function_body, opcode_const, &
         opcode_output, opcode_return
     implicit none
@@ -200,6 +201,27 @@ program test_frontend_ast_v2_print
         replace_text(envelope_eight_sx(), '(print-stmt ', '(write-stmt '), body, message), &
         'WRITE eight-item mutation was accepted')
 
+    call assert_true(ffc_lower_frontend_ast_v2_from_sx(envelope_nine_sx(), body, message), &
+        'PRINT star 7, 8, 9, 10, 11, 12, 13, 14, 15 envelope was rejected')
+    call assert_true(ffc_validate_frontend_ast_v2_print_nine_shape(body, message), &
+        'PRINT nine-item MIR shape was rejected')
+    call assert_equal(body%function%instruction_count, 19, 'nine-item instruction count changed')
+    call assert_equal(body%instructions(17)%literal_value, 15, 'ninth PRINT literal changed')
+    call assert_equal(body%instructions(18)%opcode, opcode_output, 'ninth PRINT output missing')
+    call assert_equal(body%instructions(19)%opcode, opcode_return, 'nine-item return changed')
+    call assert_true(.not. ffc_lower_frontend_ast_v2_from_sx(&
+        replace_text(envelope_nine_sx(), '(output-value-9 15)', '(output-value-9 14)'), body, message), &
+        'PRINT wrong ninth item was accepted')
+    call assert_true(.not. ffc_lower_frontend_ast_v2_from_sx(&
+        replace_text(envelope_nine_sx(), '(output-value-9 15)', '(output-value-9)'), body, message), &
+        'PRINT missing ninth item was accepted')
+    call assert_true(.not. ffc_lower_frontend_ast_v2_from_sx(&
+        replace_text(envelope_nine_sx(), '(output-rule-9 R1217)', '(output-rule-9)'), body, message), &
+        'PRINT missing ninth rule was accepted')
+    call assert_true(.not. ffc_lower_frontend_ast_v2_from_sx(&
+        replace_text(envelope_nine_sx(), '(print-stmt ', '(write-stmt '), body, message), &
+        'WRITE nine-item mutation was accepted')
+
     write (*, '(a)') 'frontend AST v2 PRINT star 7 checks: ok'
 
 contains
@@ -354,6 +376,16 @@ contains
             '(statement-page 242) (format-page 244) (output-page 248) '// &
             '(source-hash print-test))))'
     end function envelope_eight_sx
+
+    function envelope_nine_sx() result(value)
+        character(len=4096) :: value
+
+        value = envelope_eight_sx()
+        value = replace_text(value, '(end-byte 54)', '(end-byte 56)')
+        value = replace_text(value, '(output-count 8)', '(output-count 9)')
+        value = replace_text(value, '(statement-rule R1212)', &
+            '(output-kind-9 integer-literal) (output-value-9 15) (output-rule-9 R1217) (statement-rule R1212)')
+    end function envelope_nine_sx
 
     function replace_text(value, old, new) result(replaced)
         character(len=*), intent(in) :: value, old, new
