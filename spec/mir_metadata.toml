@@ -588,7 +588,6 @@ literal_values = [17]
 result_ids = [0, 1, 2, 2, 2]
 storage_keys = ["", "x", "x", "", ""]
 source_rules = ["frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt"]
-source_rules = ["frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt"]
 
 [[integer_expression_routes]]
 name = "program_unit_v2_print_variable_23"
@@ -597,5 +596,4 @@ shape = "frontend_ast_v2_print_variable"
 literal_values = [23]
 result_ids = [0, 1, 2, 2, 2]
 storage_keys = ["", "x", "x", "", ""]
-source_rules = ["frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt"]
 source_rules = ["frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt"]
