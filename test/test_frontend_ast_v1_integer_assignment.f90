@@ -61,6 +61,9 @@ contains
             '(end-byte 64) (source-hash hash-unit))))) (variable-count 1) '// &
             '(variable (variable-declaration (type-spec integer) (name x) '// &
             '(span (source-span (file unit.f90) (start-byte 10) (end-byte 24) '// &
+            '(source-hash hash-unit))))) (assignment-count 1) '// &
+            '(assignment (assignment-stmt (variable x) (expression 1) '// &
+            '(span (source-span (file unit.f90) (start-byte 25) (end-byte 30) '// &
             '(source-hash hash-unit))))))'
     end function assignment_sx
 
@@ -69,23 +72,10 @@ contains
         type(mir_function_body_t), intent(out) :: body
         character(len=:), allocatable, intent(out) :: message
 
-        ok = ffc_frontend_ast_v1_from_sx(declaration_sx(), ast, message)
+        ok = ffc_frontend_ast_v1_from_sx(assignment_sx(), ast, message)
         if (.not. ok) return
-        ast%assignment_count = 1_int32
-        ast%assignment%target = 'x'
-        ast%assignment%value = '1'
-        ast%assignment%source_file = ast%root%source_file
-        ast%assignment%source_hash = ast%root%source_hash
-        ast%assignment%start_byte = 25
-        ast%assignment%end_byte = 30
         ok = ffc_lower_frontend_ast_v1(ast, body, message)
     end function lower_assignment
-
-    function declaration_sx() result(serialized)
-        character(len=4096) :: serialized
-
-        serialized = assignment_sx()
-    end function declaration_sx
 
     subroutine assert_true(value, description)
         logical, intent(in) :: value

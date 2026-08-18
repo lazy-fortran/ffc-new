@@ -919,11 +919,11 @@ contains
         position = 1
         parsed = expect_token(token, token_count, position, '(', message)
         if (.not. parsed) return
-        parsed = expect_token(token, token_count, position, 'assignment', message)
+        parsed = expect_token(token, token_count, position, 'assignment-stmt', message)
         if (.not. parsed) return
-        parsed = read_named_atom(token, token_count, position, 'target', target, message)
+        parsed = read_named_atom(token, token_count, position, 'variable', target, message)
         if (.not. parsed) return
-        parsed = read_named_atom(token, token_count, position, 'value', value, message)
+        parsed = read_named_atom(token, token_count, position, 'expression', value, message)
         if (.not. parsed) return
         parsed = read_named_expression(token, token_count, position, 'span', expression, message)
         if (.not. parsed) return
