@@ -27,6 +27,18 @@ program test_frontend_ast_v2_print_generic_list
     call assert_true(all_source_rules_are_print_stmt(body), 'print source identity was lost')
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_sx(), &
         '(print-stmt ', '(write-stmt '), body, message), 'WRITE was accepted')
+    call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_sx(), &
+        '(clause 12.6.3)', '(clause 12.6.4)'), body, message), &
+        'wrong output-item clause was accepted')
+    call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_sx(), &
+        '(page 248)', '(page 249)'), body, message), &
+        'wrong output-item page was accepted')
+    call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_sx(), &
+        ' (clause 12.6.3)', ''), body, message), &
+        'missing output-item clause was accepted')
+    call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_sx(), &
+        ' (page 248)', ''), body, message), &
+        'missing output-item page was accepted')
     write (*, '(a)') 'frontend AST v2 generic PRINT list checks: ok'
 
 contains
@@ -46,10 +58,14 @@ contains
             '(operator ) (left-operand 3) (right-operand ))) (span (source-span (file main.f90) '// &
             '(start-byte 25) (end-byte 26) (source-hash generic-print)))))) '// &
             '(print-stmt (format-kind default-char-expr) (format-value *) (output-count 4) '// &
-            '(output-items (output-item (kind variable) (name x) (rule R901)) '// &
-            '(output-item (kind integer-literal) (value 7) (rule R1217)) '// &
-            '(output-item (kind variable) (name x) (rule R901)) '// &
-            '(output-item (kind integer-literal) (value 8) (rule R1217))) '// &
+            '(output-items (output-item (kind variable) (name x) (rule R901) '// &
+            '(clause 12.6.3) (page 248)) '// &
+            '(output-item (kind integer-literal) (value 7) (rule R1217) '// &
+            '(clause 12.6.3) (page 248)) '// &
+            '(output-item (kind variable) (name x) (rule R901) '// &
+            '(clause 12.6.3) (page 248)) '// &
+            '(output-item (kind integer-literal) (value 8) (rule R1217) '// &
+            '(clause 12.6.3) (page 248))) '// &
             '(statement-rule R1212) (format-rule R1215) (source-document J3-24-007) '// &
             '(statement-clause 12.6.1) (format-clause 12.6.2.2) (output-clause 12.6.3) '// &
             '(statement-page 242) (format-page 244) (output-page 248) '// &

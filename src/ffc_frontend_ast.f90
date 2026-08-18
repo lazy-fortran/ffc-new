@@ -1372,6 +1372,12 @@ contains
         if (.not. expect_token(token, token_count, position, 'output-items', message)) return
         do item_index = 1, int(parsed_count)
             if (.not. read_expression(token, token_count, position, item_expression, message)) return
+            if (index(trim(item_expression), '( clause 12.6.3 )') == 0 .or. &
+                index(trim(item_expression), '( page 248 )') == 0) then
+                call set_message(message, 'invalid-frontend-ast-v2-print-item-provenance')
+                parsed = .false.
+                return
+            end if
             if (.not. parse_frontend_ast_v2_print_item(item_expression, item_kind(item_index), &
                 item_value(item_index), item_rule(item_index), message)) return
         end do
@@ -1409,6 +1415,7 @@ contains
         character(len=*), intent(out) :: item_kind, item_value, item_rule
         character(len=:), allocatable, intent(out), optional :: message
         character(len=frontend_ast_token_length) :: token(frontend_ast_token_capacity)
+        character(len=32) :: item_clause, item_page
         integer :: token_count, position
         integer(int64) :: numeric_value
 
@@ -1441,6 +1448,18 @@ contains
         if ((trim(item_kind) == 'variable' .and. trim(item_rule) /= 'R901') .or. &
             (trim(item_kind) == 'integer-literal' .and. trim(item_rule) /= 'R1217')) then
             call set_message(message, 'invalid-frontend-ast-v2-print-item-rule')
+            parsed = .false.
+            return
+        end if
+        if (.not. read_named_atom(token, token_count, position, 'clause', item_clause, message)) return
+        if (trim(item_clause) /= '12.6.3') then
+            call set_message(message, 'invalid-frontend-ast-v2-print-item-clause')
+            parsed = .false.
+            return
+        end if
+        if (.not. read_named_atom(token, token_count, position, 'page', item_page, message)) return
+        if (trim(item_page) /= '248') then
+            call set_message(message, 'invalid-frontend-ast-v2-print-item-page')
             parsed = .false.
             return
         end if
