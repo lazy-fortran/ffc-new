@@ -29,6 +29,29 @@ def read_source_rules(data: dict) -> list[dict[str, str]]:
     return entries
 
 
+def read_instruction_shapes(
+    data: dict, opcodes: list[dict[str, int | str]], kinds: list[dict[str, int | str]],
+    source_rules: list[dict[str, str]],
+) -> list[dict[str, object]]:
+    entries = data.get("instruction_shapes", [])
+    opcode_names = {entry["name"] for entry in opcodes}
+    kind_names = {entry["name"] for entry in kinds}
+    source_rule_values = {entry["value"] for entry in source_rules}
+    names = [entry["name"] for entry in entries]
+    if len(set(names)) != len(names):
+        raise ValueError("instruction_shapes names must be unique")
+    for entry in entries:
+        if not entry["opcodes"]:
+            raise ValueError("instruction shape must contain instructions")
+        if any(opcode not in opcode_names for opcode in entry["opcodes"]):
+            raise ValueError("instruction shape contains an unknown opcode")
+        if entry["result_kind"] not in kind_names:
+            raise ValueError("instruction shape contains an unknown result kind")
+        if entry["source_rule"] not in source_rule_values:
+            raise ValueError("instruction shape contains an unknown source rule")
+    return entries
+
+
 def generate(spec_path: pathlib.Path) -> str:
     with spec_path.open("rb") as stream:
         data = tomllib.load(stream)
@@ -36,6 +59,7 @@ def generate(spec_path: pathlib.Path) -> str:
     opcodes = read_entries(data, "opcodes")
     source_rules = read_source_rules(data)
     type_specs = data.get("type_specs", [])
+    instruction_shapes = read_instruction_shapes(data, opcodes, kinds, source_rules)
     kind_names = {entry["name"] for entry in kinds}
     type_spec_names = {entry["name"] for entry in type_specs}
     if len(type_spec_names) != len(type_specs):
@@ -64,6 +88,30 @@ def generate(spec_path: pathlib.Path) -> str:
             f"source_rule_{entry['name']} = '{entry['value']}'"
         )
     lines.append("")
+    for entry in instruction_shapes:
+        shape = entry["name"]
+        lines.append(
+            f"    integer(int32), parameter, public :: instruction_shape_{shape}_count = "
+            f"{len(entry['opcodes'])}_int32"
+        )
+        for index, opcode in enumerate(entry["opcodes"]):
+            lines.append(
+                f"    integer(int32), parameter, public :: instruction_shape_{shape}_opcode_"
+                f"{index} = opcode_{opcode}"
+            )
+        lines.append(
+            f"    integer(int32), parameter, public :: instruction_shape_{shape}_result_kind = "
+            f"value_kind_{entry['result_kind']}"
+        )
+        lines.append(
+            f"    character(len={len(entry['result_type'])}), parameter, public :: "
+            f"instruction_shape_{shape}_result_type = '{entry['result_type']}'"
+        )
+        lines.append(
+            f"    character(len={len(entry['source_rule'])}), parameter, public :: "
+            f"instruction_shape_{shape}_source_rule = '{entry['source_rule']}'"
+        )
+        lines.append("")
     lines += [
         "    integer(int32), parameter, public :: mir_opcode_histogram_size = &",
         "        opcode_return - opcode_add + 1_int32",

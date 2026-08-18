@@ -3,8 +3,13 @@ module ffc_frontend_ast
     use ffc_lowering, only: ffc_lower_program_root, ffc_program_declaration_from_sx, &
         ffc_program_root_from_sx, ffc_program_root_t, ffc_validate_program_root
     use ffc_mir, only: mir_function_body_t, mir_make_function_witness, &
-        mir_type_spec_name, mir_type_spec_value_kind
-    use ffc_mir_metadata, only: source_rule_frontend_ast_v1_program
+        mir_type_spec_name, mir_type_spec_value_kind, mir_validate_function_body
+    use ffc_mir_metadata, only: instruction_shape_frontend_ast_v1_integer_program_count, &
+        instruction_shape_frontend_ast_v1_integer_program_opcode_0, &
+        instruction_shape_frontend_ast_v1_integer_program_opcode_1, &
+        instruction_shape_frontend_ast_v1_integer_program_result_kind, &
+        instruction_shape_frontend_ast_v1_integer_program_result_type, &
+        instruction_shape_frontend_ast_v1_integer_program_source_rule
     implicit none
     private
 
@@ -44,6 +49,7 @@ module ffc_frontend_ast
     public :: ffc_lower_frontend_ast_v1
     public :: ffc_lower_frontend_ast_v1_from_sx
     public :: ffc_validate_frontend_ast_v1
+    public :: ffc_validate_frontend_ast_v1_integer_program_shape
 
 contains
 
@@ -151,9 +157,67 @@ contains
         body%instructions(1)%result%kind = kind
         body%instructions(1)%result%type_name = trim(type_name)
         body%instructions(2)%result = body%instructions(1)%result
-        body%instructions(1)%source_rule = source_rule_frontend_ast_v1_program
-        body%instructions(2)%source_rule = source_rule_frontend_ast_v1_program
+        if (trim(ast%variable%type_spec) == 'integer') then
+            body%function%instruction_count = instruction_shape_frontend_ast_v1_integer_program_count
+            body%instructions(1)%opcode = instruction_shape_frontend_ast_v1_integer_program_opcode_0
+            body%instructions(2)%opcode = instruction_shape_frontend_ast_v1_integer_program_opcode_1
+            body%instructions(1)%result%kind = instruction_shape_frontend_ast_v1_integer_program_result_kind
+            body%instructions(1)%result%type_name = instruction_shape_frontend_ast_v1_integer_program_result_type
+            body%instructions(2)%result = body%instructions(1)%result
+            body%instructions(1)%source_rule = &
+                instruction_shape_frontend_ast_v1_integer_program_source_rule
+            body%instructions(2)%source_rule = &
+                instruction_shape_frontend_ast_v1_integer_program_source_rule
+            lowered = ffc_validate_frontend_ast_v1_integer_program_shape(body, message)
+            return
+        end if
+        body%instructions(1)%source_rule = 'frontend-ast-v1/program'
+        body%instructions(2)%source_rule = 'frontend-ast-v1/program'
     end function ffc_lower_frontend_ast_v1
+
+    logical function ffc_validate_frontend_ast_v1_integer_program_shape(body, message) &
+            result(valid)
+        type(mir_function_body_t), intent(in) :: body
+        character(len=:), allocatable, intent(out), optional :: message
+
+        call clear_message(message)
+        valid = .false.
+        if (.not. mir_validate_function_body(body, message)) return
+        if (body%function%instruction_count /= &
+            instruction_shape_frontend_ast_v1_integer_program_count) then
+            call set_message(message, 'frontend-ast-v1 integer instruction count changed')
+            return
+        end if
+        if (body%instructions(1)%opcode /= &
+            instruction_shape_frontend_ast_v1_integer_program_opcode_0 .or. &
+            body%instructions(2)%opcode /= &
+            instruction_shape_frontend_ast_v1_integer_program_opcode_1) then
+            call set_message(message, 'frontend-ast-v1 integer opcode shape changed')
+            return
+        end if
+        if (body%instructions(1)%result%kind /= &
+            instruction_shape_frontend_ast_v1_integer_program_result_kind .or. &
+            trim(body%instructions(1)%result%type_name) /= &
+            instruction_shape_frontend_ast_v1_integer_program_result_type) then
+            call set_message(message, 'frontend-ast-v1 integer result shape changed')
+            return
+        end if
+        if (body%instructions(2)%result%kind /= &
+            instruction_shape_frontend_ast_v1_integer_program_result_kind .or. &
+            trim(body%instructions(2)%result%type_name) /= &
+            instruction_shape_frontend_ast_v1_integer_program_result_type) then
+            call set_message(message, 'frontend-ast-v1 integer return shape changed')
+            return
+        end if
+        if (trim(body%instructions(1)%source_rule) /= &
+            instruction_shape_frontend_ast_v1_integer_program_source_rule .or. &
+            trim(body%instructions(2)%source_rule) /= &
+            instruction_shape_frontend_ast_v1_integer_program_source_rule) then
+            call set_message(message, 'frontend-ast-v1 integer source rule changed')
+            return
+        end if
+        valid = .true.
+    end function ffc_validate_frontend_ast_v1_integer_program_shape
 
     logical function ffc_lower_frontend_ast_v1_from_sx(serialized, body, message) result(lowered)
         character(len=*), intent(in) :: serialized
