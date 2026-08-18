@@ -2,13 +2,16 @@ program test_integer_variable_add
     use, intrinsic :: iso_fortran_env, only: int32
     use ffc_frontend_ast, only: ffc_frontend_ast_v1_from_sx, ffc_frontend_ast_v1_t, &
         ffc_lower_frontend_ast_v1, ffc_validate_frontend_ast_v1_int_var_assignment_shape
-    use ffc_mir, only: mir_function_body_t, opcode_add, opcode_const, opcode_load, opcode_return, &
-        opcode_store, value_kind_integer
+    use ffc_mir, only: mir_function_body_from_sx, mir_function_body_t, mir_function_body_to_sx, &
+        opcode_add, opcode_const, opcode_load, opcode_return, opcode_store, value_kind_integer
     implicit none
 
     type(ffc_frontend_ast_v1_t) :: ast
     type(mir_function_body_t) :: body
+    type(mir_function_body_t) :: roundtrip
     character(len=:), allocatable :: message
+    character(len=4096) :: serialized
+    logical :: ok
 
     call assert_true(lower(variable_add_expression(), body), 'variable add was not lowered')
     call assert_true(ffc_validate_frontend_ast_v1_int_var_assignment_shape(body, message), &
@@ -16,7 +19,9 @@ program test_integer_variable_add
     call assert_true(body%function%instruction_count == 5_int32, 'instruction count changed')
     call assert_true(body%instructions(1)%id == 0_int32 .and. &
         body%instructions(1)%opcode == opcode_load .and. &
-        body%instructions(1)%result%id == 0_int32, 'load shape changed')
+        body%instructions(1)%result%id == 0_int32 .and. &
+        allocated(body%instructions(1)%storage_key) .and. &
+        trim(body%instructions(1)%storage_key) == 'x', 'load storage shape changed')
     call assert_true(body%instructions(2)%id == 1_int32 .and. &
         body%instructions(2)%opcode == opcode_const .and. &
         body%instructions(2)%literal_value == 1_int32 .and. &
@@ -26,11 +31,29 @@ program test_integer_variable_add
         body%instructions(3)%result%id == 2_int32, 'add shape changed')
     call assert_true(body%instructions(4)%id == 3_int32 .and. &
         body%instructions(4)%opcode == opcode_store .and. &
-        body%instructions(4)%result%id == 2_int32, 'store shape changed')
+        body%instructions(4)%result%id == 2_int32 .and. &
+        allocated(body%instructions(4)%storage_key) .and. &
+        trim(body%instructions(4)%storage_key) == 'x', 'store storage shape changed')
     call assert_true(body%instructions(5)%id == 4_int32 .and. &
         body%instructions(5)%opcode == opcode_return .and. &
         body%instructions(5)%result%id == 2_int32, 'return shape changed')
     call assert_true(all_integer_expression_metadata(body), 'expression metadata changed')
+    call mir_function_body_to_sx(body, serialized, ok, message)
+    call assert_true(ok, 'variable storage MIR was not serialized')
+    call assert_true(index(trim(serialized), '(storage-key x)') > 0, &
+        'variable storage key was not serialized')
+    call mir_function_body_from_sx(trim(serialized), roundtrip, ok, message)
+    call assert_true(ok, 'variable storage MIR was not parsed')
+    call assert_true(ffc_validate_frontend_ast_v1_int_var_assignment_shape(roundtrip, message), &
+        'round-tripped variable storage key was rejected')
+
+    body%instructions(1)%storage_key = 'y'
+    call assert_false(ffc_validate_frontend_ast_v1_int_var_assignment_shape(body, message), &
+        'mutated storage key was accepted')
+    call assert_true(lower(variable_add_expression(), body), 'variable add was not rebuilt')
+    deallocate (body%instructions(4)%storage_key)
+    call assert_false(ffc_validate_frontend_ast_v1_int_var_assignment_shape(body, message), &
+        'missing storage key was accepted')
 
     call assert_false(lower('(assignment-expression (kind binary-expression) (operator +) '// &
         '(left-operand y) (right-operand 1))', body), 'wrong variable was accepted')

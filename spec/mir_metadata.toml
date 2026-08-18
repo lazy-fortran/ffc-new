@@ -222,6 +222,7 @@ expression = "(assignment-expression (kind binary-expression) (operator +) (left
 shape = "frontend_ast_v1_int_var_assign"
 literal_values = [1]
 result_ids = [0, 1, 2, 2, 2]
+storage_keys = ["x", "", "", "x", ""]
 
 [[integer_expression_routes]]
 name = "mul"

@@ -99,7 +99,8 @@ module ffc_frontend_ast
         mir_frontend_ast_v1_integer_expression_result_type, &
         mir_frontend_ast_v1_integer_expression_source_rule, &
         mir_frontend_ast_v1_integer_expression_literal_value, &
-        mir_frontend_ast_v1_integer_expression_result_id
+        mir_frontend_ast_v1_integer_expression_result_id, &
+        mir_frontend_ast_v1_integer_expression_storage_key
     use ffc_lowering_policy, only: bounded_integer_declaration_count, &
         bounded_integer_variable_count
     implicit none
@@ -508,6 +509,10 @@ contains
                 mir_frontend_ast_v1_integer_expression_opcode(route, index)
             body%instructions(index + 1)%source_rule = &
                 trim(mir_frontend_ast_v1_integer_expression_source_rule(route))
+            if (len_trim(mir_frontend_ast_v1_integer_expression_storage_key(route, index)) > 0) then
+                body%instructions(index + 1)%storage_key = &
+                    trim(mir_frontend_ast_v1_integer_expression_storage_key(route, index))
+            end if
             if (body%instructions(index + 1)%opcode == opcode_const) then
                 body%instructions(index + 1)%literal_value = &
                     mir_frontend_ast_v1_integer_expression_literal_value(route, literal_index)
@@ -760,6 +765,7 @@ contains
         character(len=:), allocatable, intent(out), optional :: message
 
         integer :: index
+        character(len=64) :: expected_storage_key
 
         call clear_message(message)
         valid = .false.
@@ -793,6 +799,21 @@ contains
             return
         end if
         do index = 1, 5
+            expected_storage_key = trim(mir_frontend_ast_v1_integer_expression_storage_key(2_int32, &
+                int(index - 1, int32)))
+            if (len_trim(expected_storage_key) > 0) then
+                if (.not. allocated(body%instructions(index)%storage_key)) then
+                    call set_message(message, 'frontend-ast-v1 integer variable storage key missing')
+                    return
+                end if
+                if (trim(body%instructions(index)%storage_key) /= trim(expected_storage_key)) then
+                    call set_message(message, 'frontend-ast-v1 integer variable storage key changed')
+                    return
+                end if
+            else if (allocated(body%instructions(index)%storage_key)) then
+                call set_message(message, 'frontend-ast-v1 integer variable storage key unexpected')
+                return
+            end if
             if (body%instructions(index)%result%kind /= &
                 instruction_shape_frontend_ast_v1_int_var_assign_result_kind .or. &
                 trim(body%instructions(index)%result%type_name) /= &

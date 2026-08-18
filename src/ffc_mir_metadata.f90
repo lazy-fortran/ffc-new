@@ -151,6 +151,7 @@ module ffc_mir_metadata
     public :: mir_frontend_ast_v1_integer_expression_source_rule
     public :: mir_frontend_ast_v1_integer_expression_literal_value
     public :: mir_frontend_ast_v1_integer_expression_result_id
+    public :: mir_frontend_ast_v1_integer_expression_storage_key
 
 contains
 
@@ -466,5 +467,33 @@ contains
             end select
         end select
     end function mir_frontend_ast_v1_integer_expression_result_id
+
+    character(len=64) function mir_frontend_ast_v1_integer_expression_storage_key(route, index)
+        integer(int32), intent(in) :: route, index
+
+        mir_frontend_ast_v1_integer_expression_storage_key = ''
+        select case (route)
+        case (1_int32)
+            select case (index)
+            end select
+        case (2_int32)
+            select case (index)
+            case (0_int32); mir_frontend_ast_v1_integer_expression_storage_key = 'x'
+            case (1_int32); mir_frontend_ast_v1_integer_expression_storage_key = ''
+            case (2_int32); mir_frontend_ast_v1_integer_expression_storage_key = ''
+            case (3_int32); mir_frontend_ast_v1_integer_expression_storage_key = 'x'
+            case (4_int32); mir_frontend_ast_v1_integer_expression_storage_key = ''
+            end select
+        case (3_int32)
+            select case (index)
+            end select
+        case (4_int32)
+            select case (index)
+            end select
+        case (5_int32)
+            select case (index)
+            end select
+        end select
+    end function mir_frontend_ast_v1_integer_expression_storage_key
 
 end module ffc_mir_metadata

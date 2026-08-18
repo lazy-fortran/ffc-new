@@ -31,6 +31,7 @@ module ffc_mir
         integer(int32) :: opcode = 0_int32
         integer(int32) :: literal_value = 0_int32
         type(mir_value_t) :: result
+        character(len=:), allocatable :: storage_key
         character(len=:), allocatable :: source_rule
     end type mir_instruction_t
 
@@ -132,6 +133,20 @@ contains
         if (instruction%opcode /= opcode_const .and. instruction%literal_value /= 0_int32) then
             call set_message(message, "non-const instruction has a literal value")
             return
+        end if
+        if (allocated(instruction%storage_key)) then
+            if (instruction%opcode /= opcode_load .and. instruction%opcode /= opcode_store) then
+                call set_message(message, "storage key is only valid on load or store")
+                return
+            end if
+            if (len_trim(instruction%storage_key) == 0) then
+                call set_message(message, "instruction storage key must be non-empty")
+                return
+            end if
+            if (.not. mir_is_sx_atom(instruction%storage_key)) then
+                call set_message(message, "instruction storage key is not a valid SX atom")
+                return
+            end if
         end if
         if (.not. mir_validate_value(instruction%result, message)) return
         if (.not. allocated(instruction%source_rule)) then
@@ -707,7 +722,7 @@ contains
 
         character(len=32) :: id_text, result_id_text
         character(len=32) :: opcode_text, result_kind_text
-        integer(int32) :: index
+        integer(int32) :: index, storage_size
 
         size = 0_int32
         call clear_message(message)
@@ -723,9 +738,14 @@ contains
             write (result_id_text, '(i0)') body%instructions(index)%result%id
             opcode_text = mir_opcode_name(body%instructions(index)%opcode)
             result_kind_text = mir_value_kind_name(body%instructions(index)%result%kind)
+            storage_size = 0_int32
+            if (allocated(body%instructions(index)%storage_key)) then
+                storage_size = int(len(' (storage-key ') + &
+                    len_trim(body%instructions(index)%storage_key) + len(')'), int32)
+            end if
             size = size + int(len(' (instruction (id ') + len_trim(id_text) + &
                 len(') (opcode ') + len_trim(opcode_text) + &
-                len(')') + &
+                len(')') + storage_size + &
                 merge(len(' (literal ') + len_trim(itoa(body%instructions(index)%literal_value)) + &
                 len(')'), 0, body%instructions(index)%opcode == opcode_const) + &
                 len(' (source-rule ') + len_trim(body%instructions(index)%source_rule) + &
@@ -770,6 +790,10 @@ contains
             result_kind_text = mir_value_kind_name(body%instructions(index)%result%kind)
             canonical = trim(canonical)//' (instruction (id '//trim(id_text)//') '// &
                 '(opcode '//trim(opcode_text)//')'
+            if (allocated(body%instructions(index)%storage_key)) then
+                canonical = trim(canonical)//' (storage-key '// &
+                    trim(body%instructions(index)%storage_key)//')'
+            end if
             canonical = trim(canonical)//' (source-rule '// &
                 trim(body%instructions(index)%source_rule)//')'
             if (body%instructions(index)%opcode == opcode_const) then
@@ -1090,6 +1114,17 @@ contains
             return
         end if
         instruction%literal_value = 0_int32
+        if (position <= token_count) then
+            if (trim(token(position)) == '(') then
+                if (position + 1 <= token_count) then
+                    if (trim(token(position + 1)) == 'storage-key') then
+                        ok = read_named_atom(token, token_count, position, 'storage-key', &
+                            instruction%storage_key, message)
+                        if (.not. ok) return
+                    end if
+                end if
+            end if
+        end if
         ok = read_named_atom(token, token_count, position, 'source-rule', &
             instruction%source_rule, message)
         if (.not. ok) return

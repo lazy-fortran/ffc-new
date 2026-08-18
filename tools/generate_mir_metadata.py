@@ -87,6 +87,13 @@ def read_integer_expression_routes(
             raise ValueError("integer expression route literal values must match const opcodes")
         if "result_ids" in route and len(route["result_ids"]) != len(shape["opcodes"]):
             raise ValueError("integer expression route result ids must match instruction count")
+        if "storage_keys" in route:
+            if len(route["storage_keys"]) != len(shape["opcodes"]):
+                raise ValueError("integer expression route storage keys must match instruction count")
+            if any(not isinstance(value, str) for value in route["storage_keys"]):
+                raise ValueError("integer expression route storage keys must be strings")
+            if any(value and any(character.isspace() for character in value) for value in route["storage_keys"]):
+                raise ValueError("integer expression route storage keys must be SX atoms")
     return routes
 
 
@@ -175,6 +182,7 @@ def generate(spec_path: pathlib.Path) -> str:
         "    public :: mir_frontend_ast_v1_integer_expression_source_rule",
         "    public :: mir_frontend_ast_v1_integer_expression_literal_value",
         "    public :: mir_frontend_ast_v1_integer_expression_result_id",
+        "    public :: mir_frontend_ast_v1_integer_expression_storage_key",
         "",
         "contains",
         "",
@@ -427,6 +435,25 @@ def generate(spec_path: pathlib.Path) -> str:
     lines += [
         "        end select",
         "    end function mir_frontend_ast_v1_integer_expression_result_id",
+        "",
+        "    character(len=64) function mir_frontend_ast_v1_integer_expression_storage_key(route, index)",
+        "        integer(int32), intent(in) :: route, index",
+        "",
+        "        mir_frontend_ast_v1_integer_expression_storage_key = ''",
+        "        select case (route)",
+    ]
+    for index, route in enumerate(integer_expression_routes, start=1):
+        lines.append(f"        case ({index}_int32)")
+        lines.append("            select case (index)")
+        for storage_index, storage_key in enumerate(route.get("storage_keys", [])):
+            lines.append(
+                f"            case ({storage_index}_int32); "
+                f"mir_frontend_ast_v1_integer_expression_storage_key = '{storage_key}'"
+            )
+        lines.append("            end select")
+    lines += [
+        "        end select",
+        "    end function mir_frontend_ast_v1_integer_expression_storage_key",
         "",
         "end module ffc_mir_metadata",
         "",
