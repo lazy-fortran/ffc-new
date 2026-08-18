@@ -91,7 +91,8 @@ contains
         character(len=:), allocatable, intent(out) :: message
 
         ok = ffc_frontend_ast_v1_from_sx(common_sx(&
-            '(binary-expr (operator +) (left 1) (right 2))'), ast, message)
+            '(assignment-expression (kind binary-expression) (operator +) '// &
+            '(left-operand 1) (right-operand 2))'), ast, message)
         if (.not. ok) return
         ok = ffc_lower_frontend_ast_v1(ast, body, message)
     end function lower_expression

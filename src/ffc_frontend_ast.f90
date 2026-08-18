@@ -1140,6 +1140,7 @@ contains
         integer, intent(inout) :: position
         character(len=*), intent(out) :: value
         character(len=:), allocatable, intent(out), optional :: message
+        character(len=128) :: kind, operator, left_operand, right_operand
 
         call clear_message(message)
         value = ''
@@ -1149,7 +1150,37 @@ contains
         if (.not. ok) return
         if (position <= token_count) then
             if (trim(token(position)) == '(') then
-                ok = read_expression(token, token_count, position, value, message)
+                if (position + 1 <= token_count) then
+                    if (trim(token(position + 1)) /= 'assignment-expression') then
+                        ok = read_expression(token, token_count, position, value, message)
+                        if (.not. ok) return
+                    else
+                        position = position + 2
+                        ok = read_named_atom(token, token_count, position, 'kind', kind, message)
+                        if (.not. ok) return
+                        ok = read_named_atom(token, token_count, position, 'operator', operator, &
+                            message)
+                        if (.not. ok) return
+                        ok = read_named_atom(token, token_count, position, 'left-operand', &
+                            left_operand, message)
+                        if (.not. ok) return
+                        ok = read_named_atom(token, token_count, position, 'right-operand', &
+                            right_operand, message)
+                        if (.not. ok) return
+                        ok = expect_token(token, token_count, position, ')', message)
+                        if (.not. ok) return
+                        if (trim(kind) /= 'binary-expression' .or. trim(operator) /= '+' .or. &
+                            trim(left_operand) /= '1' .or. trim(right_operand) /= '2') then
+                            call set_message(message, &
+                                'unsupported-frontend-ast-v1-assignment-expression')
+                            ok = .false.
+                            return
+                        end if
+                        value = '( binary-expr ( operator + ) ( left 1 ) ( right 2 ) )'
+                    end if
+                else
+                    ok = read_expression(token, token_count, position, value, message)
+                end if
             else
                 ok = read_atom(token, token_count, position, value, message)
             end if
