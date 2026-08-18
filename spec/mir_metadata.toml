@@ -285,6 +285,80 @@ result_type = "i32"
 source_rule = "frontend-ast-v2/print-stmt"
 
 [[instruction_shapes]]
+name = "v2_pow_print_21_40_incomplete"
+opcodes = ["const", "store", "load", "const", "pow", "store", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "return"]
+result_kind = "integer"
+result_type = "i32"
+source_rule = "frontend-ast-v2/print-stmt"
+
+[[instruction_shapes]]
+name = "v2_pow_print_21_40_overlong"
+opcodes = [
+    "const", "store", "load", "const", "pow", "store",
+    "load", "output", "load", "output", "load", "output", "load", "output",
+    "load", "output", "load", "output", "load", "output", "load", "output",
+    "load", "output", "load", "output", "load", "output", "load", "output",
+    "load", "output", "load", "output", "load", "output", "load", "output",
+    "load", "output", "load", "output", "load", "output", "load", "output",
+    "load", "output", "load", "output", "load", "output", "load", "output",
+    "load", "output", "load", "output", "load", "output", "load", "output",
+    "load", "output", "load", "output", "load", "output", "load", "output",
+    "load", "output", "load", "output", "load", "output", "load", "output",
+    "load", "output", "load", "output", "load", "output", "load", "output",
+    "load", "output", "load", "output", "load", "output", "load", "output",
+    "load", "output", "load", "output", "load", "output", "load", "output",
+    "load", "output", "load", "output", "load", "output", "load", "output",
+    "load", "output", "load", "output", "load", "output", "load", "output",
+    "load", "output", "load", "output", "load", "output", "load", "output",
+    "load", "output", "load", "output", "load", "output", "load", "output",
+    "load", "output", "load", "output", "load", "output", "load", "output",
+    "load", "output", "load", "output", "load", "output", "load", "output",
+    "load", "output", "load", "output", "load", "output", "load", "output",
+    "load", "output", "load", "output", "load", "output", "load", "output",
+    "return"
+]
+result_kind = "integer"
+result_type = "i32"
+source_rule = "frontend-ast-v2/print-stmt"
+
+[[instruction_shapes]]
+name = "v2_pow_print_21_40_wrong113"
+opcodes = ["const", "store", "load", "const", "pow", "store", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "return"]
+result_kind = "integer"
+result_type = "i32"
+source_rule = "frontend-ast-v2/print-stmt"
+
+[[instruction_shapes]]
+name = "v2_pow_print_21_40"
+opcodes = [
+    "const", "store", "load", "const", "pow", "store",
+    "load", "output", "load", "output",
+    "load", "output", "load", "output",
+    "load", "output", "load", "output",
+    "load", "output", "load", "output",
+    "load", "output", "load", "output",
+    "load", "output", "load", "output",
+    "load", "output", "load", "output",
+    "load", "output", "load", "output",
+    "load", "output", "load", "output",
+    "load", "output", "load", "output",
+    "load", "output", "load", "output",
+    "load", "output", "load", "output",
+    "load", "output", "load", "output",
+    "load", "output", "load", "output",
+    "load", "output", "load", "output",
+    "load", "output", "load", "output",
+    "load", "output", "load", "output",
+    "load", "output", "load", "output",
+    "load", "output", "load", "output",
+    "load", "output", "load", "output",
+    "return"
+]
+result_kind = "integer"
+result_type = "i32"
+source_rule = "frontend-ast-v2/print-stmt"
+
+[[instruction_shapes]]
 name = "frontend_ast_v2_print_7_8"
 opcodes = ["const", "output", "const", "output", "return"]
 result_kind = "integer"

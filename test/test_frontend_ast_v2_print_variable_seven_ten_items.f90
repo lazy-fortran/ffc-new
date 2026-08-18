@@ -8,7 +8,7 @@ program test_frontend_ast_v2_print_variable_seven_ten_items
     character(len=:), allocatable :: message
     integer :: item_count, instruction_index, output_index
 
-    do item_count = 7, 20
+    do item_count = 7, 40
         call assert_true(lower_positive(item_count), 'source-backed stored-variable PRINT route was rejected')
         call assert_true(mir_validate_function_body(body, message), 'generated MIR is invalid')
         call assert_true(body%function%instruction_count == 2 * item_count + 7, 'instruction count changed')
@@ -41,7 +41,7 @@ program test_frontend_ast_v2_print_variable_seven_ten_items
         call assert_true(body%instructions(1)%literal_value == literal_value_for(item_count) .and. &
             body%instructions(4)%literal_value == exponent_for(item_count), 'constant transport changed')
     end do
-    write (*, '(a)') 'frontend AST v2 variable seven-to-twenty-item PRINT checks: ok'
+    write (*, '(a)') 'frontend AST v2 variable seven-to-forty-item PRINT checks: ok'
 
 contains
 
@@ -59,7 +59,7 @@ contains
         integer :: item_index, literal_value, exponent
 
         select case (item_count)
-        case (7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20); literal_value = 3; exponent = 2
+        case (7:40); literal_value = 3; exponent = 2
         end select
         write (count_text, '(i0)') item_count
         value = '(program-unit-v2 (root (program-root (name main) (span (source-span '// &
@@ -102,7 +102,7 @@ contains
         integer, intent(in) :: item_count
 
         select case (item_count)
-        case (7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20); value = 3
+        case (7:40); value = 3
         end select
     end function literal_value_for
 
@@ -110,7 +110,7 @@ contains
         integer, intent(in) :: item_count
 
         select case (item_count)
-        case (7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20); value = 2
+        case (7:40); value = 2
         end select
     end function exponent_for
 
