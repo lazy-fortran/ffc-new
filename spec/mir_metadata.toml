@@ -369,6 +369,16 @@ result_type = "i32"
 source_rule = "frontend-ast-v2/print-stmt"
 
 [[instruction_shapes]]
+name = "v2_pow_print_61_80"
+opcodes = ["const", "store", "load", "const", "pow", "store"]
+repeat_opcodes = ["load", "output"]
+repeat_count = 80
+trailing_opcodes = ["return"]
+result_kind = "integer"
+result_type = "i32"
+source_rule = "frontend-ast-v2/print-stmt"
+
+[[instruction_shapes]]
 name = "frontend_ast_v2_print_7_8"
 opcodes = ["const", "output", "const", "output", "return"]
 result_kind = "integer"
