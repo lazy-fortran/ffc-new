@@ -195,6 +195,32 @@ module ffc_mir_metadata
     character(len=3), parameter, public :: instruction_shape_frontend_ast_v2_print_nine_result_type = 'i32'
     character(len=26), parameter, public :: instruction_shape_frontend_ast_v2_print_nine_source_rule = 'frontend-ast-v2/print-stmt'
 
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_ten_count = 21_int32
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_ten_opcode_0 = opcode_const
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_ten_opcode_1 = opcode_output
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_ten_opcode_2 = opcode_const
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_ten_opcode_3 = opcode_output
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_ten_opcode_4 = opcode_const
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_ten_opcode_5 = opcode_output
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_ten_opcode_6 = opcode_const
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_ten_opcode_7 = opcode_output
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_ten_opcode_8 = opcode_const
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_ten_opcode_9 = opcode_output
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_ten_opcode_10 = opcode_const
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_ten_opcode_11 = opcode_output
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_ten_opcode_12 = opcode_const
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_ten_opcode_13 = opcode_output
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_ten_opcode_14 = opcode_const
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_ten_opcode_15 = opcode_output
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_ten_opcode_16 = opcode_const
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_ten_opcode_17 = opcode_output
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_ten_opcode_18 = opcode_const
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_ten_opcode_19 = opcode_output
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_ten_opcode_20 = opcode_return
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_ten_result_kind = value_kind_integer
+    character(len=3), parameter, public :: instruction_shape_frontend_ast_v2_print_ten_result_type = 'i32'
+    character(len=26), parameter, public :: instruction_shape_frontend_ast_v2_print_ten_source_rule = 'frontend-ast-v2/print-stmt'
+
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_int_assign_count = 2_int32
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_int_assign_opcode_0 = opcode_store
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_int_assign_opcode_1 = opcode_return

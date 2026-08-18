@@ -8,13 +8,14 @@ program test_frontend_ast_v2_print
         ffc_validate_frontend_ast_v2_print_7_8_9_10_11_shape, &
         ffc_validate_frontend_ast_v2_print_7_8_9_10_11_12_shape, &
         ffc_validate_frontend_ast_v2_print_seven_shape, ffc_validate_frontend_ast_v2_print_eight_shape, &
-        ffc_validate_frontend_ast_v2_print_nine_shape
+        ffc_validate_frontend_ast_v2_print_nine_shape, ffc_validate_frontend_ast_v2_print_ten_shape
     use ffc_mir, only: mir_function_body_t, mir_validate_function_body, opcode_const, &
         opcode_output, opcode_return
     implicit none
 
     type(mir_function_body_t) :: body
     character(len=:), allocatable :: message
+    integer :: item_index
 
     call assert_true(ffc_lower_frontend_ast_v2_from_sx(envelope_sx(), body, message), &
         'PRINT star 7 envelope was rejected')
@@ -222,6 +223,33 @@ program test_frontend_ast_v2_print
         replace_text(envelope_nine_sx(), '(print-stmt ', '(write-stmt '), body, message), &
         'WRITE nine-item mutation was accepted')
 
+    call assert_true(ffc_lower_frontend_ast_v2_from_sx(envelope_ten_sx(), body, message), &
+        'PRINT star 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 envelope was rejected')
+    call assert_true(ffc_validate_frontend_ast_v2_print_ten_shape(body, message), &
+        'PRINT ten-item MIR shape was rejected')
+    call assert_equal(body%function%instruction_count, 21, 'ten-item instruction count changed')
+    do item_index = 1, 10
+        call assert_equal(body%instructions(2 * item_index - 1)%opcode, opcode_const, &
+            'ten-item const missing')
+        call assert_equal(body%instructions(2 * item_index)%opcode, opcode_output, &
+            'ten-item output missing')
+        call assert_equal(body%instructions(2 * item_index - 1)%literal_value, item_index + 6, &
+            'ten-item source correspondence changed')
+    end do
+    call assert_equal(body%instructions(21)%opcode, opcode_return, 'ten-item return changed')
+    call assert_true(.not. ffc_lower_frontend_ast_v2_from_sx(&
+        replace_text(envelope_ten_sx(), '(output-value-10 16)', '(output-value-10 15)'), body, message), &
+        'PRINT wrong tenth item was accepted')
+    call assert_true(.not. ffc_lower_frontend_ast_v2_from_sx(&
+        replace_text(envelope_ten_sx(), '(output-value-10 16)', '(output-value-10)'), body, message), &
+        'PRINT missing tenth item was accepted')
+    call assert_true(.not. ffc_lower_frontend_ast_v2_from_sx(&
+        replace_text(envelope_ten_sx(), '(output-rule-10 R1217)', '(output-rule-10)'), body, message), &
+        'PRINT missing tenth rule was accepted')
+    call assert_true(.not. ffc_lower_frontend_ast_v2_from_sx(&
+        replace_text(envelope_ten_sx(), '(print-stmt ', '(write-stmt '), body, message), &
+        'WRITE ten-item mutation was accepted')
+
     write (*, '(a)') 'frontend AST v2 PRINT star 7 checks: ok'
 
 contains
@@ -386,6 +414,16 @@ contains
         value = replace_text(value, '(statement-rule R1212)', &
             '(output-kind-9 integer-literal) (output-value-9 15) (output-rule-9 R1217) (statement-rule R1212)')
     end function envelope_nine_sx
+
+    function envelope_ten_sx() result(value)
+        character(len=4096) :: value
+
+        value = envelope_nine_sx()
+        value = replace_text(value, '(end-byte 56)', '(end-byte 58)')
+        value = replace_text(value, '(output-count 9)', '(output-count 10)')
+        value = replace_text(value, '(statement-rule R1212)', &
+            '(output-kind-10 integer-literal) (output-value-10 16) (output-rule-10 R1217) (statement-rule R1212)')
+    end function envelope_ten_sx
 
     function replace_text(value, old, new) result(replaced)
         character(len=*), intent(in) :: value, old, new
