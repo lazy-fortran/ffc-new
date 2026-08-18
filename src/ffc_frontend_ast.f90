@@ -26,6 +26,23 @@ module ffc_frontend_ast
         instruction_shape_v2_pow_print_two_items_result_kind, &
         instruction_shape_v2_pow_print_two_items_result_type, &
         instruction_shape_v2_pow_print_two_items_source_rule, &
+        instruction_shape_v2_pow_print_three_items_count, &
+        instruction_shape_v2_pow_print_three_items_opcode_0, &
+        instruction_shape_v2_pow_print_three_items_opcode_1, &
+        instruction_shape_v2_pow_print_three_items_opcode_2, &
+        instruction_shape_v2_pow_print_three_items_opcode_3, &
+        instruction_shape_v2_pow_print_three_items_opcode_4, &
+        instruction_shape_v2_pow_print_three_items_opcode_5, &
+        instruction_shape_v2_pow_print_three_items_opcode_6, &
+        instruction_shape_v2_pow_print_three_items_opcode_7, &
+        instruction_shape_v2_pow_print_three_items_opcode_8, &
+        instruction_shape_v2_pow_print_three_items_opcode_9, &
+        instruction_shape_v2_pow_print_three_items_opcode_10, &
+        instruction_shape_v2_pow_print_three_items_opcode_11, &
+        instruction_shape_v2_pow_print_three_items_opcode_12, &
+        instruction_shape_v2_pow_print_three_items_result_kind, &
+        instruction_shape_v2_pow_print_three_items_result_type, &
+        instruction_shape_v2_pow_print_three_items_source_rule, &
         instruction_shape_frontend_ast_v1_int_assign_count, &
         instruction_shape_frontend_ast_v1_int_assign_opcode_0, &
         instruction_shape_frontend_ast_v1_int_assign_opcode_1, &
@@ -701,12 +718,17 @@ contains
                 return
             end if
             if (route == 23_int32) then
+                if (frontend_ast_v2_print_variable_three_item_match(print_statement)) then
+                    call emit_frontend_ast_v2_print_variable_three_items(body)
+                    lowered = ffc_validate_frontend_ast_v2_print_variable_three_items_shape(body, message)
+                    return
+                end if
                 if (frontend_ast_v2_print_variable_two_item_match(print_statement)) then
                     call emit_frontend_ast_v2_print_variable_two_items(body)
                     lowered = ffc_validate_frontend_ast_v2_print_variable_two_items_shape(body, message)
                     return
                 end if
-                if (index(print_statement, '( output-count 2 )') /= 0) then
+                if (index(print_statement, '( output-count ') /= 0) then
                     call set_message(message, 'unsupported-frontend-ast-v2-execution-part')
                     return
                 end if
@@ -901,6 +923,21 @@ contains
             index(canonical, '( output-rule-2 R901 )') /= 0
     end function frontend_ast_v2_print_variable_two_item_match
 
+    logical function frontend_ast_v2_print_variable_three_item_match(expression) result(matches)
+        character(len=*), intent(in) :: expression
+        character(len=:), allocatable :: canonical
+
+        canonical = trim(expression)
+        matches = frontend_ast_v2_print_variable_match(canonical) .and. &
+            index(canonical, '( output-count 3 )') /= 0 .and. &
+            index(canonical, '( output-kind-2 variable )') /= 0 .and. &
+            index(canonical, '( output-name-2 x )') /= 0 .and. &
+            index(canonical, '( output-rule-2 R901 )') /= 0 .and. &
+            index(canonical, '( output-kind-3 variable )') /= 0 .and. &
+            index(canonical, '( output-name-3 x )') /= 0 .and. &
+            index(canonical, '( output-rule-3 R901 )') /= 0
+    end function frontend_ast_v2_print_variable_three_item_match
+
     subroutine emit_frontend_ast_v2_print_variable_two_items(body)
         type(mir_function_body_t), intent(inout) :: body
         integer :: index
@@ -950,6 +987,47 @@ contains
         body%instructions(9)%storage_key = 'x'
     end subroutine emit_frontend_ast_v2_print_variable_two_items
 
+    subroutine emit_frontend_ast_v2_print_variable_three_items(body)
+        type(mir_function_body_t), intent(inout) :: body
+        integer :: index
+
+        deallocate (body%instructions)
+        allocate (body%instructions(instruction_shape_v2_pow_print_three_items_count))
+        body%function%instruction_count = instruction_shape_v2_pow_print_three_items_count
+        do index = 1, instruction_shape_v2_pow_print_three_items_count
+            body%instructions(index)%id = index - 1
+            body%instructions(index)%result%kind = instruction_shape_v2_pow_print_three_items_result_kind
+            body%instructions(index)%result%type_name = instruction_shape_v2_pow_print_three_items_result_type
+            if (index <= 6) then
+                body%instructions(index)%source_rule = 'frontend-ast-v2/execution-part'
+            else
+                body%instructions(index)%source_rule = instruction_shape_v2_pow_print_three_items_source_rule
+            end if
+        end do
+        body%instructions(1)%opcode = instruction_shape_v2_pow_print_three_items_opcode_0
+        body%instructions(1)%literal_value = 3
+        body%instructions(2)%opcode = instruction_shape_v2_pow_print_three_items_opcode_1
+        body%instructions(3)%opcode = instruction_shape_v2_pow_print_three_items_opcode_2
+        body%instructions(4)%opcode = instruction_shape_v2_pow_print_three_items_opcode_3
+        body%instructions(4)%literal_value = 2
+        body%instructions(5)%opcode = instruction_shape_v2_pow_print_three_items_opcode_4
+        body%instructions(6)%opcode = instruction_shape_v2_pow_print_three_items_opcode_5
+        body%instructions(7)%opcode = instruction_shape_v2_pow_print_three_items_opcode_6
+        body%instructions(8)%opcode = instruction_shape_v2_pow_print_three_items_opcode_7
+        body%instructions(9)%opcode = instruction_shape_v2_pow_print_three_items_opcode_8
+        body%instructions(10)%opcode = instruction_shape_v2_pow_print_three_items_opcode_9
+        body%instructions(11)%opcode = instruction_shape_v2_pow_print_three_items_opcode_10
+        body%instructions(12)%opcode = instruction_shape_v2_pow_print_three_items_opcode_11
+        body%instructions(13)%opcode = instruction_shape_v2_pow_print_three_items_opcode_12
+        body%instructions(:)%result%id = [0, 1, 2, 3, 4, 4, 6, 6, 7, 7, 8, 8, 8]
+        body%instructions(2)%storage_key = 'x'
+        body%instructions(3)%storage_key = 'x'
+        body%instructions(6)%storage_key = 'x'
+        body%instructions(7)%storage_key = 'x'
+        body%instructions(9)%storage_key = 'x'
+        body%instructions(11)%storage_key = 'x'
+    end subroutine emit_frontend_ast_v2_print_variable_three_items
+
     logical function ffc_validate_frontend_ast_v2_print_variable_two_items_shape(body, message) &
             result(valid)
         type(mir_function_body_t), intent(in) :: body
@@ -976,6 +1054,33 @@ contains
         end do
         valid = .true.
     end function ffc_validate_frontend_ast_v2_print_variable_two_items_shape
+
+    logical function ffc_validate_frontend_ast_v2_print_variable_three_items_shape(body, message) &
+            result(valid)
+        type(mir_function_body_t), intent(in) :: body
+        character(len=:), allocatable, intent(out), optional :: message
+        integer :: index
+
+        call clear_message(message)
+        valid = .false.
+        if (.not. mir_validate_function_body(body, message)) return
+        if (body%function%instruction_count /= instruction_shape_v2_pow_print_three_items_count) then
+            call set_message(message, 'frontend-ast-v2 variable three-item instruction count changed')
+            return
+        end if
+        do index = 1, instruction_shape_v2_pow_print_three_items_count
+            if (body%instructions(index)%result%kind /= instruction_shape_v2_pow_print_three_items_result_kind .or. &
+                trim(body%instructions(index)%result%type_name) /= instruction_shape_v2_pow_print_three_items_result_type .or. &
+                (index <= 6 .and. trim(body%instructions(index)%source_rule) /= &
+                'frontend-ast-v2/execution-part') .or. &
+                (index > 6 .and. trim(body%instructions(index)%source_rule) /= &
+                instruction_shape_v2_pow_print_three_items_source_rule)) then
+                call set_message(message, 'frontend-ast-v2 variable three-item result shape changed')
+                return
+            end if
+        end do
+        valid = .true.
+    end function ffc_validate_frontend_ast_v2_print_variable_three_items_shape
 
     character(len=16) function sequence_position_name(position)
         integer, intent(in) :: position

@@ -100,6 +100,24 @@ module ffc_mir_metadata
     character(len=3), parameter, public :: instruction_shape_v2_pow_print_two_items_result_type = 'i32'
     character(len=26), parameter, public :: instruction_shape_v2_pow_print_two_items_source_rule = 'frontend-ast-v2/print-stmt'
 
+    integer(int32), parameter, public :: instruction_shape_v2_pow_print_three_items_count = 13_int32
+    integer(int32), parameter, public :: instruction_shape_v2_pow_print_three_items_opcode_0 = opcode_const
+    integer(int32), parameter, public :: instruction_shape_v2_pow_print_three_items_opcode_1 = opcode_store
+    integer(int32), parameter, public :: instruction_shape_v2_pow_print_three_items_opcode_2 = opcode_load
+    integer(int32), parameter, public :: instruction_shape_v2_pow_print_three_items_opcode_3 = opcode_const
+    integer(int32), parameter, public :: instruction_shape_v2_pow_print_three_items_opcode_4 = opcode_pow
+    integer(int32), parameter, public :: instruction_shape_v2_pow_print_three_items_opcode_5 = opcode_store
+    integer(int32), parameter, public :: instruction_shape_v2_pow_print_three_items_opcode_6 = opcode_load
+    integer(int32), parameter, public :: instruction_shape_v2_pow_print_three_items_opcode_7 = opcode_output
+    integer(int32), parameter, public :: instruction_shape_v2_pow_print_three_items_opcode_8 = opcode_load
+    integer(int32), parameter, public :: instruction_shape_v2_pow_print_three_items_opcode_9 = opcode_output
+    integer(int32), parameter, public :: instruction_shape_v2_pow_print_three_items_opcode_10 = opcode_load
+    integer(int32), parameter, public :: instruction_shape_v2_pow_print_three_items_opcode_11 = opcode_output
+    integer(int32), parameter, public :: instruction_shape_v2_pow_print_three_items_opcode_12 = opcode_return
+    integer(int32), parameter, public :: instruction_shape_v2_pow_print_three_items_result_kind = value_kind_integer
+    character(len=3), parameter, public :: instruction_shape_v2_pow_print_three_items_result_type = 'i32'
+    character(len=26), parameter, public :: instruction_shape_v2_pow_print_three_items_source_rule = 'frontend-ast-v2/print-stmt'
+
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_7_8_count = 5_int32
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_7_8_opcode_0 = opcode_const
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_7_8_opcode_1 = opcode_output
