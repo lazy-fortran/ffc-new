@@ -632,11 +632,16 @@ contains
                 '( integer-literal 17 )' .and. trim(assignments(1)%value) /= &
                 '( integer-literal 23 )') .or. &
                 (assignment_count == 2 .and. &
-                (trim(assignments(1)%value) /= '( integer-literal 23 )' .or. &
+                ((trim(assignments(1)%value) /= '( integer-literal 23 )' .and. &
+                trim(assignments(1)%value) /= '( integer-literal 24 )') .or. &
                 trim(assignments(2)%target) /= 'x' .or. trim(assignments(2)%value) /= &
                 '(assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))' .and. &
                 trim(assignments(2)%value) /= &
-                '(assignment-expression (kind binary-expression) (operator *) (left-operand x) (right-operand 2))')) .or. &
+                '(assignment-expression (kind binary-expression) (operator *) (left-operand x) (right-operand 2))' .and. &
+                trim(assignments(2)%value) /= &
+                '(assignment-expression (kind binary-expression) (operator –) (left-operand x) (right-operand 2))' .and. &
+                trim(assignments(2)%value) /= &
+                '(assignment-expression (kind binary-expression) (operator /) (left-operand x) (right-operand 2))')) .or. &
                 .not. frontend_ast_v2_print_variable_match(print_statement)) then
                 call set_message(message, 'unsupported-frontend-ast-v2-execution-part')
                 return
@@ -3184,7 +3189,11 @@ contains
             .and. trim(assignment%value) /= &
             '(assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))' &
             .and. trim(assignment%value) /= &
-            '(assignment-expression (kind binary-expression) (operator *) (left-operand x) (right-operand 2))') then
+            '(assignment-expression (kind binary-expression) (operator *) (left-operand x) (right-operand 2))' &
+            .and. trim(assignment%value) /= &
+            '(assignment-expression (kind binary-expression) (operator –) (left-operand x) (right-operand 2))' &
+            .and. trim(assignment%value) /= &
+            '(assignment-expression (kind binary-expression) (operator /) (left-operand x) (right-operand 2))') then
             call set_message(message, 'unsupported-frontend-ast-v1-assignment')
             return
         end if
@@ -3286,10 +3295,12 @@ contains
                             (trim(operator) == '*' .and. &
                             ((trim(left_operand) /= '2' .or. trim(right_operand) /= '3') .and. &
                             (trim(left_operand) /= 'x' .or. trim(right_operand) /= '2'))) .or. &
-                            (trim(operator) == '/' .and. (trim(left_operand) /= '6' .or. &
-                            trim(right_operand) /= '2')) .or. &
-                            (trim(operator) == '–' .and. (trim(left_operand) /= '5' .or. &
-                            trim(right_operand) /= '3'))) then
+                            (trim(operator) == '/' .and. &
+                            ((trim(left_operand) /= '6' .or. trim(right_operand) /= '2') .and. &
+                            (trim(left_operand) /= 'x' .or. trim(right_operand) /= '2'))) .or. &
+                            (trim(operator) == '–' .and. &
+                            ((trim(left_operand) /= '5' .or. trim(right_operand) /= '3') .and. &
+                            (trim(left_operand) /= 'x' .or. trim(right_operand) /= '2')))) then
                             call set_message(message, &
                                 'unsupported-frontend-ast-v1-assignment-expression')
                             ok = .false.
@@ -3303,6 +3314,14 @@ contains
                                 trim(right_operand) == '2') then
                             value = '(assignment-expression (kind binary-expression) '// &
                                 '(operator *) (left-operand x) (right-operand 2))'
+                        else if (trim(operator) == '/' .and. trim(left_operand) == 'x' .and. &
+                                trim(right_operand) == '2') then
+                            value = '(assignment-expression (kind binary-expression) '// &
+                                '(operator /) (left-operand x) (right-operand 2))'
+                        else if (trim(operator) == '–' .and. trim(left_operand) == 'x' .and. &
+                                trim(right_operand) == '2') then
+                            value = '(assignment-expression (kind binary-expression) '// &
+                                '(operator –) (left-operand x) (right-operand 2))'
                         else
                             value = '( binary-expr ( operator '//trim(operator)//' ) ( left '// &
                                 trim(left_operand)//' ) ( right '//trim(right_operand)//' ) )'

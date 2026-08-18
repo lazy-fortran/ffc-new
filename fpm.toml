@@ -170,6 +170,10 @@ name = "ast_mul"
 source-dir = "test"
 
 [[test]]
+name = "frontend_ast_v2_print_variable_arithmetic"
+source-dir = "test"
+
+[[test]]
 name = "frontend_ast_v1_real_policy"
 source-dir = "test"
 

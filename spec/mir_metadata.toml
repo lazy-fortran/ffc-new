@@ -414,6 +414,20 @@ result_type = "i32"
 source_rule = "frontend-ast-v2/execution-part"
 
 [[instruction_shapes]]
+name = "v2_sub_print"
+opcodes = ["const", "store", "load", "const", "sub", "store", "load", "output", "return"]
+result_kind = "integer"
+result_type = "i32"
+source_rule = "frontend-ast-v2/execution-part"
+
+[[instruction_shapes]]
+name = "v2_div_print"
+opcodes = ["const", "store", "load", "const", "div", "store", "load", "output", "return"]
+result_kind = "integer"
+result_type = "i32"
+source_rule = "frontend-ast-v2/execution-part"
+
+[[instruction_shapes]]
 name = "frontend_ast_v2_stop_7"
 opcodes = ["const", "return"]
 result_kind = "integer"
@@ -626,6 +640,24 @@ name = "program_unit_v2_print_variable_multiply_expression_23"
 expression = "(execution-part (assignment-sequence (assignment-count 2) (assignment x ( integer-literal 23 )) (assignment x (assignment-expression (kind binary-expression) (operator *) (left-operand x) (right-operand 2)))) )"
 shape = "v2_mul_print"
 literal_values = [23, 2]
+result_ids = [0, 1, 2, 3, 4, 4, 6, 6, 6]
+storage_keys = ["", "x", "x", "", "", "x", "x", "", ""]
+source_rules = ["frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt"]
+
+[[integer_expression_routes]]
+name = "program_unit_v2_print_variable_subtraction_expression_21"
+expression = "(execution-part (assignment-sequence (assignment-count 2) (assignment x ( integer-literal 23 )) (assignment x (assignment-expression (kind binary-expression) (operator –) (left-operand x) (right-operand 2)))) )"
+shape = "v2_sub_print"
+literal_values = [23, 2]
+result_ids = [0, 1, 2, 3, 4, 4, 6, 6, 6]
+storage_keys = ["", "x", "x", "", "", "x", "x", "", ""]
+source_rules = ["frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt"]
+
+[[integer_expression_routes]]
+name = "program_unit_v2_print_variable_division_expression_12"
+expression = "(execution-part (assignment-sequence (assignment-count 2) (assignment x ( integer-literal 24 )) (assignment x (assignment-expression (kind binary-expression) (operator /) (left-operand x) (right-operand 2)))) )"
+shape = "v2_div_print"
+literal_values = [24, 2]
 result_ids = [0, 1, 2, 3, 4, 4, 6, 6, 6]
 storage_keys = ["", "x", "x", "", "", "x", "x", "", ""]
 source_rules = ["frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt"]
