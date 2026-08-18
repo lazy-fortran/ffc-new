@@ -2,7 +2,7 @@ program test_frontend_ast_v2_print_expression
     use, intrinsic :: iso_fortran_env, only: int32
     use ffc_frontend_ast, only: ffc_lower_frontend_ast_v2_from_sx
     use ffc_mir, only: mir_function_body_t, mir_validate_function_body, opcode_add, opcode_const, opcode_load, &
-        opcode_output, opcode_return, opcode_store
+        opcode_mul, opcode_output, opcode_return, opcode_store
     implicit none
 
     type(mir_function_body_t) :: body
@@ -16,12 +16,18 @@ program test_frontend_ast_v2_print_expression
         [opcode_const, opcode_store, opcode_load, opcode_load, opcode_add, opcode_output, opcode_load, &
         opcode_output, opcode_return])
     call assert_load_storage([3, 4, 7])
+    call check_shape(replace_text(replace_text(positive_sx(.true.), '(operator +)', '(operator *)'), &
+        '(right 1)', '(right 2)'), [opcode_const, opcode_store, opcode_load, opcode_const, opcode_mul, &
+        opcode_output, opcode_load, opcode_output, opcode_return])
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_sx(.true.), '(operator +)', &
         '(operator *)'), body, message), 'wrong expression operator was accepted')
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_sx(.true.), '(right 1)', &
         '(right )'), body, message), 'missing expression operand was accepted')
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_sx(.true.), '(right 1)', &
         '(right 2)'), body, message), 'unsupported expression operand was accepted')
+    call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(replace_text(positive_sx(.true.), &
+        '(operator +)', '(operator *)'), '(right 1)', '(right 3)'), body, message), &
+        'unsupported multiplication operand was accepted')
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_sx(.true.), '(rule R1217)', &
         '(rule R901)'), body, message), 'wrong expression provenance was accepted')
     write (*, '(a)') 'frontend AST v2 generic expression checks: ok'
