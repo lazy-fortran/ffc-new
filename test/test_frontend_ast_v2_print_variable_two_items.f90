@@ -76,7 +76,7 @@ contains
             '(source-hash print-variable-two-item)))))) '// &
             '(print-stmt (format-kind default-char-expr) (format-value *) (output-kind variable) '// &
             '(output-name x) (output-count 2) (output-kind-2 variable) (output-name-2 x) '// &
-            '(output-rule-2 R1217) (statement-rule R1212) (format-rule R1215) (output-rule R901) '// &
+            '(output-rule-2 R901) (statement-rule R1212) (format-rule R1215) (output-rule R901) '// &
             '(source-document J3-24-007) (statement-clause 12.6.1) (format-clause 12.6.2.2) '// &
             '(output-clause 12.6.3) (statement-page 242) (format-page 244) (output-page 248) '// &
             '(source-hash print-variable-two-item))))'

@@ -898,7 +898,7 @@ contains
             index(canonical, '( output-count 2 )') /= 0 .and. &
             index(canonical, '( output-kind-2 variable )') /= 0 .and. &
             index(canonical, '( output-name-2 x )') /= 0 .and. &
-            index(canonical, '( output-rule-2 R1217 )') /= 0
+            index(canonical, '( output-rule-2 R901 )') /= 0
     end function frontend_ast_v2_print_variable_two_item_match
 
     subroutine emit_frontend_ast_v2_print_variable_two_items(body)
