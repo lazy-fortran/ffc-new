@@ -225,6 +225,13 @@ result_type = "i32"
 source_rule = "frontend-ast-v2/print-stmt"
 
 [[instruction_shapes]]
+name = "frontend_ast_v2_print_six"
+opcodes = ["const", "output", "const", "output", "const", "output", "const", "output", "const", "output", "const", "output", "return"]
+result_kind = "integer"
+result_type = "i32"
+source_rule = "frontend-ast-v2/print-stmt"
+
+[[instruction_shapes]]
 name = "frontend_ast_v1_int_assign"
 opcodes = ["store", "return"]
 result_kind = "integer"
