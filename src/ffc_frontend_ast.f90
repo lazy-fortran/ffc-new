@@ -466,7 +466,7 @@ module ffc_frontend_ast
     implicit none
     private
 
-    integer, parameter :: frontend_ast_token_capacity = 1024
+    integer, parameter :: frontend_ast_token_capacity = 2048
     integer, parameter :: frontend_ast_token_length = 256
     integer, parameter :: frontend_ast_expression_length = 16384
 
