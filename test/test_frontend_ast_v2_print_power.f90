@@ -48,6 +48,22 @@ program test_frontend_ast_v2_print_power
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_sx(), &
         '(print-stmt (format-kind', '(write-stmt (format-kind'), body, message), &
         'WRITE neighbour was accepted')
+
+    if (.not. ffc_lower_frontend_ast_v2_from_sx(positive_value_sx(), body, message)) then
+        if (allocated(message)) write (*, '(a)') trim(message)
+        error stop 'second source-backed power PRINT sequence was rejected'
+    end if
+    call assert_true(body%instructions(1)%literal_value == 3 .and. &
+        body%instructions(4)%literal_value == 2, 'second constant transport changed')
+    call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_value_sx(), &
+        '(name main)', '(name wrong)'), body, message), 'second wrong program name was accepted')
+    call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_value_sx(), &
+        '(output-name x)', '(output-name y)'), body, message), 'second wrong output name was accepted')
+    call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_value_sx(), &
+        '(operator **)', '(operator *)'), body, message), 'second wrong operator was accepted')
+    call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_value_sx(), &
+        '(print-stmt (format-kind', '(write-stmt (format-kind'), body, message), &
+        'second WRITE neighbour was accepted')
     write (*, '(a)') 'frontend AST v2 variable power PRINT checks: ok'
 
 contains
@@ -78,6 +94,15 @@ contains
             '(source-hash print-variable-power))))'
     end function positive_sx
 
+    function positive_value_sx() result(value)
+        character(len=12288) :: value
+
+        value = positive_sx()
+        value = replace_all(value, 'left-operand 2', 'left-operand 3')
+        value = replace_all(value, 'right-operand 3', 'right-operand 2')
+        value = replace_all(value, 'print-variable-power', 'print-variable-power-value')
+    end function positive_value_sx
+
     subroutine assert_storage(instruction_index)
         integer, intent(in) :: instruction_index
 
@@ -94,6 +119,21 @@ contains
         if (found > 0) replace_text = replace_text(:found - 1)//replacement// &
             replace_text(found + len(needle):)
     end function replace_text
+
+    character(len=12288) function replace_all(value, needle, replacement)
+        character(len=*), intent(in) :: value, needle, replacement
+        integer :: found, start
+
+        replace_all = value
+        start = 1
+        do
+            found = index(replace_all(start:), needle)
+            if (found == 0) exit
+            found = start + found - 1
+            replace_all = replace_all(:found - 1)//replacement//replace_all(found + len(needle):)
+            start = found + len(replacement)
+        end do
+    end function replace_all
 
     subroutine assert_true(value, description)
         logical, intent(in) :: value

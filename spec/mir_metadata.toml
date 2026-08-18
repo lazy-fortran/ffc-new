@@ -656,6 +656,15 @@ storage_keys = ["", "x", "x", "", "", "x", "x", "", ""]
 source_rules = ["frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt"]
 
 [[integer_expression_routes]]
+name = "program_unit_v2_print_variable_power_expression_9"
+expression = "(execution-part (assignment-sequence (assignment-count 2) (assignment x ( integer-literal 3 )) (assignment x (assignment-expression (kind binary-expression) (operator **) (left-operand x) (right-operand 2)))) )"
+shape = "v2_pow_print"
+literal_values = [3, 2]
+result_ids = [0, 1, 2, 3, 4, 4, 6, 6, 6]
+storage_keys = ["", "x", "x", "", "", "x", "x", "", ""]
+source_rules = ["frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt"]
+
+[[integer_expression_routes]]
 name = "program_unit_v2_print_variable_multiply_expression_23"
 expression = "(execution-part (assignment-sequence (assignment-count 2) (assignment x ( integer-literal 23 )) (assignment x (assignment-expression (kind binary-expression) (operator *) (left-operand x) (right-operand 2)))) )"
 shape = "v2_mul_print"
