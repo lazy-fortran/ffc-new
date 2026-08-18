@@ -28,6 +28,10 @@ value = "frontend-ast-v1/storage-sequence"
 name = "frontend_ast_v1_storage_sequence_3"
 value = "frontend-ast-v1/storage-sequence-3"
 
+[[source_rules]]
+name = "frontend_ast_v2_execution_part"
+value = "frontend-ast-v2/execution-part"
+
 [[value_kinds]]
 name = "integer"
 value = 1
@@ -197,6 +201,13 @@ result_type = "i32"
 source_rule = "frontend-ast-v1/storage-sequence-3"
 
 [[instruction_shapes]]
+name = "frontend_ast_v2_int_exec"
+opcodes = ["const", "store", "load", "const", "add", "store", "return"]
+result_kind = "integer"
+result_type = "i32"
+source_rule = "frontend-ast-v2/execution-part"
+
+[[instruction_shapes]]
 name = "frontend_ast_v1_logical_program"
 opcodes = ["add", "return"]
 result_kind = "logical"
@@ -282,3 +293,11 @@ shape = "frontend_ast_v1_int_seq_3"
 literal_values = [7, 1, 1]
 result_ids = [0, 1, 2, 3, 4, 4, 6, 7, 8, 8, 8]
 storage_keys = ["", "x", "x", "", "", "x", "x", "", "", "x", ""]
+
+[[integer_expression_routes]]
+name = "program_unit_v2_execution_part"
+expression = "(execution-part (assignment-sequence (assignment-count 2) (assignment x ( integer-literal 7 )) (assignment x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1)))) )"
+shape = "frontend_ast_v2_int_exec"
+literal_values = [7, 1]
+result_ids = [0, 1, 2, 3, 4, 4, 4]
+storage_keys = ["", "x", "x", "", "", "x", ""]

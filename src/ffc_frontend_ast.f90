@@ -153,6 +153,7 @@ module ffc_frontend_ast
     public :: ffc_lower_frontend_ast_v1
     public :: ffc_lower_frontend_ast_v1_from_sx
     public :: ffc_lower_frontend_ast_v1_assignment_sequence_from_sx
+    public :: ffc_lower_frontend_ast_v2_from_sx
     public :: ffc_validate_frontend_ast_v1
     public :: ffc_validate_frontend_ast_v1_integer_program_shape
     public :: ffc_validate_frontend_ast_v1_integer_assignment_program_shape
@@ -305,6 +306,128 @@ contains
         call emit_frontend_ast_v1_integer_expression(body, route)
         lowered = mir_validate_function_body(body, message)
     end function ffc_lower_frontend_ast_v1_assignment_sequence_from_sx
+
+    logical function ffc_lower_frontend_ast_v2_from_sx(serialized, body, message) result(lowered)
+        character(len=*), intent(in) :: serialized
+        type(mir_function_body_t), intent(out) :: body
+        character(len=:), allocatable, intent(out), optional :: message
+
+        character(len=frontend_ast_token_length) :: token(frontend_ast_token_capacity)
+        character(len=frontend_ast_expression_length) :: expression
+        character(len=64) :: count_text
+        type(ffc_program_root_t) :: root, declaration
+        type(ffc_frontend_variable_declaration_v1_t) :: variable
+        type(ffc_frontend_assignment_v1_t) :: assignments(2)
+        character(len=frontend_ast_expression_length) :: route_key
+        integer :: token_count, position
+        integer(int64) :: declaration_count, variable_count
+        integer(int32) :: route
+
+        call clear_message(message)
+        lowered = .false.
+        if (.not. tokenize_frontend_ast_sx(serialized, token, token_count, message)) return
+        position = 1
+        if (.not. expect_token(token, token_count, position, '(', message)) return
+        if (.not. expect_token(token, token_count, position, 'program-unit-v2', message)) return
+        if (.not. read_named_expression(token, token_count, position, 'root', expression, message)) return
+        if (.not. ffc_program_root_from_sx(trim(expression), root, message)) return
+        if (.not. read_named_atom(token, token_count, position, 'declaration-count', count_text, &
+            message)) return
+        if (.not. parse_count(count_text, declaration_count, message)) return
+        if (declaration_count /= 1_int64) then
+            call set_message(message, 'invalid-frontend-ast-v2-declaration-count')
+            return
+        end if
+        if (.not. read_named_expression(token, token_count, position, 'declaration', expression, &
+            message)) return
+        if (.not. ffc_program_declaration_from_sx(trim(expression), declaration, message)) return
+        if (.not. read_named_atom(token, token_count, position, 'variable-count', count_text, &
+            message)) return
+        if (.not. parse_count(count_text, variable_count, message)) return
+        if (variable_count /= 1_int64) then
+            call set_message(message, 'invalid-frontend-ast-v2-variable-count')
+            return
+        end if
+        if (.not. read_named_expression(token, token_count, position, 'variable', expression, &
+            message)) return
+        if (.not. parse_variable_declaration_v1(trim(expression), variable, message)) return
+        if (.not. read_named_expression(token, token_count, position, 'execution-part', expression, &
+            message)) return
+        if (.not. parse_v2_assignment_sequence(trim(expression), assignments, message)) return
+        if (.not. expect_token(token, token_count, position, ')', message)) return
+        if (position <= token_count) then
+            call set_message(message, 'malformed-frontend-ast-v2')
+            return
+        end if
+        if (trim(root%name) /= 'main' .or. trim(declaration%name) /= 'main' .or. &
+            trim(variable%type_spec) /= 'integer' .or. trim(variable%name) /= 'x' .or. &
+            trim(assignments(1)%target) /= 'x' .or. trim(assignments(2)%target) /= 'x' .or. &
+            trim(assignments(1)%value) /= '( integer-literal 7 )' .or. &
+            trim(assignments(2)%value) /= '(assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))') then
+            call set_message(message, 'unsupported-frontend-ast-v2-execution-part')
+            return
+        end if
+        if (trim(root%source_file) /= trim(variable%source_file) .or. &
+            trim(root%source_hash) /= trim(variable%source_hash) .or. &
+            trim(root%source_file) /= trim(assignments(1)%source_file) .or. &
+            trim(root%source_file) /= trim(assignments(2)%source_file) .or. &
+            trim(assignments(1)%source_hash) /= 'l3-raw-program-two-assignment-v1' .or. &
+            trim(assignments(2)%source_hash) /= 'l3-raw-program-two-assignment-v1') then
+            call set_message(message, 'frontend-ast-v2-invalid-provenance')
+            return
+        end if
+        route_key = '(execution-part (assignment-sequence (assignment-count 2) '// &
+            '(assignment x '//trim(assignments(1)%value)//') (assignment x '// &
+            trim(assignments(2)%value)//')) )'
+        route = mir_frontend_ast_v1_integer_expression_route(route_key)
+        if (route == 0_int32) then
+            call set_message(message, 'unsupported-frontend-ast-v2-execution-part')
+            return
+        end if
+        call mir_make_function_witness(body)
+        body%function%name = trim(root%name)
+        call emit_frontend_ast_v1_integer_expression(body, route)
+        lowered = mir_validate_function_body(body, message)
+    end function ffc_lower_frontend_ast_v2_from_sx
+
+    logical function parse_v2_assignment_sequence(serialized, assignments, message) result(parsed)
+        character(len=*), intent(in) :: serialized
+        type(ffc_frontend_assignment_v1_t), intent(out) :: assignments(2)
+        character(len=:), allocatable, intent(out), optional :: message
+
+        character(len=frontend_ast_token_length) :: token(frontend_ast_token_capacity)
+        character(len=frontend_ast_expression_length) :: assignment_text
+        character(len=64) :: count_text
+        integer :: token_count, position, assignment_index
+        integer(int64) :: count
+
+        assignments = ffc_frontend_assignment_v1_t()
+        call clear_message(message)
+        parsed = tokenize_frontend_ast_sx(serialized, token, token_count, message)
+        if (.not. parsed) return
+        position = 1
+        if (.not. expect_token(token, token_count, position, '(', message)) return
+        if (.not. expect_token(token, token_count, position, 'assignment-sequence', message)) return
+        if (.not. read_named_atom(token, token_count, position, 'assignment-count', count_text, &
+            message)) return
+        if (.not. parse_count(count_text, count, message)) return
+        if (count /= 2_int64) then
+            call set_message(message, 'invalid-frontend-ast-v2-assignment-count')
+            parsed = .false.
+            return
+        end if
+        do assignment_index = 1, 2
+            if (.not. read_named_expression(token, token_count, position, 'assignment', &
+                assignment_text, message)) return
+            if (.not. parse_assignment_v1(trim(assignment_text), assignments(assignment_index), &
+                message)) return
+        end do
+        if (.not. expect_token(token, token_count, position, ')', message)) return
+        if (position <= token_count) then
+            call set_message(message, 'malformed-frontend-ast-v2-execution-part')
+            parsed = .false.
+        end if
+    end function parse_v2_assignment_sequence
 
     character(len=16) function sequence_position_name(position)
         integer, intent(in) :: position
