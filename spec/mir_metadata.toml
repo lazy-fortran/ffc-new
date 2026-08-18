@@ -1,0 +1,57 @@
+# Source of truth for the numeric mir-v0 metadata.
+
+[[value_kinds]]
+name = "integer"
+value = 1
+
+[[value_kinds]]
+name = "real"
+value = 2
+
+[[value_kinds]]
+name = "logical"
+value = 3
+
+[[value_kinds]]
+name = "address"
+value = 4
+
+[[opcodes]]
+name = "add"
+value = 1
+
+[[opcodes]]
+name = "sub"
+value = 2
+
+[[opcodes]]
+name = "mul"
+value = 3
+
+[[opcodes]]
+name = "div"
+value = 4
+
+[[opcodes]]
+name = "load"
+value = 5
+
+[[opcodes]]
+name = "store"
+value = 6
+
+[[opcodes]]
+name = "compare"
+value = 7
+
+[[opcodes]]
+name = "branch"
+value = 8
+
+[[opcodes]]
+name = "call"
+value = 9
+
+[[opcodes]]
+name = "return"
+value = 10

@@ -1,25 +1,17 @@
 module ffc_mir
     use, intrinsic :: iso_fortran_env, only: int32
+    use ffc_mir_metadata, only: mir_opcode_histogram_size, mir_opcode_name, &
+        mir_opcode_value, mir_value_kind_name, mir_value_kind_value, opcode_add, &
+        opcode_branch, opcode_call, opcode_compare, opcode_div, opcode_load, &
+        opcode_mul, opcode_return, opcode_store, opcode_sub, value_kind_address, &
+        value_kind_integer, value_kind_logical, value_kind_real
     implicit none
     private
 
-    integer(int32), parameter, public :: value_kind_integer = 1_int32
-    integer(int32), parameter, public :: value_kind_real = 2_int32
-    integer(int32), parameter, public :: value_kind_logical = 3_int32
-    integer(int32), parameter, public :: value_kind_address = 4_int32
-
-    integer(int32), parameter, public :: opcode_add = 1_int32
-    integer(int32), parameter, public :: opcode_sub = 2_int32
-    integer(int32), parameter, public :: opcode_mul = 3_int32
-    integer(int32), parameter, public :: opcode_div = 4_int32
-    integer(int32), parameter, public :: opcode_load = 5_int32
-    integer(int32), parameter, public :: opcode_store = 6_int32
-    integer(int32), parameter, public :: opcode_compare = 7_int32
-    integer(int32), parameter, public :: opcode_branch = 8_int32
-    integer(int32), parameter, public :: opcode_call = 9_int32
-    integer(int32), parameter, public :: opcode_return = 10_int32
-    integer(int32), parameter, public :: mir_opcode_histogram_size = &
-        opcode_return - opcode_add + 1_int32
+    public :: value_kind_integer, value_kind_real, value_kind_logical, value_kind_address
+    public :: opcode_add, opcode_sub, opcode_mul, opcode_div, opcode_load, opcode_store
+    public :: opcode_compare, opcode_branch, opcode_call, opcode_return
+    public :: mir_opcode_histogram_size
 
     integer(int32), parameter :: mir_witness_max_instructions = 2_int32
 
@@ -916,42 +908,6 @@ contains
         write (itoa, '(i0)') value
     end function itoa
 
-    character(len=32) function mir_opcode_name(opcode)
-        integer(int32), intent(in) :: opcode
-
-        select case (opcode)
-        case (opcode_add); mir_opcode_name = 'add'
-        case (opcode_sub); mir_opcode_name = 'sub'
-        case (opcode_mul); mir_opcode_name = 'mul'
-        case (opcode_div); mir_opcode_name = 'div'
-        case (opcode_load); mir_opcode_name = 'load'
-        case (opcode_store); mir_opcode_name = 'store'
-        case (opcode_compare); mir_opcode_name = 'compare'
-        case (opcode_branch); mir_opcode_name = 'branch'
-        case (opcode_call); mir_opcode_name = 'call'
-        case (opcode_return); mir_opcode_name = 'return'
-        case default; mir_opcode_name = ''
-        end select
-    end function mir_opcode_name
-
-    integer(int32) function mir_opcode_value(name)
-        character(len=*), intent(in) :: name
-
-        select case (trim(name))
-        case ('add'); mir_opcode_value = opcode_add
-        case ('sub'); mir_opcode_value = opcode_sub
-        case ('mul'); mir_opcode_value = opcode_mul
-        case ('div'); mir_opcode_value = opcode_div
-        case ('load'); mir_opcode_value = opcode_load
-        case ('store'); mir_opcode_value = opcode_store
-        case ('compare'); mir_opcode_value = opcode_compare
-        case ('branch'); mir_opcode_value = opcode_branch
-        case ('call'); mir_opcode_value = opcode_call
-        case ('return'); mir_opcode_value = opcode_return
-        case default; mir_opcode_value = 0_int32
-        end select
-    end function mir_opcode_value
-
     logical function tokenize_sx(input, token, token_count, message) result(ok)
         character(len=*), intent(in) :: input
         character(len=*), intent(out) :: token(:)
@@ -1148,30 +1104,6 @@ contains
         if (.not. ok) return
         ok = expect_token(token, token_count, position, ')', message)
     end function read_value
-
-    character(len=32) function mir_value_kind_name(kind)
-        integer(int32), intent(in) :: kind
-
-        select case (kind)
-        case (value_kind_integer); mir_value_kind_name = 'integer'
-        case (value_kind_real); mir_value_kind_name = 'real'
-        case (value_kind_logical); mir_value_kind_name = 'logical'
-        case (value_kind_address); mir_value_kind_name = 'address'
-        case default; mir_value_kind_name = ''
-        end select
-    end function mir_value_kind_name
-
-    integer(int32) function mir_value_kind_value(name)
-        character(len=*), intent(in) :: name
-
-        select case (trim(name))
-        case ('integer'); mir_value_kind_value = value_kind_integer
-        case ('real'); mir_value_kind_value = value_kind_real
-        case ('logical'); mir_value_kind_value = value_kind_logical
-        case ('address'); mir_value_kind_value = value_kind_address
-        case default; mir_value_kind_value = 0_int32
-        end select
-    end function mir_value_kind_value
 
     subroutine reset_body(body)
         type(mir_function_body_t), intent(out) :: body

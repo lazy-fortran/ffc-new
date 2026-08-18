@@ -107,3 +107,9 @@ source-dir = "test"
 [[test]]
 name = "dispatch_l2_mir_trace"
 source-dir = "test"
+
+# Generated metadata freshness is a shell check: test/test_mir_metadata_fresh.sh
+
+[[test]]
+name = "mir_metadata_behavior"
+source-dir = "test"
