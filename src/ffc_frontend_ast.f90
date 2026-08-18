@@ -106,7 +106,7 @@ module ffc_frontend_ast
     implicit none
     private
 
-    integer, parameter :: frontend_ast_token_capacity = 256
+    integer, parameter :: frontend_ast_token_capacity = 512
     integer, parameter :: frontend_ast_token_length = 256
     integer, parameter :: frontend_ast_expression_length = 4096
 
@@ -259,11 +259,11 @@ contains
         character(len=:), allocatable, intent(out), optional :: message
 
         character(len=frontend_ast_token_length) :: token(frontend_ast_token_capacity)
-        character(len=frontend_ast_expression_length) :: first_text, second_text
+        character(len=frontend_ast_expression_length) :: assignment_text(3)
         character(len=64) :: count_text
-        type(ffc_frontend_assignment_v1_t) :: first, second
+        type(ffc_frontend_assignment_v1_t) :: assignments(3)
         character(len=frontend_ast_expression_length) :: route_key
-        integer :: token_count, position
+        integer :: assignment_count, assignment_index, token_count, position
         integer(int32) :: route
 
         call clear_message(message)
@@ -274,38 +274,48 @@ contains
         if (.not. expect_token(token, token_count, position, 'assignment-sequence', message)) return
         if (.not. read_named_atom(token, token_count, position, 'assignment-count', count_text, &
             message)) return
-        if (trim(count_text) /= '2') then
-            call set_message(message, 'unsupported-two-assignment-sequence')
+        if (trim(count_text) /= '2' .and. trim(count_text) /= '3') then
+            call set_message(message, 'unsupported-assignment-sequence')
             return
         end if
-        if (.not. read_named_expression(token, token_count, position, 'assignment', first_text, &
-            message)) return
-        if (.not. read_named_expression(token, token_count, position, 'assignment', second_text, &
-            message)) return
+        read (count_text, *) assignment_count
+        do assignment_index = 1, assignment_count
+            if (.not. read_named_expression(token, token_count, position, 'assignment', &
+                assignment_text(assignment_index), message)) return
+            if (.not. parse_assignment_v1(trim(assignment_text(assignment_index)), &
+                assignments(assignment_index), message)) return
+        end do
         if (.not. expect_token(token, token_count, position, ')', message)) return
         if (position <= token_count) then
             call set_message(message, 'malformed-assignment-sequence')
             return
         end if
-        if (.not. parse_assignment_v1(trim(first_text), first, message)) return
-        if (.not. parse_assignment_v1(trim(second_text), second, message)) return
-        if (trim(first%value) /= '( integer-literal 7 )' .or. trim(first%target) /= 'x' .or. &
-            trim(second%target) /= 'x' .or. trim(second%value) /= &
-            '(assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))') then
-            call set_message(message, 'unsupported-two-assignment-sequence')
-            return
-        end if
-        route_key = '(assignment-sequence (assignment-count 2) (first x '//trim(first%value)// &
-            ') (second x '//trim(second%value)//'))'
+        route_key = '(assignment-sequence (assignment-count '//trim(count_text)//')'
+        do assignment_index = 1, assignment_count
+            route_key = trim(route_key)//' ('//trim(sequence_position_name(assignment_index))//' '// &
+                trim(assignments(assignment_index)%target)//' '//trim(assignments(assignment_index)%value)//')'
+        end do
+        route_key = trim(route_key)//')'
         route = mir_frontend_ast_v1_integer_expression_route(trim(route_key))
         if (route == 0_int32) then
-            call set_message(message, 'unsupported-two-assignment-sequence')
+            call set_message(message, 'unsupported-assignment-sequence')
             return
         end if
         call mir_make_function_witness(body)
         call emit_frontend_ast_v1_integer_expression(body, route)
         lowered = mir_validate_function_body(body, message)
     end function ffc_lower_frontend_ast_v1_assignment_sequence_from_sx
+
+    character(len=16) function sequence_position_name(position)
+        integer, intent(in) :: position
+
+        select case (position)
+        case (1); sequence_position_name = 'first'
+        case (2); sequence_position_name = 'second'
+        case (3); sequence_position_name = 'third'
+        case default; sequence_position_name = ''
+        end select
+    end function sequence_position_name
 
     logical function ffc_validate_frontend_ast_v1(ast, message) result(valid)
         type(ffc_frontend_ast_v1_t), intent(in) :: ast
