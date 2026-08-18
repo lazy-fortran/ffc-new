@@ -273,7 +273,7 @@ contains
             '(assignment (assignment-stmt (variable x) (expression '// &
             '(assignment-expression (kind binary-expression) (operator +) (left-operand x) '// &
             '(right-operand 1))) (span (source-span (file sequence.f90) (start-byte 81) '// &
-            '(end-byte 91) (source-hash l3-raw-program-five-assignment-v1)))))'
+            '(end-byte 91) (source-hash l3-raw-program-five-assignment-v1))))))'
     end function sequence5_sx
 
     function sequence5_wrong_count_sx() result(value)
