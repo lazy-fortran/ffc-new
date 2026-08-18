@@ -105,3 +105,10 @@ opcodes = ["add", "return"]
 result_kind = "real"
 result_type = "f32"
 source_rule = "frontend-ast-v1/program"
+
+[[instruction_shapes]]
+name = "frontend_ast_v1_double_precision_program"
+opcodes = ["add", "return"]
+result_kind = "real"
+result_type = "f64"
+source_rule = "frontend-ast-v1/program"

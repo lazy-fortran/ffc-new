@@ -39,6 +39,13 @@ module ffc_mir_metadata
     character(len=3), parameter, public :: instruction_shape_frontend_ast_v1_real_program_result_type = 'f32'
     character(len=23), parameter, public :: instruction_shape_frontend_ast_v1_real_program_source_rule = 'frontend-ast-v1/program'
 
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_dp_program_count = 2_int32
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_dp_program_opcode_0 = opcode_add
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_dp_program_opcode_1 = opcode_return
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_dp_program_result_kind = value_kind_real
+    character(len=3), parameter, public :: instruction_shape_frontend_ast_v1_dp_program_result_type = 'f64'
+    character(len=23), parameter, public :: instruction_shape_frontend_ast_v1_dp_program_source_rule = 'frontend-ast-v1/program'
+
     integer(int32), parameter, public :: mir_opcode_histogram_size = &
         opcode_return - opcode_add + 1_int32
 

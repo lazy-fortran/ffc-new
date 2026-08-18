@@ -52,6 +52,12 @@ def read_instruction_shapes(
     return entries
 
 
+def shape_symbol(shape: str, suffix: str) -> str:
+    """Return a legal Fortran identifier for a generated shape member."""
+    compact_shape = shape.replace("double_precision", "dp")
+    return f"instruction_shape_{compact_shape}_{suffix}"
+
+
 def generate(spec_path: pathlib.Path) -> str:
     with spec_path.open("rb") as stream:
         data = tomllib.load(stream)
@@ -91,25 +97,26 @@ def generate(spec_path: pathlib.Path) -> str:
     for entry in instruction_shapes:
         shape = entry["name"]
         lines.append(
-            f"    integer(int32), parameter, public :: instruction_shape_{shape}_count = "
+            f"    integer(int32), parameter, public :: {shape_symbol(shape, 'count')} = "
             f"{len(entry['opcodes'])}_int32"
         )
         for index, opcode in enumerate(entry["opcodes"]):
             lines.append(
-                f"    integer(int32), parameter, public :: instruction_shape_{shape}_opcode_"
-                f"{index} = opcode_{opcode}"
+                f"    integer(int32), parameter, public :: "
+                f"{shape_symbol(shape, f'opcode_{index}')} = opcode_{opcode}"
             )
         lines.append(
-            f"    integer(int32), parameter, public :: instruction_shape_{shape}_result_kind = "
+            f"    integer(int32), parameter, public :: "
+            f"{shape_symbol(shape, 'result_kind')} = "
             f"value_kind_{entry['result_kind']}"
         )
         lines.append(
             f"    character(len={len(entry['result_type'])}), parameter, public :: "
-            f"instruction_shape_{shape}_result_type = '{entry['result_type']}'"
+            f"{shape_symbol(shape, 'result_type')} = '{entry['result_type']}'"
         )
         lines.append(
             f"    character(len={len(entry['source_rule'])}), parameter, public :: "
-            f"instruction_shape_{shape}_source_rule = '{entry['source_rule']}'"
+            f"{shape_symbol(shape, 'source_rule')} = '{entry['source_rule']}'"
         )
         lines.append("")
     lines += [
