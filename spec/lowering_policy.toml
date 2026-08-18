@@ -1,0 +1,9 @@
+# Source of truth for the bounded integer frontend-ast-v1 lowering policy.
+
+[bounded_integer_program]
+instruction_count = 2
+first_opcode = "add"
+last_opcode = "return"
+result_kind = "integer"
+result_type = "i32"
+source_rule = "frontend-ast-v1/program"
