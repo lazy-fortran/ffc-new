@@ -22,6 +22,7 @@ module ffc_mir_metadata
     integer(int32), parameter, public :: opcode_call = 9_int32
     integer(int32), parameter, public :: opcode_return = 10_int32
     integer(int32), parameter, public :: opcode_const = 11_int32
+    integer(int32), parameter, public :: opcode_output = 12_int32
 
     character(len=12), parameter, public :: source_rule_program_root = 'program-root'
     character(len=19), parameter, public :: source_rule_frontend_v0_program = 'frontend-v0/program'
@@ -41,6 +42,7 @@ module ffc_mir_metadata
     character(len=32), parameter, public :: source_rule_frontend_ast_v2_execution_part_5 = 'frontend-ast-v2/execution-part-5'
     character(len=32), parameter, public :: source_rule_frontend_ast_v2_execution_part_6 = 'frontend-ast-v2/execution-part-6'
     character(len=25), parameter, public :: source_rule_frontend_ast_v2_stop_stmt = 'frontend-ast-v2/stop-stmt'
+    character(len=26), parameter, public :: source_rule_frontend_ast_v2_print_stmt = 'frontend-ast-v2/print-stmt'
 
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_integer_program_count = 2_int32
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_integer_program_opcode_0 = opcode_add
@@ -48,6 +50,14 @@ module ffc_mir_metadata
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_integer_program_result_kind = value_kind_integer
     character(len=3), parameter, public :: instruction_shape_frontend_ast_v1_integer_program_result_type = 'i32'
     character(len=23), parameter, public :: instruction_shape_frontend_ast_v1_integer_program_source_rule = 'frontend-ast-v1/program'
+
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_7_count = 3_int32
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_7_opcode_0 = opcode_const
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_7_opcode_1 = opcode_output
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_7_opcode_2 = opcode_return
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_7_result_kind = value_kind_integer
+    character(len=3), parameter, public :: instruction_shape_frontend_ast_v2_print_7_result_type = 'i32'
+    character(len=26), parameter, public :: instruction_shape_frontend_ast_v2_print_7_source_rule = 'frontend-ast-v2/print-stmt'
 
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_int_assign_count = 2_int32
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_int_assign_opcode_0 = opcode_store
@@ -473,7 +483,7 @@ module ffc_mir_metadata
     character(len=23), parameter, public :: instruction_shape_frontend_ast_v1_character_program_source_rule = 'frontend-ast-v1/program'
 
     integer(int32), parameter, public :: mir_opcode_histogram_size = &
-        11_int32
+        12_int32
 
     public :: mir_opcode_name, mir_opcode_value
     public :: mir_value_kind_name, mir_value_kind_value
@@ -506,6 +516,7 @@ contains
         case (opcode_call); mir_opcode_name = 'call'
         case (opcode_return); mir_opcode_name = 'return'
         case (opcode_const); mir_opcode_name = 'const'
+        case (opcode_output); mir_opcode_name = 'output'
         case default; mir_opcode_name = ''
         end select
     end function mir_opcode_name
@@ -525,6 +536,7 @@ contains
         case ('call'); mir_opcode_value = opcode_call
         case ('return'); mir_opcode_value = opcode_return
         case ('const'); mir_opcode_value = opcode_const
+        case ('output'); mir_opcode_value = opcode_output
         case default; mir_opcode_value = 0_int32
         end select
     end function mir_opcode_value
@@ -607,6 +619,7 @@ contains
         case (source_rule_frontend_ast_v2_execution_part_5); mir_source_rule_name = 'frontend_ast_v2_execution_part_5'
         case (source_rule_frontend_ast_v2_execution_part_6); mir_source_rule_name = 'frontend_ast_v2_execution_part_6'
         case (source_rule_frontend_ast_v2_stop_stmt); mir_source_rule_name = 'frontend_ast_v2_stop_stmt'
+        case (source_rule_frontend_ast_v2_print_stmt); mir_source_rule_name = 'frontend_ast_v2_print_stmt'
         case default; mir_source_rule_name = ''
         end select
     end function mir_source_rule_name
@@ -633,6 +646,7 @@ contains
         case ('frontend_ast_v2_execution_part_5'); mir_source_rule_value = source_rule_frontend_ast_v2_execution_part_5
         case ('frontend_ast_v2_execution_part_6'); mir_source_rule_value = source_rule_frontend_ast_v2_execution_part_6
         case ('frontend_ast_v2_stop_stmt'); mir_source_rule_value = source_rule_frontend_ast_v2_stop_stmt
+        case ('frontend_ast_v2_print_stmt'); mir_source_rule_value = source_rule_frontend_ast_v2_print_stmt
         case default; mir_source_rule_value = ''
         end select
     end function mir_source_rule_value

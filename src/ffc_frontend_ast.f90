@@ -98,6 +98,13 @@ module ffc_frontend_ast
         instruction_shape_frontend_ast_v2_stop_7_result_kind, &
         instruction_shape_frontend_ast_v2_stop_7_result_type, &
         instruction_shape_frontend_ast_v2_stop_7_source_rule, &
+        instruction_shape_frontend_ast_v2_print_7_count, &
+        instruction_shape_frontend_ast_v2_print_7_opcode_0, &
+        instruction_shape_frontend_ast_v2_print_7_opcode_1, &
+        instruction_shape_frontend_ast_v2_print_7_opcode_2, &
+        instruction_shape_frontend_ast_v2_print_7_result_kind, &
+        instruction_shape_frontend_ast_v2_print_7_result_type, &
+        instruction_shape_frontend_ast_v2_print_7_source_rule, &
         mir_frontend_ast_v1_integer_expression_route, &
         mir_frontend_ast_v1_integer_expression_instruction_count, &
         mir_frontend_ast_v1_integer_expression_opcode, &
@@ -175,6 +182,7 @@ module ffc_frontend_ast
     public :: ffc_validate_frontend_ast_v1_complex_program_shape
     public :: ffc_validate_frontend_ast_v1_character_program_shape
     public :: ffc_validate_frontend_ast_v2_stop_7_shape
+    public :: ffc_validate_frontend_ast_v2_print_7_shape
 
 contains
 
@@ -360,7 +368,8 @@ contains
             if (.not. read_named_expression(token, token_count, position, 'execution-part', &
                 expression, message)) return
             route = frontend_ast_v2_stop_route(expression)
-            if (route /= 18_int32) then
+            if (route == 0_int32) route = frontend_ast_v2_print_route(expression)
+            if (route == 0_int32) then
                 call set_message(message, 'unsupported-frontend-ast-v2-stop-stmt')
                 return
             end if
@@ -370,13 +379,18 @@ contains
                 return
             end if
             if (trim(root%name) /= 'p') then
-                call set_message(message, 'unsupported-frontend-ast-v2-stop-stmt')
+                call set_message(message, 'unsupported-frontend-ast-v2-execution-part')
                 return
             end if
             call mir_make_function_witness(body)
             body%function%name = trim(root%name)
-            call emit_frontend_ast_v1_integer_expression(body, route)
-            lowered = ffc_validate_frontend_ast_v2_stop_7_shape(body, message)
+            if (route == 18_int32) then
+                call emit_frontend_ast_v1_integer_expression(body, route)
+                lowered = ffc_validate_frontend_ast_v2_stop_7_shape(body, message)
+            else
+                call emit_frontend_ast_v2_print_7(body)
+                lowered = ffc_validate_frontend_ast_v2_print_7_shape(body, message)
+            end if
             return
         end if
         if (declaration_count /= 1_int64) then
@@ -1543,6 +1557,64 @@ contains
         valid = .true.
     end function ffc_validate_frontend_ast_v2_stop_7_shape
 
+    subroutine emit_frontend_ast_v2_print_7(body)
+        type(mir_function_body_t), intent(inout) :: body
+        integer :: index
+
+        deallocate (body%instructions)
+        allocate (body%instructions(3))
+        body%function%instruction_count = 3
+        body%instructions(1)%id = 0
+        body%instructions(1)%opcode = instruction_shape_frontend_ast_v2_print_7_opcode_0
+        body%instructions(1)%literal_value = 7
+        body%instructions(2)%id = 1
+        body%instructions(2)%opcode = instruction_shape_frontend_ast_v2_print_7_opcode_1
+        body%instructions(3)%id = 2
+        body%instructions(3)%opcode = instruction_shape_frontend_ast_v2_print_7_opcode_2
+        do index = 1, 3
+            body%instructions(index)%result%id = 0
+            body%instructions(index)%result%kind = &
+                instruction_shape_frontend_ast_v2_print_7_result_kind
+            body%instructions(index)%result%type_name = &
+                instruction_shape_frontend_ast_v2_print_7_result_type
+            body%instructions(index)%source_rule = &
+                instruction_shape_frontend_ast_v2_print_7_source_rule
+        end do
+    end subroutine emit_frontend_ast_v2_print_7
+
+    logical function ffc_validate_frontend_ast_v2_print_7_shape(body, message) result(valid)
+        type(mir_function_body_t), intent(in) :: body
+        character(len=:), allocatable, intent(out), optional :: message
+        integer :: index
+
+        call clear_message(message)
+        valid = .false.
+        if (.not. mir_validate_function_body(body, message)) return
+        if (body%function%instruction_count /= instruction_shape_frontend_ast_v2_print_7_count) then
+            call set_message(message, 'frontend-ast-v2 print-7 instruction count changed')
+            return
+        end if
+        if (body%instructions(1)%opcode /= instruction_shape_frontend_ast_v2_print_7_opcode_0 .or. &
+            body%instructions(2)%opcode /= instruction_shape_frontend_ast_v2_print_7_opcode_1 .or. &
+            body%instructions(3)%opcode /= instruction_shape_frontend_ast_v2_print_7_opcode_2 .or. &
+            body%instructions(1)%literal_value /= 7) then
+            call set_message(message, 'frontend-ast-v2 print-7 opcode shape changed')
+            return
+        end if
+        do index = 1, 3
+            if (body%instructions(index)%result%kind /= &
+                instruction_shape_frontend_ast_v2_print_7_result_kind .or. &
+                trim(body%instructions(index)%result%type_name) /= &
+                instruction_shape_frontend_ast_v2_print_7_result_type .or. &
+                trim(body%instructions(index)%source_rule) /= &
+                instruction_shape_frontend_ast_v2_print_7_source_rule) then
+                call set_message(message, 'frontend-ast-v2 print-7 typed result shape changed')
+                return
+            end if
+        end do
+        valid = .true.
+    end function ffc_validate_frontend_ast_v2_print_7_shape
+
     integer(int32) function frontend_ast_v2_stop_route(expression) result(route)
         character(len=*), intent(in) :: expression
         character(len=:), allocatable :: canonical
@@ -1558,6 +1630,38 @@ contains
         if (index(canonical, '( quiet ') /= 0) return
         route = 18_int32
     end function frontend_ast_v2_stop_route
+
+    integer(int32) function frontend_ast_v2_print_route(expression) result(route)
+        character(len=*), intent(in) :: expression
+        character(len=:), allocatable :: canonical
+
+        canonical = trim(expression)
+        route = 0_int32
+        if (index(canonical, '( print-stmt ') /= 1) return
+        if (index(canonical, '( format * )') == 0) return
+        if (index(canonical, '( output-item-list ( output-item') == 0) return
+        if (index(canonical, '( integer-literal 7 )') == 0) return
+        if (index(canonical, 'R1212') == 0 .or. index(canonical, 'R1215') == 0 .or. &
+            index(canonical, 'R1217') == 0) return
+        if (index(canonical, 'write-stmt') /= 0 .or. index(canonical, 'control-list') /= 0 .or. &
+            index(canonical, 'io-implied-do') /= 0 .or. index(canonical, '( integer-literal 8 )') /= 0) return
+        if (count_substring(canonical, '( output-item ') /= 1) return
+        route = 19_int32
+    end function frontend_ast_v2_print_route
+
+    integer function count_substring(value, needle) result(count)
+        character(len=*), intent(in) :: value, needle
+        integer :: position
+
+        count = 0
+        position = 1
+        do while (position <= len_trim(value))
+            position = index(value(position:), needle)
+            if (position == 0) return
+            count = count + 1
+            position = position + len(needle)
+        end do
+    end function count_substring
 
     logical function ffc_lower_frontend_ast_v1_from_sx(serialized, body, message) result(lowered)
         character(len=*), intent(in) :: serialized

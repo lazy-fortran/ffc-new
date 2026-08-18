@@ -2,7 +2,7 @@ program test_mir_opcode_histogram
     use, intrinsic :: iso_fortran_env, only: int32
     use ffc_mir, only: mir_function_body_t, mir_function_opcode_histogram_at, &
         mir_instruction_t, mir_opcode_histogram_size, opcode_add, opcode_branch, &
-        opcode_call, opcode_compare, opcode_div, opcode_load, opcode_mul, &
+        opcode_call, opcode_compare, opcode_div, opcode_load, opcode_mul, opcode_output, &
         opcode_return, opcode_store, opcode_sub, value_kind_integer
     implicit none
 
@@ -18,14 +18,14 @@ program test_mir_opcode_histogram
 
     call make_body(body, [opcode_add, opcode_add, opcode_return, opcode_add, opcode_return])
     expected = [3_int32, 0_int32, 0_int32, 0_int32, 0_int32, 0_int32, 0_int32, &
-        0_int32, 0_int32, 2_int32, 0_int32]
+        0_int32, 0_int32, 2_int32, 0_int32, 0_int32]
     call assert_histogram(body, expected, 5_int32, 'repeated opcodes')
 
     call make_body(body, [opcode_add, opcode_sub, opcode_mul, opcode_div, opcode_load, &
-        opcode_store, opcode_compare, opcode_branch, opcode_call, opcode_return])
+        opcode_store, opcode_compare, opcode_branch, opcode_call, opcode_return, opcode_output])
     expected = [1_int32, 1_int32, 1_int32, 1_int32, 1_int32, 1_int32, 1_int32, &
-        1_int32, 1_int32, 1_int32, 0_int32]
-    call assert_histogram(body, expected, 10_int32, 'all opcodes')
+        1_int32, 1_int32, 1_int32, 0_int32, 1_int32]
+    call assert_histogram(body, expected, 11_int32, 'all opcodes')
 
     call make_body(body, [opcode_add, opcode_return])
     histogram = 77_int32

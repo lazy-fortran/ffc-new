@@ -3,7 +3,7 @@ module ffc_mir
     use ffc_mir_metadata, only: mir_opcode_histogram_size, mir_opcode_name, &
         mir_opcode_value, mir_value_kind_name, mir_value_kind_value, opcode_add, &
         opcode_branch, opcode_call, opcode_compare, opcode_div, opcode_load, &
-        opcode_const, opcode_mul, opcode_return, opcode_store, opcode_sub, &
+        opcode_const, opcode_mul, opcode_output, opcode_return, opcode_store, opcode_sub, &
         value_kind_address, &
         value_kind_character, value_kind_complex, value_kind_integer, value_kind_logical, &
         value_kind_real, &
@@ -14,7 +14,8 @@ module ffc_mir
     public :: value_kind_integer, value_kind_real, value_kind_logical, value_kind_address, &
         value_kind_complex, value_kind_character
     public :: mir_type_spec_name, mir_type_spec_value_kind
-    public :: opcode_const, opcode_add, opcode_sub, opcode_mul, opcode_div, opcode_load, opcode_store
+    public :: opcode_const, opcode_add, opcode_sub, opcode_mul, opcode_div, opcode_load, opcode_store, &
+        opcode_output
     public :: opcode_compare, opcode_branch, opcode_call, opcode_return
     public :: mir_opcode_histogram_size
 
@@ -126,7 +127,7 @@ contains
             call set_message(message, "instruction id must be non-negative")
             return
         end if
-        if (instruction%opcode < opcode_add .or. instruction%opcode > opcode_const) then
+        if (instruction%opcode < opcode_add .or. instruction%opcode > opcode_output) then
             call set_message(message, "instruction opcode is outside mir-v0")
             return
         end if
@@ -308,7 +309,7 @@ contains
         count = 0_int32
         call clear_message(message)
         valid = .false.
-        if (opcode < opcode_add .or. opcode > opcode_const) then
+        if (opcode < opcode_add .or. opcode > opcode_output) then
             call set_message(message, "opcode is outside mir-v0")
             return
         end if

@@ -29,7 +29,7 @@ program test_mir_opcode_count_query
     call assert_equal(message, 'opcode is outside mir-v0', 'invalid opcode diagnostic changed')
 
     count = 99_int32
-    call assert_false(mir_function_opcode_count_at(body, opcode_return + 2_int32, count, &
+    call assert_false(mir_function_opcode_count_at(body, opcode_return + 3_int32, count, &
         message), 'opcode above mir-v0 was accepted')
     call assert_equal_integer(count, 0_int32, 'high invalid opcode did not clear output')
 

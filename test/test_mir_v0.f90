@@ -7,7 +7,7 @@ program test_mir_v0
         mir_function_instruction_at, &
         mir_function_instruction_opcode_at, &
         mir_function_witness_to_sx, mir_function_witness_from_sx, &
-        opcode_add, opcode_return, value_kind_integer
+        opcode_add, opcode_output, opcode_return, value_kind_integer
     implicit none
 
     type(mir_value_t) :: value
@@ -39,7 +39,7 @@ program test_mir_v0
     call assert_true(mir_validate_instruction(instruction, message), &
         "valid instruction rejected")
 
-    instruction%opcode = opcode_return + 2_int32
+    instruction%opcode = opcode_output + 1_int32
     call assert_false(mir_validate_instruction(instruction, message), &
         "invalid instruction accepted")
 

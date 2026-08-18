@@ -1,0 +1,72 @@
+program test_frontend_ast_v2_print
+    use, intrinsic :: iso_fortran_env, only: int32
+    use ffc_frontend_ast, only: ffc_lower_frontend_ast_v2_from_sx, &
+        ffc_validate_frontend_ast_v2_print_7_shape
+    use ffc_mir, only: mir_function_body_t, mir_validate_function_body, opcode_const, &
+        opcode_output, opcode_return
+    implicit none
+
+    type(mir_function_body_t) :: body
+    character(len=:), allocatable :: message
+
+    call assert_true(ffc_lower_frontend_ast_v2_from_sx(envelope_sx(), body, message), &
+        'PRINT star 7 envelope was rejected')
+    call assert_true(mir_validate_function_body(body, message), 'PRINT MIR is invalid')
+    call assert_true(ffc_validate_frontend_ast_v2_print_7_shape(body, message), &
+        'PRINT MIR shape was rejected')
+    call assert_equal(body%instructions(1)%opcode, opcode_const, 'PRINT literal opcode changed')
+    call assert_equal(body%instructions(2)%opcode, opcode_output, 'PRINT output opcode missing')
+    call assert_equal(body%instructions(3)%opcode, opcode_return, 'PRINT return opcode changed')
+    call assert_equal(body%instructions(1)%literal_value, 7, 'PRINT literal changed')
+    call assert_true(.not. ffc_lower_frontend_ast_v2_from_sx(&
+        replace_text(envelope_sx(), '(integer-literal 7)', '(integer-literal 8)'), body, message), &
+        'PRINT 8 mutation was accepted')
+    call assert_true(.not. ffc_lower_frontend_ast_v2_from_sx(&
+        replace_text(envelope_sx(), '(print-stmt ', '(write-stmt '), body, message), &
+        'WRITE mutation was accepted')
+    call assert_true(.not. ffc_lower_frontend_ast_v2_from_sx(&
+        replace_text(envelope_sx(), '(output-item-list (output-item (expr (integer-literal 7)))', &
+        '(output-item-list)'), body, message), 'missing PRINT item was accepted')
+
+    write (*, '(a)') 'frontend AST v2 PRINT star 7 checks: ok'
+
+contains
+
+    function envelope_sx() result(value)
+        character(len=4096) :: value
+
+        value = '(program-unit-v2 (root (program-root (name p) (span (source-span '// &
+            '(file main.f90) (start-byte 0) (end-byte 40) (source-hash print-test))))) '// &
+            '(declaration-count 0) (declaration) (variable-count 0) (variable) '// &
+            '(execution-part (print-stmt (format *) (output-item-list '// &
+            '(output-item (expr (integer-literal 7))) '// &
+            '(span (source-span (file main.f90) (start-byte 28) (end-byte 38) '// &
+            '(source-hash print-test))) (source-rule R1212) (format-rule R1215) '// &
+            '(item-rule R1217)))))'
+    end function envelope_sx
+
+    function replace_text(value, old, new) result(replaced)
+        character(len=*), intent(in) :: value, old, new
+        character(len=4096) :: replaced
+        integer :: start
+
+        replaced = value
+        start = index(replaced, old)
+        if (start > 0) replaced = replaced(:start - 1)//new//replaced(start + len(old):)
+    end function replace_text
+
+    subroutine assert_true(value, description)
+        logical, intent(in) :: value
+        character(len=*), intent(in) :: description
+
+        if (.not. value) error stop description
+    end subroutine assert_true
+
+    subroutine assert_equal(actual, expected, description)
+        integer(int32), intent(in) :: actual, expected
+        character(len=*), intent(in) :: description
+
+        call assert_true(actual == expected, description)
+    end subroutine assert_equal
+
+end program test_frontend_ast_v2_print
