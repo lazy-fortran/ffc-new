@@ -18,12 +18,13 @@ program test_mir_opcode_histogram
 
     call make_body(body, [opcode_add, opcode_add, opcode_return, opcode_add, opcode_return])
     expected = [3_int32, 0_int32, 0_int32, 0_int32, 0_int32, 0_int32, 0_int32, &
-        0_int32, 0_int32, 2_int32]
+        0_int32, 0_int32, 2_int32, 0_int32]
     call assert_histogram(body, expected, 5_int32, 'repeated opcodes')
 
     call make_body(body, [opcode_add, opcode_sub, opcode_mul, opcode_div, opcode_load, &
         opcode_store, opcode_compare, opcode_branch, opcode_call, opcode_return])
-    expected = 1_int32
+    expected = [1_int32, 1_int32, 1_int32, 1_int32, 1_int32, 1_int32, 1_int32, &
+        1_int32, 1_int32, 1_int32, 0_int32]
     call assert_histogram(body, expected, 10_int32, 'all opcodes')
 
     call make_body(body, [opcode_add, opcode_return])

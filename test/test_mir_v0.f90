@@ -39,7 +39,7 @@ program test_mir_v0
     call assert_true(mir_validate_instruction(instruction, message), &
         "valid instruction rejected")
 
-    instruction%opcode = opcode_return + 1_int32
+    instruction%opcode = opcode_return + 2_int32
     call assert_false(mir_validate_instruction(instruction, message), &
         "invalid instruction accepted")
 

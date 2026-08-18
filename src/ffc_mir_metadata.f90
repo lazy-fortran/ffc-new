@@ -21,6 +21,7 @@ module ffc_mir_metadata
     integer(int32), parameter, public :: opcode_branch = 8_int32
     integer(int32), parameter, public :: opcode_call = 9_int32
     integer(int32), parameter, public :: opcode_return = 10_int32
+    integer(int32), parameter, public :: opcode_const = 11_int32
 
     character(len=12), parameter, public :: source_rule_program_root = 'program-root'
     character(len=19), parameter, public :: source_rule_frontend_v0_program = 'frontend-v0/program'
@@ -41,6 +42,14 @@ module ffc_mir_metadata
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_int_assign_result_kind = value_kind_integer
     character(len=3), parameter, public :: instruction_shape_frontend_ast_v1_int_assign_result_type = 'i32'
     character(len=26), parameter, public :: instruction_shape_frontend_ast_v1_int_assign_source_rule = 'frontend-ast-v1/assignment'
+
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_int_lit_assign_count = 3_int32
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_int_lit_assign_opcode_0 = opcode_const
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_int_lit_assign_opcode_1 = opcode_store
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_int_lit_assign_opcode_2 = opcode_return
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_int_lit_assign_result_kind = value_kind_integer
+    character(len=3), parameter, public :: instruction_shape_frontend_ast_v1_int_lit_assign_result_type = 'i32'
+    character(len=26), parameter, public :: instruction_shape_frontend_ast_v1_int_lit_assign_source_rule = 'frontend-ast-v1/assignment'
 
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_int_expr_assign_count = 3_int32
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_int_expr_assign_opcode_0 = opcode_add
@@ -110,7 +119,7 @@ module ffc_mir_metadata
     character(len=23), parameter, public :: instruction_shape_frontend_ast_v1_character_program_source_rule = 'frontend-ast-v1/program'
 
     integer(int32), parameter, public :: mir_opcode_histogram_size = &
-        opcode_return - opcode_add + 1_int32
+        11_int32
 
     public :: mir_opcode_name, mir_opcode_value
     public :: mir_value_kind_name, mir_value_kind_value
@@ -139,6 +148,7 @@ contains
         case (opcode_branch); mir_opcode_name = 'branch'
         case (opcode_call); mir_opcode_name = 'call'
         case (opcode_return); mir_opcode_name = 'return'
+        case (opcode_const); mir_opcode_name = 'const'
         case default; mir_opcode_name = ''
         end select
     end function mir_opcode_name
@@ -157,6 +167,7 @@ contains
         case ('branch'); mir_opcode_value = opcode_branch
         case ('call'); mir_opcode_value = opcode_call
         case ('return'); mir_opcode_value = opcode_return
+        case ('const'); mir_opcode_value = opcode_const
         case default; mir_opcode_value = 0_int32
         end select
     end function mir_opcode_value

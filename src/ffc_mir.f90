@@ -3,7 +3,8 @@ module ffc_mir
     use ffc_mir_metadata, only: mir_opcode_histogram_size, mir_opcode_name, &
         mir_opcode_value, mir_value_kind_name, mir_value_kind_value, opcode_add, &
         opcode_branch, opcode_call, opcode_compare, opcode_div, opcode_load, &
-        opcode_mul, opcode_return, opcode_store, opcode_sub, value_kind_address, &
+        opcode_const, opcode_mul, opcode_return, opcode_store, opcode_sub, &
+        value_kind_address, &
         value_kind_character, value_kind_complex, value_kind_integer, value_kind_logical, &
         value_kind_real, &
         mir_type_spec_name, mir_type_spec_value_kind
@@ -13,7 +14,7 @@ module ffc_mir
     public :: value_kind_integer, value_kind_real, value_kind_logical, value_kind_address, &
         value_kind_complex, value_kind_character
     public :: mir_type_spec_name, mir_type_spec_value_kind
-    public :: opcode_add, opcode_sub, opcode_mul, opcode_div, opcode_load, opcode_store
+    public :: opcode_const, opcode_add, opcode_sub, opcode_mul, opcode_div, opcode_load, opcode_store
     public :: opcode_compare, opcode_branch, opcode_call, opcode_return
     public :: mir_opcode_histogram_size
 
@@ -28,6 +29,7 @@ module ffc_mir
     type, public :: mir_instruction_t
         integer(int32) :: id = 0_int32
         integer(int32) :: opcode = 0_int32
+        integer(int32) :: literal_value = 0_int32
         type(mir_value_t) :: result
         character(len=:), allocatable :: source_rule
     end type mir_instruction_t
@@ -123,8 +125,12 @@ contains
             call set_message(message, "instruction id must be non-negative")
             return
         end if
-        if (instruction%opcode < opcode_add .or. instruction%opcode > opcode_return) then
+        if (instruction%opcode < opcode_add .or. instruction%opcode > opcode_const) then
             call set_message(message, "instruction opcode is outside mir-v0")
+            return
+        end if
+        if (instruction%opcode /= opcode_const .and. instruction%literal_value /= 0_int32) then
+            call set_message(message, "non-const instruction has a literal value")
             return
         end if
         if (.not. mir_validate_value(instruction%result, message)) return
@@ -287,7 +293,7 @@ contains
         count = 0_int32
         call clear_message(message)
         valid = .false.
-        if (opcode < opcode_add .or. opcode > opcode_return) then
+        if (opcode < opcode_add .or. opcode > opcode_const) then
             call set_message(message, "opcode is outside mir-v0")
             return
         end if
@@ -719,7 +725,10 @@ contains
             result_kind_text = mir_value_kind_name(body%instructions(index)%result%kind)
             size = size + int(len(' (instruction (id ') + len_trim(id_text) + &
                 len(') (opcode ') + len_trim(opcode_text) + &
-                len(') (source-rule ') + len_trim(body%instructions(index)%source_rule) + &
+                len(')') + &
+                merge(len(' (literal-value ') + len_trim(itoa(body%instructions(index)%literal_value)) + &
+                len(')'), 0, body%instructions(index)%opcode == opcode_const) + &
+                len(' (source-rule ') + len_trim(body%instructions(index)%source_rule) + &
                 len(') (result (id ') + len_trim(result_id_text) + &
                 len(') (kind ') + len_trim(result_kind_text) + &
                 len(') (type ') + &
@@ -760,7 +769,12 @@ contains
             opcode_text = mir_opcode_name(body%instructions(index)%opcode)
             result_kind_text = mir_value_kind_name(body%instructions(index)%result%kind)
             canonical = trim(canonical)//' (instruction (id '//trim(id_text)//') '// &
-                '(opcode '//trim(opcode_text)//') (source-rule '// &
+                '(opcode '//trim(opcode_text)//')'
+            if (body%instructions(index)%opcode == opcode_const) then
+                canonical = trim(canonical)//' (literal-value '// &
+                    trim(itoa(body%instructions(index)%literal_value))//')'
+            end if
+            canonical = trim(canonical)//' (source-rule '// &
                 trim(body%instructions(index)%source_rule)//') (result (id '// &
                 trim(result_id_text)//') (kind '//trim(result_kind_text)//') (type '// &
                 trim(body%instructions(index)%result%type_name)// &
@@ -1073,6 +1087,12 @@ contains
             message = 'unknown mir-v0 opcode'
             ok = .false.
             return
+        end if
+        instruction%literal_value = 0_int32
+        if (instruction%opcode == opcode_const) then
+            ok = read_named_integer(token, token_count, position, 'literal-value', &
+                instruction%literal_value, message)
+            if (.not. ok) return
         end if
         ok = read_named_atom(token, token_count, position, 'source-rule', &
             instruction%source_rule, message)

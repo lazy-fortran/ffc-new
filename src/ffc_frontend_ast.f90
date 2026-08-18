@@ -16,6 +16,13 @@ module ffc_frontend_ast
         instruction_shape_frontend_ast_v1_int_assign_result_kind, &
         instruction_shape_frontend_ast_v1_int_assign_result_type, &
         instruction_shape_frontend_ast_v1_int_assign_source_rule, &
+        instruction_shape_frontend_ast_v1_int_lit_assign_count, &
+        instruction_shape_frontend_ast_v1_int_lit_assign_opcode_0, &
+        instruction_shape_frontend_ast_v1_int_lit_assign_opcode_1, &
+        instruction_shape_frontend_ast_v1_int_lit_assign_opcode_2, &
+        instruction_shape_frontend_ast_v1_int_lit_assign_result_kind, &
+        instruction_shape_frontend_ast_v1_int_lit_assign_result_type, &
+        instruction_shape_frontend_ast_v1_int_lit_assign_source_rule, &
         instruction_shape_frontend_ast_v1_int_expr_assign_count, &
         instruction_shape_frontend_ast_v1_int_expr_assign_opcode_0, &
         instruction_shape_frontend_ast_v1_int_expr_assign_opcode_1, &
@@ -134,6 +141,7 @@ module ffc_frontend_ast
     public :: ffc_validate_frontend_ast_v1
     public :: ffc_validate_frontend_ast_v1_integer_program_shape
     public :: ffc_validate_frontend_ast_v1_integer_assignment_program_shape
+    public :: ffc_validate_frontend_ast_v1_int_literal_assignment_shape
     public :: ffc_validate_frontend_ast_v1_int_expr_assignment_shape
     public :: ffc_validate_frontend_ast_v1_int_mul_expr_assignment_shape
     public :: ffc_validate_frontend_ast_v1_int_div_expr_assignment_shape
@@ -278,7 +286,7 @@ contains
         character(len=:), allocatable, intent(out), optional :: message
 
         integer :: kind
-        integer(int32) :: expression_route
+        integer(int32) :: expression_route, literal_value
         character(len=32) :: type_name
 
         call clear_message(message)
@@ -307,6 +315,39 @@ contains
                     case (4_int32); lowered = ffc_validate_frontend_ast_v1_int_sub_expr_assignment_shape(&
                             body, message)
                     end select
+                    return
+                end if
+                if (starts_integer_literal_expression(trim(ast%assignment%value))) then
+                    if (.not. parse_integer_literal_expression(trim(ast%assignment%value), &
+                        literal_value, message)) return
+                    deallocate (body%instructions)
+                    allocate (body%instructions(3))
+                    body%instructions(1)%id = 0_int32
+                    body%instructions(2)%id = 1_int32
+                    body%instructions(3)%id = 2_int32
+                    body%function%instruction_count = &
+                        instruction_shape_frontend_ast_v1_int_lit_assign_count
+                    body%instructions(1)%opcode = &
+                        instruction_shape_frontend_ast_v1_int_lit_assign_opcode_0
+                    body%instructions(1)%literal_value = literal_value
+                    body%instructions(2)%opcode = &
+                        instruction_shape_frontend_ast_v1_int_lit_assign_opcode_1
+                    body%instructions(3)%opcode = &
+                        instruction_shape_frontend_ast_v1_int_lit_assign_opcode_2
+                    body%instructions(1)%result%kind = &
+                        instruction_shape_frontend_ast_v1_int_lit_assign_result_kind
+                    body%instructions(1)%result%type_name = &
+                        instruction_shape_frontend_ast_v1_int_lit_assign_result_type
+                    body%instructions(2)%result = body%instructions(1)%result
+                    body%instructions(3)%result = body%instructions(1)%result
+                    body%instructions(1)%source_rule = &
+                        instruction_shape_frontend_ast_v1_int_lit_assign_source_rule
+                    body%instructions(2)%source_rule = &
+                        instruction_shape_frontend_ast_v1_int_lit_assign_source_rule
+                    body%instructions(3)%source_rule = &
+                        instruction_shape_frontend_ast_v1_int_lit_assign_source_rule
+                    lowered = ffc_validate_frontend_ast_v1_int_literal_assignment_shape(body, &
+                        message)
                     return
                 end if
                 body%function%instruction_count = &
@@ -550,6 +591,58 @@ contains
         end if
         valid = .true.
     end function ffc_validate_frontend_ast_v1_integer_assignment_program_shape
+
+    logical function ffc_validate_frontend_ast_v1_int_literal_assignment_shape(body, message) &
+            result(valid)
+        type(mir_function_body_t), intent(in) :: body
+        character(len=:), allocatable, intent(out), optional :: message
+
+        call clear_message(message)
+        valid = .false.
+        if (.not. mir_validate_function_body(body, message)) return
+        if (body%function%instruction_count /= &
+            instruction_shape_frontend_ast_v1_int_lit_assign_count) then
+            call set_message(message, 'frontend-ast-v1 integer literal instruction count changed')
+            return
+        end if
+        if (body%instructions(1)%opcode /= &
+            instruction_shape_frontend_ast_v1_int_lit_assign_opcode_0 .or. &
+            body%instructions(2)%opcode /= &
+            instruction_shape_frontend_ast_v1_int_lit_assign_opcode_1 .or. &
+            body%instructions(3)%opcode /= &
+            instruction_shape_frontend_ast_v1_int_lit_assign_opcode_2) then
+            call set_message(message, 'frontend-ast-v1 integer literal opcode shape changed')
+            return
+        end if
+        if (body%instructions(1)%result%kind /= &
+            instruction_shape_frontend_ast_v1_int_lit_assign_result_kind .or. &
+            trim(body%instructions(1)%result%type_name) /= &
+            instruction_shape_frontend_ast_v1_int_lit_assign_result_type) then
+            call set_message(message, 'frontend-ast-v1 integer literal result shape changed')
+            return
+        end if
+        if (body%instructions(1)%literal_value < 0_int32) then
+            call set_message(message, 'frontend-ast-v1 integer literal value is out of range')
+            return
+        end if
+        if (body%instructions(2)%result%kind /= &
+            instruction_shape_frontend_ast_v1_int_lit_assign_result_kind .or. &
+            body%instructions(3)%result%kind /= &
+            instruction_shape_frontend_ast_v1_int_lit_assign_result_kind) then
+            call set_message(message, 'frontend-ast-v1 integer literal return shape changed')
+            return
+        end if
+        if (trim(body%instructions(1)%source_rule) /= &
+            instruction_shape_frontend_ast_v1_int_lit_assign_source_rule .or. &
+            trim(body%instructions(2)%source_rule) /= &
+            instruction_shape_frontend_ast_v1_int_lit_assign_source_rule .or. &
+            trim(body%instructions(3)%source_rule) /= &
+            instruction_shape_frontend_ast_v1_int_lit_assign_source_rule) then
+            call set_message(message, 'frontend-ast-v1 integer literal source rule changed')
+            return
+        end if
+        valid = .true.
+    end function ffc_validate_frontend_ast_v1_int_literal_assignment_shape
 
     logical function ffc_validate_frontend_ast_v1_int_expr_assignment_shape(&
             body, message) result(valid)
@@ -1307,6 +1400,7 @@ contains
     logical function ffc_validate_assignment_v1(assignment, message) result(valid)
         type(ffc_frontend_assignment_v1_t), intent(in) :: assignment
         character(len=:), allocatable, intent(out), optional :: message
+        integer(int32) :: literal_value
 
         call clear_message(message)
         valid = .false.
@@ -1314,7 +1408,9 @@ contains
             call set_message(message, 'unsupported-frontend-ast-v1-assignment')
             return
         end if
-        if (trim(assignment%value) /= '1' .and. trim(assignment%value) /= &
+        if (trim(assignment%value) /= '1' .and. &
+            .not. starts_integer_literal_expression(trim(assignment%value)) .and. &
+            trim(assignment%value) /= &
             '( binary-expr ( operator + ) ( left 1 ) ( right 2 ) )' .and. &
             trim(assignment%value) /= '( binary-expr ( operator * ) ( left 2 ) ( right 3 ) )' &
             .and. trim(assignment%value) /= '( binary-expr ( operator / ) ( left 6 ) ( right 2 ) )' &
@@ -1341,6 +1437,7 @@ contains
         character(len=*), intent(out) :: value
         character(len=:), allocatable, intent(out), optional :: message
         character(len=128) :: kind, operator, left_operand, right_operand
+        integer(int32) :: literal_value
 
         call clear_message(message)
         value = ''
@@ -1383,13 +1480,18 @@ contains
                             if (.not. ok) return
                             ok = expect_token(token, token_count, position, ')', message)
                             if (.not. ok) return
-                            if (trim(left_operand) /= '1') then
+                            ok = parse_bounded_decimal_literal(trim(left_operand), literal_value, &
+                                message)
+                            if (.not. ok) then
                                 call set_message(message, &
                                     'unsupported-frontend-ast-v1-assignment-expression')
-                                ok = .false.
                                 return
                             end if
-                            value = '1'
+                            if (literal_value == 1_int32) then
+                                value = '1'
+                            else
+                                write (value, '(a,i0,a)') '( integer-literal ', literal_value, ' )'
+                            end if
                             ok = expect_token(token, token_count, position, ')', message)
                             if (.not. ok) return
                             return
@@ -1436,6 +1538,76 @@ contains
         if (.not. ok) return
         ok = expect_token(token, token_count, position, ')', message)
     end function read_assignment_expression
+
+    logical function parse_integer_literal_expression(serialized, value, message) result(ok)
+        character(len=*), intent(in) :: serialized
+        integer(int32), intent(out) :: value
+        character(len=:), allocatable, intent(out), optional :: message
+
+        character(len=frontend_ast_token_length) :: token(frontend_ast_token_capacity)
+        character(len=128) :: literal_text
+        integer :: token_count, position
+
+        value = 0_int32
+        call clear_message(message)
+        ok = tokenize_frontend_ast_sx(serialized, token, token_count, message)
+        if (.not. ok) return
+        position = 1
+        ok = expect_token(token, token_count, position, '(', message)
+        if (.not. ok) return
+        ok = expect_token(token, token_count, position, 'integer-literal', message)
+        if (.not. ok) return
+        ok = read_atom(token, token_count, position, literal_text, message)
+        if (.not. ok) return
+        ok = parse_bounded_decimal_literal(literal_text, value, message)
+        if (.not. ok) return
+        ok = expect_token(token, token_count, position, ')', message)
+        if (.not. ok) return
+        if (position <= token_count) then
+            call set_message(message, 'malformed-frontend-ast-v1-integer-literal')
+            ok = .false.
+        end if
+    end function parse_integer_literal_expression
+
+    logical function starts_integer_literal_expression(serialized) result(is_literal)
+        character(len=*), intent(in) :: serialized
+
+        is_literal = .false.
+        if (len_trim(serialized) < len('( integer-literal')) return
+        is_literal = index(trim(serialized), '( integer-literal') == 1
+    end function starts_integer_literal_expression
+
+    logical function parse_bounded_decimal_literal(text, value, message) result(ok)
+        character(len=*), intent(in) :: text
+        integer(int32), intent(out) :: value
+        character(len=:), allocatable, intent(out), optional :: message
+
+        integer(int64) :: accumulator, digit
+        integer :: position
+
+        value = 0_int32
+        call clear_message(message)
+        ok = len_trim(text) > 0
+        if (.not. ok) return
+        accumulator = 0_int64
+        do position = 1, len_trim(text)
+            if (text(position:position) < '0' .or. text(position:position) > '9') then
+                call set_message(message, 'frontend-ast-v1 integer literal is not decimal')
+                ok = .false.
+                return
+            end if
+            digit = int(iachar(text(position:position)) - iachar('0'), int64)
+            if (accumulator > 214748364_int64 .or. &
+                (accumulator == 214748364_int64 .and. digit > 7_int64)) then
+                call set_message(message, 'frontend-ast-v1 integer literal is out of range')
+                ok = .false.
+                return
+            end if
+            accumulator = accumulator * 10_int64 + digit
+        end do
+        value = int(accumulator, int32)
+        ok = .true.
+    end function parse_bounded_decimal_literal
 
     logical function append_token(value, token, token_count, message) result(ok)
         character(len=*), intent(in) :: value

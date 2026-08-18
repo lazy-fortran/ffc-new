@@ -18,6 +18,16 @@ def read_entries(data: dict, key: str) -> list[dict[str, int | str]]:
     return entries
 
 
+def read_opcodes(data: dict) -> list[dict[str, int | str]]:
+    entries = data.get("opcodes", [])
+    values = [entry["value"] for entry in entries]
+    if len(set(values)) != len(values) or any(value < 1 for value in values):
+        raise ValueError("opcode values must be unique and positive")
+    if len({entry["name"] for entry in entries}) != len(entries):
+        raise ValueError("opcode names must be unique")
+    return entries
+
+
 def read_source_rules(data: dict) -> list[dict[str, str]]:
     entries = data.get("source_rules", [])
     names = [entry["name"] for entry in entries]
@@ -77,7 +87,7 @@ def generate(spec_path: pathlib.Path) -> str:
     with spec_path.open("rb") as stream:
         data = tomllib.load(stream)
     kinds = read_entries(data, "value_kinds")
-    opcodes = read_entries(data, "opcodes")
+    opcodes = read_opcodes(data)
     source_rules = read_source_rules(data)
     type_specs = data.get("type_specs", [])
     instruction_shapes = read_instruction_shapes(data, opcodes, kinds, source_rules)
@@ -138,7 +148,7 @@ def generate(spec_path: pathlib.Path) -> str:
         lines.append("")
     lines += [
         "    integer(int32), parameter, public :: mir_opcode_histogram_size = &",
-        "        opcode_return - opcode_add + 1_int32",
+        f"        {max(entry['value'] for entry in opcodes)}_int32",
         "",
         "    public :: mir_opcode_name, mir_opcode_value",
         "    public :: mir_value_kind_name, mir_value_kind_value",

@@ -114,6 +114,10 @@ value = 9
 name = "return"
 value = 10
 
+[[opcodes]]
+name = "const"
+value = 11
+
 [[instruction_shapes]]
 name = "frontend_ast_v1_integer_program"
 opcodes = ["add", "return"]
@@ -124,6 +128,13 @@ source_rule = "frontend-ast-v1/program"
 [[instruction_shapes]]
 name = "frontend_ast_v1_int_assign"
 opcodes = ["store", "return"]
+result_kind = "integer"
+result_type = "i32"
+source_rule = "frontend-ast-v1/assignment"
+
+[[instruction_shapes]]
+name = "frontend_ast_v1_int_lit_assign"
+opcodes = ["const", "store", "return"]
 result_kind = "integer"
 result_type = "i32"
 source_rule = "frontend-ast-v1/assignment"
