@@ -11,8 +11,8 @@ rejected_input="$work_dir/rejected.sx"
 rejected_output="$work_dir/rejected-output.sx"
 diagnostic_file="$work_dir/diagnostic.txt"
 
-printf '%s' '(program-unit (root (program-root (name main) (span (file unit.f90) (start-byte 0) (end-byte 64) (source-hash hash-unit)))) (declaration-count 1) (declaration (program-declaration (declaration-kind program) (name main) (span (file unit.f90) (start-byte 0) (end-byte 64) (source-hash hash-unit)))) (variable-count 1) (variable (variable-declaration (type-spec double-precision) (name x) (span (source-span (file unit.f90) (start-byte 10) (end-byte 24) (source-hash hash-unit))))))' >"$input_file"
-printf '%s' '(mir-function (name main) (entry-block 0) (instruction-count 2) (instructions (instruction (id 0) (opcode add) (source-rule frontend-ast-v1/program) (result (id 1) (kind real) (type f64))) (instruction (id 1) (opcode return) (source-rule frontend-ast-v1/program) (result (id 1) (kind real) (type f64)))))' >"$output_file.expected"
+printf '%s' '(program-unit (root (program-root (name main) (span (file unit.f90) (start-byte 0) (end-byte 64) (source-hash hash-unit)))) (declaration-count 1) (declaration (program-declaration (declaration-kind program) (name main) (span (file unit.f90) (start-byte 0) (end-byte 64) (source-hash hash-unit)))) (variable-count 1) (variable (variable-declaration (type-spec real) (name x) (span (source-span (file unit.f90) (start-byte 10) (end-byte 24) (source-hash hash-unit))))))' >"$input_file"
+printf '%s' '(mir-function (name main) (entry-block 0) (instruction-count 2) (instructions (instruction (id 0) (opcode add) (source-rule frontend-ast-v1/program) (result (id 1) (kind real) (type f32))) (instruction (id 1) (opcode return) (source-rule frontend-ast-v1/program) (result (id 1) (kind real) (type f32)))))' >"$output_file.expected"
 
 fo exec ffc-lower-frontend-ast-v1 "$input_file" "$output_file"
 cmp -s "$output_file.expected" "$output_file"
