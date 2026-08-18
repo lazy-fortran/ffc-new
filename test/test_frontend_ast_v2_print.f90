@@ -41,10 +41,10 @@ program test_frontend_ast_v2_print
     call assert_equal(body%instructions(1)%literal_value, 7, 'first PRINT literal changed')
     call assert_equal(body%instructions(3)%literal_value, 8, 'second PRINT literal changed')
     call assert_true(.not. ffc_lower_frontend_ast_v2_from_sx(&
-        replace_text(envelope_two_sx(), '(output-value 8)', '(output-value 9)'), body, message), &
+        replace_text(envelope_two_sx(), '(output-value-2 8)', '(output-value-2 9)'), body, message), &
         'PRINT wrong second item was accepted')
     call assert_true(.not. ffc_lower_frontend_ast_v2_from_sx(&
-        replace_text(envelope_two_sx(), '(output-value 8)', '(output-value)'), body, message), &
+        replace_text(envelope_two_sx(), '(output-value-2 8)', '(output-value-2)'), body, message), &
         'PRINT missing second item was accepted')
     call assert_true(.not. ffc_lower_frontend_ast_v2_from_sx(&
         replace_text(envelope_two_sx(), '(print-stmt ', '(write-stmt '), body, message), &
@@ -76,9 +76,10 @@ contains
             '(file main.f90) (start-byte 0) (end-byte 42) (source-hash print-test))))) '// &
             '(declaration-count 0) (declaration) (variable-count 0) (variable) '// &
             '(execution-part (print-stmt (format-kind default-char-expr) (format-value *) '// &
-            '(output-kind integer-literal) (output-value 7) '// &
-            '(output-kind integer-literal) (output-value 8) '// &
+            '(output-kind integer-literal) (output-value 7) (output-count 2) '// &
+            '(output-kind-2 integer-literal) (output-value-2 8) '// &
             '(statement-rule R1212) (format-rule R1215) (output-rule R1217) '// &
+            '(output-rule-2 R1217) '// &
             '(source-document J3-24-007) (statement-clause 12.6.1) '// &
             '(format-clause 12.6.2.2) (output-clause 12.6.3) '// &
             '(statement-page 242) (format-page 244) (output-page 248) '// &

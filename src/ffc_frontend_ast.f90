@@ -1727,13 +1727,14 @@ contains
             index(canonical, '( source-hash ') == 0) return
         if (index(canonical, 'write-stmt') /= 0 .or. index(canonical, 'control-list') /= 0 .or. &
             index(canonical, 'io-implied-do') /= 0) return
-        if (count_substring(canonical, '( output-kind integer-literal )') == 2 .and. &
-            count_substring(canonical, '( output-value 7 )') == 1 .and. &
-            count_substring(canonical, '( output-value 8 )') == 1 .and. &
-            index(canonical, '( output-value 7 )') < index(canonical, '( output-value 8 )')) then
+        if (index(canonical, '( output-count 2 )') /= 0 .and. &
+            index(canonical, '( output-kind-2 integer-literal )') /= 0 .and. &
+            index(canonical, '( output-value-2 8 )') /= 0 .and. &
+            index(canonical, '( output-rule-2 R1217 )') /= 0) then
             route = 20_int32
             return
         end if
+        if (index(canonical, '( output-count 2 )') /= 0) return
         if (count_substring(canonical, '( output-kind integer-literal )') /= 1 .or. &
             count_substring(canonical, '( output-value 7 )') /= 1) return
         route = 19_int32
