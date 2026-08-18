@@ -1,6 +1,7 @@
 program ffc_lower_frontend_ast_v1
     use, intrinsic :: iso_fortran_env, only: error_unit, int32, int64
-    use ffc_frontend_ast, only: ffc_lower_frontend_ast_v1_from_sx
+    use ffc_frontend_ast, only: ffc_lower_frontend_ast_v1_from_sx, &
+        ffc_lower_frontend_ast_v2_from_sx
     use ffc_mir, only: mir_function_body_sx_size, mir_function_body_t, &
         mir_function_body_to_sx
     implicit none
@@ -21,7 +22,11 @@ program ffc_lower_frontend_ast_v1
     call read_input_file(input_path, input, ok)
     if (.not. ok) call fail('cannot read input file')
 
-    ok = ffc_lower_frontend_ast_v1_from_sx(input, body, message)
+    if (index(adjustl(input), '(program-unit-v2') == 1) then
+        ok = ffc_lower_frontend_ast_v2_from_sx(input, body, message)
+    else
+        ok = ffc_lower_frontend_ast_v1_from_sx(input, body, message)
+    end if
     if (.not. ok) then
         if (allocated(message)) then
             call fail('invalid frontend-ast-v1 input: '//trim(message))
