@@ -186,6 +186,10 @@ name = "frontend_ast_v2_print_variable_six_items"
 source-dir = "test"
 
 [[test]]
+name = "frontend_ast_v2_print_variable_seven_ten_items"
+source-dir = "test"
+
+[[test]]
 name = "frontend_ast_v1_real_policy"
 source-dir = "test"
 

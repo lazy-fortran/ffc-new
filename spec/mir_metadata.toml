@@ -250,6 +250,34 @@ result_type = "i32"
 source_rule = "frontend-ast-v2/print-stmt"
 
 [[instruction_shapes]]
+name = "v2_pow_print_seven_items"
+opcodes = ["const", "store", "load", "const", "pow", "store", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "return"]
+result_kind = "integer"
+result_type = "i32"
+source_rule = "frontend-ast-v2/print-stmt"
+
+[[instruction_shapes]]
+name = "v2_pow_print_eight_items"
+opcodes = ["const", "store", "load", "const", "pow", "store", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "return"]
+result_kind = "integer"
+result_type = "i32"
+source_rule = "frontend-ast-v2/print-stmt"
+
+[[instruction_shapes]]
+name = "v2_pow_print_nine_items"
+opcodes = ["const", "store", "load", "const", "pow", "store", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "return"]
+result_kind = "integer"
+result_type = "i32"
+source_rule = "frontend-ast-v2/print-stmt"
+
+[[instruction_shapes]]
+name = "v2_pow_print_ten_items"
+opcodes = ["const", "store", "load", "const", "pow", "store", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "load", "output", "return"]
+result_kind = "integer"
+result_type = "i32"
+source_rule = "frontend-ast-v2/print-stmt"
+
+[[instruction_shapes]]
 name = "frontend_ast_v2_print_7_8"
 opcodes = ["const", "output", "const", "output", "return"]
 result_kind = "integer"
@@ -680,6 +708,42 @@ literal_values = [23, 1]
 result_ids = [0, 1, 2, 3, 4, 4, 6, 6, 6]
 storage_keys = ["", "x", "x", "", "", "x", "x", "", ""]
 source_rules = ["frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt"]
+
+[[integer_expression_routes]]
+name = "program_unit_v2_print_variable_power_7_items"
+expression = "(execution-part (assignment-sequence (assignment-count 2) (assignment x ( integer-literal 4 )) (assignment x (assignment-expression (kind binary-expression) (operator **) (left-operand x) (right-operand 2)))) )"
+shape = "v2_pow_print_seven_items"
+literal_values = [4, 2]
+result_ids = [0, 1, 2, 3, 4, 4, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 12]
+storage_keys = ["", "x", "x", "", "", "x", "x", "", "x", "", "x", "", "x", "", "x", "", "x", "", "x", "", ""]
+source_rules = ["frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt"]
+
+[[integer_expression_routes]]
+name = "program_unit_v2_print_variable_power_8_items"
+expression = "(execution-part (assignment-sequence (assignment-count 2) (assignment x ( integer-literal 5 )) (assignment x (assignment-expression (kind binary-expression) (operator **) (left-operand x) (right-operand 2)))) )"
+shape = "v2_pow_print_eight_items"
+literal_values = [5, 2]
+result_ids = [0, 1, 2, 3, 4, 4, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13, 13]
+storage_keys = ["", "x", "x", "", "", "x", "x", "", "x", "", "x", "", "x", "", "x", "", "x", "", "x", "", "x", "", ""]
+source_rules = ["frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt"]
+
+[[integer_expression_routes]]
+name = "program_unit_v2_print_variable_power_9_items"
+expression = "(execution-part (assignment-sequence (assignment-count 2) (assignment x ( integer-literal 3 )) (assignment x (assignment-expression (kind binary-expression) (operator **) (left-operand x) (right-operand 3)))) )"
+shape = "v2_pow_print_nine_items"
+literal_values = [3, 3]
+result_ids = [0, 1, 2, 3, 4, 4, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13, 14, 14, 14]
+storage_keys = ["", "x", "x", "", "", "x", "x", "", "x", "", "x", "", "x", "", "x", "", "x", "", "x", "", "x", "", "x", "", ""]
+source_rules = ["frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt"]
+
+[[integer_expression_routes]]
+name = "program_unit_v2_print_variable_power_10_items"
+expression = "(execution-part (assignment-sequence (assignment-count 2) (assignment x ( integer-literal 2 )) (assignment x (assignment-expression (kind binary-expression) (operator **) (left-operand x) (right-operand 2)))) )"
+shape = "v2_pow_print_ten_items"
+literal_values = [2, 2]
+result_ids = [0, 1, 2, 3, 4, 4, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13, 14, 14, 15, 15, 15]
+storage_keys = ["", "x", "x", "", "", "x", "x", "", "x", "", "x", "", "x", "", "x", "", "x", "", "x", "", "x", "", "x", "", "x", "", ""]
+source_rules = ["frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt"]
 
 [[integer_expression_routes]]
 name = "program_unit_v2_print_variable_power_expression_8"
