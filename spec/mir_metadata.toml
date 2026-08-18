@@ -31,6 +31,11 @@ kind = "real"
 type_name = "f32"
 
 [[type_specs]]
+name = "double-precision"
+kind = "real"
+type_name = "f64"
+
+[[type_specs]]
 name = "complex"
 kind = "complex"
 type_name = "c32"

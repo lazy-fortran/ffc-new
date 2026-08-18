@@ -98,6 +98,7 @@ contains
         select case (trim(type_spec))
         case ('integer'); mir_type_spec_value_kind = value_kind_integer
         case ('real'); mir_type_spec_value_kind = value_kind_real
+        case ('double-precision'); mir_type_spec_value_kind = value_kind_real
         case ('complex'); mir_type_spec_value_kind = value_kind_complex
         case default; mir_type_spec_value_kind = 0_int32
         end select
@@ -109,6 +110,7 @@ contains
         select case (trim(type_spec))
         case ('integer'); mir_type_spec_name = 'i32'
         case ('real'); mir_type_spec_name = 'f32'
+        case ('double-precision'); mir_type_spec_name = 'f64'
         case ('complex'); mir_type_spec_name = 'c32'
         case default; mir_type_spec_name = ''
         end select
