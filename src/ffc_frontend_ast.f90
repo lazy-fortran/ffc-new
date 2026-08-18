@@ -246,7 +246,7 @@ module ffc_frontend_ast
         mir_frontend_ast_v1_integer_expression_opcode, &
         mir_frontend_ast_v1_integer_expression_result_kind, &
         mir_frontend_ast_v1_integer_expression_result_type, &
-        mir_frontend_ast_v1_integer_expression_source_rule, &
+        mir_frontend_ast_v1_integer_expression_source_rule_at, &
         mir_frontend_ast_v1_integer_expression_literal_value, &
         mir_frontend_ast_v1_integer_expression_result_id, &
         mir_frontend_ast_v1_integer_expression_storage_key
@@ -627,7 +627,6 @@ contains
         end if
         if (len_trim(print_statement) > 0) then
             if (assignment_count /= 1 .or. trim(assignments(1)%target) /= 'x' .or. &
-                trim(assignments(1)%value) /= '( integer-literal 17 )' .or. &
                 .not. frontend_ast_v2_print_variable_match(print_statement)) then
                 call set_message(message, 'unsupported-frontend-ast-v2-execution-part')
                 return
@@ -643,7 +642,21 @@ contains
             end if
             call mir_make_function_witness(body)
             body%function%name = trim(root%name)
-            call emit_frontend_ast_v2_print_variable(body)
+            write (count_text, '(i0)') assignment_count
+            route_key = '(execution-part (assignment-sequence (assignment-count '// &
+                trim(count_text)//')'
+            do assignment_index = 1, assignment_count
+                route_key = trim(route_key)//' (assignment x '// &
+                    trim(assignments(assignment_index)%value)//')'
+            end do
+            route_key = trim(route_key)//') )'
+            route = mir_frontend_ast_v1_integer_expression_route(&
+                route_key)
+            if (route == 0_int32) then
+                call set_message(message, 'unsupported-frontend-ast-v2-execution-part')
+                return
+            end if
+            call emit_frontend_ast_v1_integer_expression(body, route)
             lowered = mir_validate_function_body(body, message)
             return
         end if
@@ -820,38 +833,6 @@ contains
             index(canonical, 'control-list') == 0 .and. &
             index(canonical, 'io-implied-do') == 0
     end function frontend_ast_v2_print_variable_match
-
-    subroutine emit_frontend_ast_v2_print_variable(body)
-        type(mir_function_body_t), intent(inout) :: body
-        integer :: index
-
-        deallocate (body%instructions)
-        allocate (body%instructions(5))
-        body%function%instruction_count = 5
-        do index = 1, 5
-            body%instructions(index)%id = index - 1
-            body%instructions(index)%result%kind = 1
-            body%instructions(index)%result%type_name = 'i32'
-        end do
-        body%instructions(1)%opcode = opcode_const
-        body%instructions(1)%literal_value = 17
-        body%instructions(1)%result%id = 0
-        body%instructions(1)%source_rule = 'frontend-ast-v2/execution-part'
-        body%instructions(2)%opcode = opcode_store
-        body%instructions(2)%result%id = 1
-        body%instructions(2)%storage_key = 'x'
-        body%instructions(2)%source_rule = 'frontend-ast-v2/execution-part'
-        body%instructions(3)%opcode = opcode_load
-        body%instructions(3)%result%id = 2
-        body%instructions(3)%storage_key = 'x'
-        body%instructions(3)%source_rule = 'frontend-ast-v2/print-stmt'
-        body%instructions(4)%opcode = opcode_output
-        body%instructions(4)%result%id = 2
-        body%instructions(4)%source_rule = 'frontend-ast-v2/print-stmt'
-        body%instructions(5)%opcode = opcode_return
-        body%instructions(5)%result%id = 2
-        body%instructions(5)%source_rule = 'frontend-ast-v2/print-stmt'
-    end subroutine emit_frontend_ast_v2_print_variable
 
     character(len=16) function sequence_position_name(position)
         integer, intent(in) :: position
@@ -1128,7 +1109,7 @@ contains
             body%instructions(index + 1)%opcode = &
                 mir_frontend_ast_v1_integer_expression_opcode(route, index)
             body%instructions(index + 1)%source_rule = &
-                trim(mir_frontend_ast_v1_integer_expression_source_rule(route))
+                trim(mir_frontend_ast_v1_integer_expression_source_rule_at(route, index))
             if (len_trim(mir_frontend_ast_v1_integer_expression_storage_key(route, index)) > 0) then
                 body%instructions(index + 1)%storage_key = &
                     trim(mir_frontend_ast_v1_integer_expression_storage_key(route, index))

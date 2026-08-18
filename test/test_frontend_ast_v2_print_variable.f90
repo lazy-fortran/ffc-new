@@ -24,6 +24,17 @@ program test_frontend_ast_v2_print_variable
         trim(body%instructions(3)%storage_key) == 'x', 'PRINT load storage changed')
     call assert_true(body%instructions(4)%opcode == opcode_output .and. &
         body%instructions(5)%opcode == opcode_return, 'PRINT output/return changed')
+    call assert_true(ffc_lower_frontend_ast_v2_from_sx(positive_23_sx(), body, message), &
+        'stored-variable PRINT literal 23 was rejected')
+    call assert_true(body%instructions(1)%literal_value == 23, &
+        'stored-variable PRINT literal 23 was not transported')
+    call assert_true(body%instructions(2)%opcode == opcode_store .and. &
+        body%instructions(3)%opcode == opcode_load .and. &
+        body%instructions(4)%opcode == opcode_output .and. &
+        body%instructions(5)%opcode == opcode_return, &
+        'stored-variable PRINT literal 23 MIR route changed')
+    call assert_false(ffc_lower_frontend_ast_v2_from_sx(unsupported_literal_sx(), body, message), &
+        'stored-variable PRINT arbitrary literal was accepted')
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(missing_assignment_sx(), body, message), &
         'missing assignment was accepted')
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(wrong_name_sx(), body, message), &
@@ -50,6 +61,18 @@ contains
 
         value = envelope('(assignment-sequence (assignment-count 0))', print_sx())
     end function missing_assignment_sx
+
+    function positive_23_sx() result(value)
+        character(len=8192) :: value
+
+        value = replace_text(positive_sx(), 'left-operand 17', 'left-operand 23')
+    end function positive_23_sx
+
+    function unsupported_literal_sx() result(value)
+        character(len=8192) :: value
+
+        value = replace_text(positive_sx(), 'left-operand 17', 'left-operand 24')
+    end function unsupported_literal_sx
 
     function wrong_name_sx() result(value)
         character(len=8192) :: value

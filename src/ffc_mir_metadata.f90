@@ -59,6 +59,16 @@ module ffc_mir_metadata
     character(len=3), parameter, public :: instruction_shape_frontend_ast_v2_print_7_result_type = 'i32'
     character(len=26), parameter, public :: instruction_shape_frontend_ast_v2_print_7_source_rule = 'frontend-ast-v2/print-stmt'
 
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_variable_count = 5_int32
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_variable_opcode_0 = opcode_const
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_variable_opcode_1 = opcode_store
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_variable_opcode_2 = opcode_load
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_variable_opcode_3 = opcode_output
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_variable_opcode_4 = opcode_return
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_variable_result_kind = value_kind_integer
+    character(len=3), parameter, public :: instruction_shape_frontend_ast_v2_print_variable_result_type = 'i32'
+    character(len=26), parameter, public :: instruction_shape_frontend_ast_v2_print_variable_source_rule = 'frontend-ast-v2/print-stmt'
+
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_7_8_count = 5_int32
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_7_8_opcode_0 = opcode_const
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_7_8_opcode_1 = opcode_output
@@ -657,6 +667,7 @@ module ffc_mir_metadata
     public :: mir_frontend_ast_v1_integer_expression_result_kind
     public :: mir_frontend_ast_v1_integer_expression_result_type
     public :: mir_frontend_ast_v1_integer_expression_source_rule
+    public :: mir_frontend_ast_v1_integer_expression_source_rule_at
     public :: mir_frontend_ast_v1_integer_expression_literal_value
     public :: mir_frontend_ast_v1_integer_expression_result_id
     public :: mir_frontend_ast_v1_integer_expression_storage_key
@@ -818,23 +829,101 @@ contains
 
         select case (trim(expression))
         case ('( binary-expr ( operator + ) ( left 1 ) ( right 2 ) )'); mir_frontend_ast_v1_integer_expression_route = 1_int32
-        case ('(assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))'); mir_frontend_ast_v1_integer_expression_route = 2_int32
+        case ('(assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-ope'// &
+                'rand 1))'); mir_frontend_ast_v1_integer_expression_route = 2_int32
         case ('( binary-expr ( operator * ) ( left 2 ) ( right 3 ) )'); mir_frontend_ast_v1_integer_expression_route = 3_int32
         case ('( binary-expr ( operator / ) ( left 6 ) ( right 2 ) )'); mir_frontend_ast_v1_integer_expression_route = 4_int32
         case ('( binary-expr ( operator – ) ( left 5 ) ( right 3 ) )'); mir_frontend_ast_v1_integer_expression_route = 5_int32
-        case ('(assignment-sequence (assignment-count 2) (first x ( integer-literal 7 )) (second x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))))'); mir_frontend_ast_v1_integer_expression_route = 6_int32
-        case ('(assignment-sequence (assignment-count 3) (first x ( integer-literal 7 )) (second x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (third x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))))'); mir_frontend_ast_v1_integer_expression_route = 7_int32
-        case ('(assignment-sequence (assignment-count 4) (first x ( integer-literal 7 )) (second x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (third x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (fourth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))))'); mir_frontend_ast_v1_integer_expression_route = 8_int32
-        case ('(assignment-sequence (assignment-count 5) (first x ( integer-literal 7 )) (second x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (third x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (fourth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (fifth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))))'); mir_frontend_ast_v1_integer_expression_route = 9_int32
-        case ('(execution-part (assignment-sequence (assignment-count 2) (assignment x ( integer-literal 7 )) (assignment x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1)))) )'); mir_frontend_ast_v1_integer_expression_route = 10_int32
-        case ('(execution-part (assignment-sequence (assignment-count 5) (assignment x ( integer-literal 7 )) (assignment x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (assignment x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (assignment x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (assignment x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1)))) )'); mir_frontend_ast_v1_integer_expression_route = 11_int32
-        case ('(assignment-sequence (assignment-count 6) (first x ( integer-literal 7 )) (second x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (third x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (fourth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (fifth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (sixth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))))'); mir_frontend_ast_v1_integer_expression_route = 12_int32
-        case ('(assignment-sequence (assignment-count 7) (first x ( integer-literal 7 )) (second x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (third x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (fourth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (fifth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (sixth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (seventh x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))))'); mir_frontend_ast_v1_integer_expression_route = 13_int32
-        case ('(assignment-sequence (assignment-count 8) (first x ( integer-literal 7 )) (second x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (third x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (fourth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (fifth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (sixth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (seventh x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (eighth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))))'); mir_frontend_ast_v1_integer_expression_route = 14_int32
-        case ('(assignment-sequence (assignment-count 9) (first x ( integer-literal 7 )) (second x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (third x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (fourth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (fifth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (sixth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (seventh x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (eighth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (ninth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))))'); mir_frontend_ast_v1_integer_expression_route = 15_int32
-        case ('(assignment-sequence (assignment-count 10) (first x ( integer-literal 7 )) (second x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (third x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (fourth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (fifth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (sixth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (seventh x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (eighth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (ninth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (tenth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))))'); mir_frontend_ast_v1_integer_expression_route = 16_int32
-        case ('(execution-part (assignment-sequence (assignment-count 6) (assignment x ( integer-literal 7 )) (assignment x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (assignment x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (assignment x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (assignment x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (assignment x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1)))) )'); mir_frontend_ast_v1_integer_expression_route = 17_int32
+        case ('(assignment-sequence (assignment-count 2) (first x ( integer-literal 7 )) (second x (ass'// &
+                'ignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand'// &
+                ' 1))))'); mir_frontend_ast_v1_integer_expression_route = 6_int32
+        case ('(assignment-sequence (assignment-count 3) (first x ( integer-literal 7 )) (second x (ass'// &
+                'ignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand'// &
+                ' 1))) (third x (assignment-expression (kind binary-expression) (operator +) (left-operan'// &
+                'd x) (right-operand 1))))'); mir_frontend_ast_v1_integer_expression_route = 7_int32
+        case ('(assignment-sequence (assignment-count 4) (first x ( integer-literal 7 )) (second x (ass'// &
+                'ignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand'// &
+                ' 1))) (third x (assignment-expression (kind binary-expression) (operator +) (left-operan'// &
+                'd x) (right-operand 1))) (fourth x (assignment-expression (kind binary-expression) (oper'// &
+                'ator +) (left-operand x) (right-operand 1))))'); mir_frontend_ast_v1_integer_expression_route = 8_int32
+        case ('(assignment-sequence (assignment-count 5) (first x ( integer-literal 7 )) (second x (ass'// &
+                'ignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand'// &
+                ' 1))) (third x (assignment-expression (kind binary-expression) (operator +) (left-operan'// &
+                'd x) (right-operand 1))) (fourth x (assignment-expression (kind binary-expression) (oper'// &
+                'ator +) (left-operand x) (right-operand 1))) (fifth x (assignment-expression (kind binar'// &
+                'y-expression) (operator +) (left-operand x) (right-operand 1))))'); mir_frontend_ast_v1_integer_expression_route = 9_int32
+        case ('(execution-part (assignment-sequence (assignment-count 2) (assignment x ( integer-litera'// &
+                'l 7 )) (assignment x (assignment-expression (kind binary-expression) (operator +) (left-'// &
+                'operand x) (right-operand 1)))) )'); mir_frontend_ast_v1_integer_expression_route = 10_int32
+        case ('(execution-part (assignment-sequence (assignment-count 5) (assignment x ( integer-litera'// &
+                'l 7 )) (assignment x (assignment-expression (kind binary-expression) (operator +) (left-'// &
+                'operand x) (right-operand 1))) (assignment x (assignment-expression (kind binary-express'// &
+                'ion) (operator +) (left-operand x) (right-operand 1))) (assignment x (assignment-express'// &
+                'ion (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (assignme'// &
+                'nt x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (righ'// &
+                't-operand 1)))) )'); mir_frontend_ast_v1_integer_expression_route = 11_int32
+        case ('(assignment-sequence (assignment-count 6) (first x ( integer-literal 7 )) (second x (ass'// &
+                'ignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand'// &
+                ' 1))) (third x (assignment-expression (kind binary-expression) (operator +) (left-operan'// &
+                'd x) (right-operand 1))) (fourth x (assignment-expression (kind binary-expression) (oper'// &
+                'ator +) (left-operand x) (right-operand 1))) (fifth x (assignment-expression (kind binar'// &
+                'y-expression) (operator +) (left-operand x) (right-operand 1))) (sixth x (assignment-exp'// &
+                'ression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))))'); mir_frontend_ast_v1_integer_expression_route = 12_int32
+        case ('(assignment-sequence (assignment-count 7) (first x ( integer-literal 7 )) (second x (ass'// &
+                'ignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand'// &
+                ' 1))) (third x (assignment-expression (kind binary-expression) (operator +) (left-operan'// &
+                'd x) (right-operand 1))) (fourth x (assignment-expression (kind binary-expression) (oper'// &
+                'ator +) (left-operand x) (right-operand 1))) (fifth x (assignment-expression (kind binar'// &
+                'y-expression) (operator +) (left-operand x) (right-operand 1))) (sixth x (assignment-exp'// &
+                'ression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (seve'// &
+                'nth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (rig'// &
+                'ht-operand 1))))'); mir_frontend_ast_v1_integer_expression_route = 13_int32
+        case ('(assignment-sequence (assignment-count 8) (first x ( integer-literal 7 )) (second x (ass'// &
+                'ignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand'// &
+                ' 1))) (third x (assignment-expression (kind binary-expression) (operator +) (left-operan'// &
+                'd x) (right-operand 1))) (fourth x (assignment-expression (kind binary-expression) (oper'// &
+                'ator +) (left-operand x) (right-operand 1))) (fifth x (assignment-expression (kind binar'// &
+                'y-expression) (operator +) (left-operand x) (right-operand 1))) (sixth x (assignment-exp'// &
+                'ression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (seve'// &
+                'nth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (rig'// &
+                'ht-operand 1))) (eighth x (assignment-expression (kind binary-expression) (operator +) ('// &
+                'left-operand x) (right-operand 1))))'); mir_frontend_ast_v1_integer_expression_route = 14_int32
+        case ('(assignment-sequence (assignment-count 9) (first x ( integer-literal 7 )) (second x (ass'// &
+                'ignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand'// &
+                ' 1))) (third x (assignment-expression (kind binary-expression) (operator +) (left-operan'// &
+                'd x) (right-operand 1))) (fourth x (assignment-expression (kind binary-expression) (oper'// &
+                'ator +) (left-operand x) (right-operand 1))) (fifth x (assignment-expression (kind binar'// &
+                'y-expression) (operator +) (left-operand x) (right-operand 1))) (sixth x (assignment-exp'// &
+                'ression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (seve'// &
+                'nth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (rig'// &
+                'ht-operand 1))) (eighth x (assignment-expression (kind binary-expression) (operator +) ('// &
+                'left-operand x) (right-operand 1))) (ninth x (assignment-expression (kind binary-express'// &
+                'ion) (operator +) (left-operand x) (right-operand 1))))'); mir_frontend_ast_v1_integer_expression_route = 15_int32
+        case ('(assignment-sequence (assignment-count 10) (first x ( integer-literal 7 )) (second x (as'// &
+                'signment-expression (kind binary-expression) (operator +) (left-operand x) (right-operan'// &
+                'd 1))) (third x (assignment-expression (kind binary-expression) (operator +) (left-opera'// &
+                'nd x) (right-operand 1))) (fourth x (assignment-expression (kind binary-expression) (ope'// &
+                'rator +) (left-operand x) (right-operand 1))) (fifth x (assignment-expression (kind bina'// &
+                'ry-expression) (operator +) (left-operand x) (right-operand 1))) (sixth x (assignment-ex'// &
+                'pression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (sev'// &
+                'enth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (ri'// &
+                'ght-operand 1))) (eighth x (assignment-expression (kind binary-expression) (operator +) '// &
+                '(left-operand x) (right-operand 1))) (ninth x (assignment-expression (kind binary-expres'// &
+                'sion) (operator +) (left-operand x) (right-operand 1))) (tenth x (assignment-expression '// &
+                '(kind binary-expression) (operator +) (left-operand x) (right-operand 1))))'); mir_frontend_ast_v1_integer_expression_route = 16_int32
+        case ('(execution-part (assignment-sequence (assignment-count 6) (assignment x ( integer-litera'// &
+                'l 7 )) (assignment x (assignment-expression (kind binary-expression) (operator +) (left-'// &
+                'operand x) (right-operand 1))) (assignment x (assignment-expression (kind binary-express'// &
+                'ion) (operator +) (left-operand x) (right-operand 1))) (assignment x (assignment-express'// &
+                'ion (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (assignme'// &
+                'nt x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (righ'// &
+                't-operand 1))) (assignment x (assignment-expression (kind binary-expression) (operator +'// &
+                ') (left-operand x) (right-operand 1)))) )'); mir_frontend_ast_v1_integer_expression_route = 17_int32
         case ('(execution-part ( stop-stmt ( stop-code 7 ) ))'); mir_frontend_ast_v1_integer_expression_route = 18_int32
+        case ('(execution-part (assignment-sequence (assignment-count 1) (assignment x ( integer-litera'// &
+                'l 17 ))) )'); mir_frontend_ast_v1_integer_expression_route = 19_int32
+        case ('(execution-part (assignment-sequence (assignment-count 1) (assignment x ( integer-litera'// &
+                'l 23 ))) )'); mir_frontend_ast_v1_integer_expression_route = 20_int32
         case default; mir_frontend_ast_v1_integer_expression_route = 0_int32
         end select
     end function mir_frontend_ast_v1_integer_expression_route
@@ -861,6 +950,8 @@ contains
         case (16_int32); mir_frontend_ast_v1_integer_expression_instruction_count = instruction_shape_frontend_ast_v1_int_seq_10_count
         case (17_int32); mir_frontend_ast_v1_integer_expression_instruction_count = instruction_shape_frontend_ast_v2_int_exec_6_count
         case (18_int32); mir_frontend_ast_v1_integer_expression_instruction_count = instruction_shape_frontend_ast_v2_stop_7_count
+        case (19_int32); mir_frontend_ast_v1_integer_expression_instruction_count = instruction_shape_frontend_ast_v2_print_variable_count
+        case (20_int32); mir_frontend_ast_v1_integer_expression_instruction_count = instruction_shape_frontend_ast_v2_print_variable_count
         case default; mir_frontend_ast_v1_integer_expression_instruction_count = 0_int32
         end select
     end function mir_frontend_ast_v1_integer_expression_instruction_count
@@ -1207,6 +1298,22 @@ contains
             case (0_int32); mir_frontend_ast_v1_integer_expression_opcode = instruction_shape_frontend_ast_v2_stop_7_opcode_0
             case (1_int32); mir_frontend_ast_v1_integer_expression_opcode = instruction_shape_frontend_ast_v2_stop_7_opcode_1
             end select
+        case (19_int32)
+            select case (index)
+            case (0_int32); mir_frontend_ast_v1_integer_expression_opcode = instruction_shape_frontend_ast_v2_print_variable_opcode_0
+            case (1_int32); mir_frontend_ast_v1_integer_expression_opcode = instruction_shape_frontend_ast_v2_print_variable_opcode_1
+            case (2_int32); mir_frontend_ast_v1_integer_expression_opcode = instruction_shape_frontend_ast_v2_print_variable_opcode_2
+            case (3_int32); mir_frontend_ast_v1_integer_expression_opcode = instruction_shape_frontend_ast_v2_print_variable_opcode_3
+            case (4_int32); mir_frontend_ast_v1_integer_expression_opcode = instruction_shape_frontend_ast_v2_print_variable_opcode_4
+            end select
+        case (20_int32)
+            select case (index)
+            case (0_int32); mir_frontend_ast_v1_integer_expression_opcode = instruction_shape_frontend_ast_v2_print_variable_opcode_0
+            case (1_int32); mir_frontend_ast_v1_integer_expression_opcode = instruction_shape_frontend_ast_v2_print_variable_opcode_1
+            case (2_int32); mir_frontend_ast_v1_integer_expression_opcode = instruction_shape_frontend_ast_v2_print_variable_opcode_2
+            case (3_int32); mir_frontend_ast_v1_integer_expression_opcode = instruction_shape_frontend_ast_v2_print_variable_opcode_3
+            case (4_int32); mir_frontend_ast_v1_integer_expression_opcode = instruction_shape_frontend_ast_v2_print_variable_opcode_4
+            end select
         end select
     end function mir_frontend_ast_v1_integer_expression_opcode
 
@@ -1233,6 +1340,8 @@ contains
         case (16_int32); mir_frontend_ast_v1_integer_expression_result_kind = instruction_shape_frontend_ast_v1_int_seq_10_result_kind
         case (17_int32); mir_frontend_ast_v1_integer_expression_result_kind = instruction_shape_frontend_ast_v2_int_exec_6_result_kind
         case (18_int32); mir_frontend_ast_v1_integer_expression_result_kind = instruction_shape_frontend_ast_v2_stop_7_result_kind
+        case (19_int32); mir_frontend_ast_v1_integer_expression_result_kind = instruction_shape_frontend_ast_v2_print_variable_result_kind
+        case (20_int32); mir_frontend_ast_v1_integer_expression_result_kind = instruction_shape_frontend_ast_v2_print_variable_result_kind
         end select
     end function mir_frontend_ast_v1_integer_expression_result_kind
 
@@ -1259,6 +1368,8 @@ contains
         case (16_int32); mir_frontend_ast_v1_integer_expression_result_type = instruction_shape_frontend_ast_v1_int_seq_10_result_type
         case (17_int32); mir_frontend_ast_v1_integer_expression_result_type = instruction_shape_frontend_ast_v2_int_exec_6_result_type
         case (18_int32); mir_frontend_ast_v1_integer_expression_result_type = instruction_shape_frontend_ast_v2_stop_7_result_type
+        case (19_int32); mir_frontend_ast_v1_integer_expression_result_type = instruction_shape_frontend_ast_v2_print_variable_result_type
+        case (20_int32); mir_frontend_ast_v1_integer_expression_result_type = instruction_shape_frontend_ast_v2_print_variable_result_type
         end select
     end function mir_frontend_ast_v1_integer_expression_result_type
 
@@ -1285,8 +1396,35 @@ contains
         case (16_int32); mir_frontend_ast_v1_integer_expression_source_rule = instruction_shape_frontend_ast_v1_int_seq_10_source_rule
         case (17_int32); mir_frontend_ast_v1_integer_expression_source_rule = instruction_shape_frontend_ast_v2_int_exec_6_source_rule
         case (18_int32); mir_frontend_ast_v1_integer_expression_source_rule = instruction_shape_frontend_ast_v2_stop_7_source_rule
+        case (19_int32); mir_frontend_ast_v1_integer_expression_source_rule = instruction_shape_frontend_ast_v2_print_variable_source_rule
+        case (20_int32); mir_frontend_ast_v1_integer_expression_source_rule = instruction_shape_frontend_ast_v2_print_variable_source_rule
         end select
     end function mir_frontend_ast_v1_integer_expression_source_rule
+
+    character(len=64) function mir_frontend_ast_v1_integer_expression_source_rule_at(route, index)
+        integer(int32), intent(in) :: route, index
+
+        mir_frontend_ast_v1_integer_expression_source_rule_at = &
+            mir_frontend_ast_v1_integer_expression_source_rule(route)
+        select case (route)
+        case (19_int32)
+            select case (index)
+            case (0_int32); mir_frontend_ast_v1_integer_expression_source_rule_at = 'frontend-ast-v2/execution-part'
+            case (1_int32); mir_frontend_ast_v1_integer_expression_source_rule_at = 'frontend-ast-v2/execution-part'
+            case (2_int32); mir_frontend_ast_v1_integer_expression_source_rule_at = 'frontend-ast-v2/print-stmt'
+            case (3_int32); mir_frontend_ast_v1_integer_expression_source_rule_at = 'frontend-ast-v2/print-stmt'
+            case (4_int32); mir_frontend_ast_v1_integer_expression_source_rule_at = 'frontend-ast-v2/print-stmt'
+            end select
+        case (20_int32)
+            select case (index)
+            case (0_int32); mir_frontend_ast_v1_integer_expression_source_rule_at = 'frontend-ast-v2/execution-part'
+            case (1_int32); mir_frontend_ast_v1_integer_expression_source_rule_at = 'frontend-ast-v2/execution-part'
+            case (2_int32); mir_frontend_ast_v1_integer_expression_source_rule_at = 'frontend-ast-v2/print-stmt'
+            case (3_int32); mir_frontend_ast_v1_integer_expression_source_rule_at = 'frontend-ast-v2/print-stmt'
+            case (4_int32); mir_frontend_ast_v1_integer_expression_source_rule_at = 'frontend-ast-v2/print-stmt'
+            end select
+        end select
+    end function mir_frontend_ast_v1_integer_expression_source_rule_at
 
     integer(int32) function mir_frontend_ast_v1_integer_expression_literal_value(route, index)
         integer(int32), intent(in) :: route, index
@@ -1423,6 +1561,14 @@ contains
         case (18_int32)
             select case (index)
             case (0_int32); mir_frontend_ast_v1_integer_expression_literal_value = 7_int32
+            end select
+        case (19_int32)
+            select case (index)
+            case (0_int32); mir_frontend_ast_v1_integer_expression_literal_value = 17_int32
+            end select
+        case (20_int32)
+            select case (index)
+            case (0_int32); mir_frontend_ast_v1_integer_expression_literal_value = 23_int32
             end select
         end select
     end function mir_frontend_ast_v1_integer_expression_literal_value
@@ -1769,6 +1915,22 @@ contains
             case (0_int32); mir_frontend_ast_v1_integer_expression_result_id = 0_int32
             case (1_int32); mir_frontend_ast_v1_integer_expression_result_id = 0_int32
             end select
+        case (19_int32)
+            select case (index)
+            case (0_int32); mir_frontend_ast_v1_integer_expression_result_id = 0_int32
+            case (1_int32); mir_frontend_ast_v1_integer_expression_result_id = 1_int32
+            case (2_int32); mir_frontend_ast_v1_integer_expression_result_id = 2_int32
+            case (3_int32); mir_frontend_ast_v1_integer_expression_result_id = 2_int32
+            case (4_int32); mir_frontend_ast_v1_integer_expression_result_id = 2_int32
+            end select
+        case (20_int32)
+            select case (index)
+            case (0_int32); mir_frontend_ast_v1_integer_expression_result_id = 0_int32
+            case (1_int32); mir_frontend_ast_v1_integer_expression_result_id = 1_int32
+            case (2_int32); mir_frontend_ast_v1_integer_expression_result_id = 2_int32
+            case (3_int32); mir_frontend_ast_v1_integer_expression_result_id = 2_int32
+            case (4_int32); mir_frontend_ast_v1_integer_expression_result_id = 2_int32
+            end select
         end select
     end function mir_frontend_ast_v1_integer_expression_result_id
 
@@ -2091,6 +2253,22 @@ contains
             end select
         case (18_int32)
             select case (index)
+            end select
+        case (19_int32)
+            select case (index)
+            case (0_int32); mir_frontend_ast_v1_integer_expression_storage_key = ''
+            case (1_int32); mir_frontend_ast_v1_integer_expression_storage_key = 'x'
+            case (2_int32); mir_frontend_ast_v1_integer_expression_storage_key = 'x'
+            case (3_int32); mir_frontend_ast_v1_integer_expression_storage_key = ''
+            case (4_int32); mir_frontend_ast_v1_integer_expression_storage_key = ''
+            end select
+        case (20_int32)
+            select case (index)
+            case (0_int32); mir_frontend_ast_v1_integer_expression_storage_key = ''
+            case (1_int32); mir_frontend_ast_v1_integer_expression_storage_key = 'x'
+            case (2_int32); mir_frontend_ast_v1_integer_expression_storage_key = 'x'
+            case (3_int32); mir_frontend_ast_v1_integer_expression_storage_key = ''
+            case (4_int32); mir_frontend_ast_v1_integer_expression_storage_key = ''
             end select
         end select
     end function mir_frontend_ast_v1_integer_expression_storage_key

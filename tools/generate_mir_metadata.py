@@ -63,7 +63,9 @@ def read_instruction_shapes(
 
 
 def read_integer_expression_routes(
-    data: dict, instruction_shapes: list[dict[str, object]]
+    data: dict,
+    instruction_shapes: list[dict[str, object]],
+    source_rules: list[dict[str, str]],
 ) -> list[dict[str, object]]:
     routes = data.get("integer_expression_routes", [])
     shape_names = {entry["name"] for entry in instruction_shapes}
@@ -94,6 +96,12 @@ def read_integer_expression_routes(
                 raise ValueError("integer expression route storage keys must be strings")
             if any(value and any(character.isspace() for character in value) for value in route["storage_keys"]):
                 raise ValueError("integer expression route storage keys must be SX atoms")
+        if "source_rules" in route:
+            if len(route["source_rules"]) != len(shape["opcodes"]):
+                raise ValueError("integer expression route source rules must match instruction count")
+            source_rule_values = {entry["value"] for entry in source_rules}
+            if any(value not in source_rule_values for value in route["source_rules"]):
+                raise ValueError("integer expression route contains an unknown source rule")
     return routes
 
 
@@ -101,6 +109,18 @@ def shape_symbol(shape: str, suffix: str) -> str:
     """Return a legal Fortran identifier for a generated shape member."""
     compact_shape = shape.replace("double_precision", "dp")
     return f"instruction_shape_{compact_shape}_{suffix}"
+
+
+def fortran_case_literal(expression: str) -> list[str]:
+    """Render a long route expression as a wrapped Fortran character literal."""
+    chunk_length = 88
+    chunks = [expression[index:index + chunk_length] for index in range(0, len(expression), chunk_length)]
+    if len(chunks) == 1:
+        return [f"        case ('{chunks[0]}');"]
+    lines = [f"        case ('{chunks[0]}'// &"]
+    lines.extend(f"                '{chunk}'// &" for chunk in chunks[1:-1])
+    lines.append(f"                '{chunks[-1]}');")
+    return lines
 
 
 def generate(spec_path: pathlib.Path) -> str:
@@ -111,7 +131,7 @@ def generate(spec_path: pathlib.Path) -> str:
     source_rules = read_source_rules(data)
     type_specs = data.get("type_specs", [])
     instruction_shapes = read_instruction_shapes(data, opcodes, kinds, source_rules)
-    integer_expression_routes = read_integer_expression_routes(data, instruction_shapes)
+    integer_expression_routes = read_integer_expression_routes(data, instruction_shapes, source_rules)
     shapes_by_name = {entry["name"]: entry for entry in instruction_shapes}
     kind_names = {entry["name"] for entry in kinds}
     type_spec_names = {entry["name"] for entry in type_specs}
@@ -180,6 +200,7 @@ def generate(spec_path: pathlib.Path) -> str:
         "    public :: mir_frontend_ast_v1_integer_expression_result_kind",
         "    public :: mir_frontend_ast_v1_integer_expression_result_type",
         "    public :: mir_frontend_ast_v1_integer_expression_source_rule",
+        "    public :: mir_frontend_ast_v1_integer_expression_source_rule_at",
         "    public :: mir_frontend_ast_v1_integer_expression_literal_value",
         "    public :: mir_frontend_ast_v1_integer_expression_result_id",
         "    public :: mir_frontend_ast_v1_integer_expression_storage_key",
@@ -307,10 +328,9 @@ def generate(spec_path: pathlib.Path) -> str:
         "        select case (trim(expression))",
     ]
     for index, route in enumerate(integer_expression_routes, start=1):
-        lines.append(
-            f"        case ('{route['expression']}'); "
-            f"mir_frontend_ast_v1_integer_expression_route = {index}_int32"
-        )
+        route_case = fortran_case_literal(route["expression"])
+        route_case[-1] += f" mir_frontend_ast_v1_integer_expression_route = {index}_int32"
+        lines.extend(route_case)
     lines += [
         "        case default; mir_frontend_ast_v1_integer_expression_route = 0_int32",
         "        end select",
@@ -397,6 +417,28 @@ def generate(spec_path: pathlib.Path) -> str:
     lines += [
         "        end select",
         "    end function mir_frontend_ast_v1_integer_expression_source_rule",
+        "",
+        "    character(len=64) function mir_frontend_ast_v1_integer_expression_source_rule_at(route, index)",
+        "        integer(int32), intent(in) :: route, index",
+        "",
+        "        mir_frontend_ast_v1_integer_expression_source_rule_at = &",
+        "            mir_frontend_ast_v1_integer_expression_source_rule(route)",
+        "        select case (route)",
+    ]
+    for index, route in enumerate(integer_expression_routes, start=1):
+        if "source_rules" not in route:
+            continue
+        lines.append(f"        case ({index}_int32)")
+        lines.append("            select case (index)")
+        for source_index, source_rule in enumerate(route["source_rules"]):
+            lines.append(
+                f"            case ({source_index}_int32); "
+                f"mir_frontend_ast_v1_integer_expression_source_rule_at = '{source_rule}'"
+            )
+        lines.append("            end select")
+    lines += [
+        "        end select",
+        "    end function mir_frontend_ast_v1_integer_expression_source_rule_at",
         "",
         "    integer(int32) function mir_frontend_ast_v1_integer_expression_literal_value(route, index)",
         "        integer(int32), intent(in) :: route, index",

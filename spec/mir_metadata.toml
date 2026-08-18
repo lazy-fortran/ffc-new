@@ -197,6 +197,13 @@ result_type = "i32"
 source_rule = "frontend-ast-v2/print-stmt"
 
 [[instruction_shapes]]
+name = "frontend_ast_v2_print_variable"
+opcodes = ["const", "store", "load", "output", "return"]
+result_kind = "integer"
+result_type = "i32"
+source_rule = "frontend-ast-v2/print-stmt"
+
+[[instruction_shapes]]
 name = "frontend_ast_v2_print_7_8"
 opcodes = ["const", "output", "const", "output", "return"]
 result_kind = "integer"
@@ -572,3 +579,23 @@ expression = "(execution-part ( stop-stmt ( stop-code 7 ) ))"
 shape = "frontend_ast_v2_stop_7"
 literal_values = [7]
 result_ids = [0, 0]
+
+[[integer_expression_routes]]
+name = "program_unit_v2_print_variable_17"
+expression = "(execution-part (assignment-sequence (assignment-count 1) (assignment x ( integer-literal 17 ))) )"
+shape = "frontend_ast_v2_print_variable"
+literal_values = [17]
+result_ids = [0, 1, 2, 2, 2]
+storage_keys = ["", "x", "x", "", ""]
+source_rules = ["frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt"]
+source_rules = ["frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt"]
+
+[[integer_expression_routes]]
+name = "program_unit_v2_print_variable_23"
+expression = "(execution-part (assignment-sequence (assignment-count 1) (assignment x ( integer-literal 23 ))) )"
+shape = "frontend_ast_v2_print_variable"
+literal_values = [23]
+result_ids = [0, 1, 2, 2, 2]
+storage_keys = ["", "x", "x", "", ""]
+source_rules = ["frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt"]
+source_rules = ["frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt"]
