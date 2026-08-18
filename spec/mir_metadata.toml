@@ -148,21 +148,21 @@ source_rule = "frontend-ast-v1/expression"
 
 [[instruction_shapes]]
 name = "frontend_ast_v1_int_mul_assign"
-opcodes = ["mul", "store", "return"]
+opcodes = ["const", "const", "mul", "store", "return"]
 result_kind = "integer"
 result_type = "i32"
 source_rule = "frontend-ast-v1/expression"
 
 [[instruction_shapes]]
 name = "frontend_ast_v1_int_div_assign"
-opcodes = ["div", "store", "return"]
+opcodes = ["const", "const", "div", "store", "return"]
 result_kind = "integer"
 result_type = "i32"
 source_rule = "frontend-ast-v1/expression"
 
 [[instruction_shapes]]
 name = "frontend_ast_v1_int_sub_assign"
-opcodes = ["sub", "store", "return"]
+opcodes = ["const", "const", "sub", "store", "return"]
 result_kind = "integer"
 result_type = "i32"
 source_rule = "frontend-ast-v1/expression"
@@ -213,13 +213,19 @@ result_ids = [0, 1, 2, 2, 2]
 name = "mul"
 expression = "( binary-expr ( operator * ) ( left 2 ) ( right 3 ) )"
 shape = "frontend_ast_v1_int_mul_assign"
+literal_values = [2, 3]
+result_ids = [0, 1, 2, 2, 2]
 
 [[integer_expression_routes]]
 name = "div"
 expression = "( binary-expr ( operator / ) ( left 6 ) ( right 2 ) )"
 shape = "frontend_ast_v1_int_div_assign"
+literal_values = [6, 2]
+result_ids = [0, 1, 2, 2, 2]
 
 [[integer_expression_routes]]
 name = "sub"
 expression = "( binary-expr ( operator – ) ( left 5 ) ( right 3 ) )"
 shape = "frontend_ast_v1_int_sub_assign"
+literal_values = [5, 3]
+result_ids = [0, 1, 2, 2, 2]

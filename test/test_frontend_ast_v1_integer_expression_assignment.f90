@@ -41,10 +41,11 @@ program test_frontend_ast_v1_integer_expression_assignment
         'wrapped integer multiplication AST-v1 was not lowered')
     call assert_true(ffc_validate_frontend_ast_v1_int_mul_expr_assignment_shape(body, message), &
         'generated integer multiplication shape rejected its positive path')
-    call assert_true(body%instructions(1)%opcode == opcode_mul, &
+    call assert_expression_route(body, opcode_mul, 2_int32, 3_int32, 'multiplication')
+    call assert_true(body%instructions(3)%opcode == opcode_mul, &
         'multiplication was not represented by mul')
-    call assert_true(body%instructions(2)%opcode == opcode_store .and. &
-        body%instructions(3)%opcode == opcode_return, &
+    call assert_true(body%instructions(4)%opcode == opcode_store .and. &
+        body%instructions(5)%opcode == opcode_return, &
         'multiplication assignment shape changed')
     call assert_equal(body%instructions(1)%source_rule, 'frontend-ast-v1/expression', &
         'multiplication source rule changed')
@@ -53,10 +54,11 @@ program test_frontend_ast_v1_integer_expression_assignment
         'wrapped integer division AST-v1 was not lowered')
     call assert_true(ffc_validate_frontend_ast_v1_int_div_expr_assignment_shape(body, message), &
         'generated integer division shape rejected its positive path')
-    call assert_true(body%instructions(1)%opcode == opcode_div, &
+    call assert_expression_route(body, opcode_div, 6_int32, 2_int32, 'division')
+    call assert_true(body%instructions(3)%opcode == opcode_div, &
         'division was not represented by div')
-    call assert_true(body%instructions(2)%opcode == opcode_store .and. &
-        body%instructions(3)%opcode == opcode_return, &
+    call assert_true(body%instructions(4)%opcode == opcode_store .and. &
+        body%instructions(5)%opcode == opcode_return, &
         'division assignment shape changed')
     call assert_equal(body%instructions(1)%source_rule, 'frontend-ast-v1/expression', &
         'division source rule changed')
@@ -65,10 +67,11 @@ program test_frontend_ast_v1_integer_expression_assignment
         'wrapped integer subtraction AST-v1 was not lowered')
     call assert_true(ffc_validate_frontend_ast_v1_int_sub_expr_assignment_shape(body, message), &
         'generated integer subtraction shape rejected its positive path')
-    call assert_true(body%instructions(1)%opcode == opcode_sub, &
+    call assert_expression_route(body, opcode_sub, 5_int32, 3_int32, 'subtraction')
+    call assert_true(body%instructions(3)%opcode == opcode_sub, &
         'subtraction was not represented by sub')
-    call assert_true(body%instructions(2)%opcode == opcode_store .and. &
-        body%instructions(3)%opcode == opcode_return, &
+    call assert_true(body%instructions(4)%opcode == opcode_store .and. &
+        body%instructions(5)%opcode == opcode_return, &
         'subtraction assignment shape changed')
     call assert_equal(body%instructions(1)%source_rule, 'frontend-ast-v1/expression', &
         'subtraction source rule changed')
@@ -141,6 +144,32 @@ program test_frontend_ast_v1_integer_expression_assignment
     write (*, '(a)') 'frontend AST-v1 integer expression assignment checks: ok'
 
 contains
+
+    subroutine assert_expression_route(body, operator, left, right, name)
+        type(mir_function_body_t), intent(in) :: body
+        integer(int32), intent(in) :: operator, left, right
+        integer :: index
+        character(len=*), intent(in) :: name
+
+        call assert_true(body%function%instruction_count == 5_int32, &
+            trim(name)//' instruction count changed')
+        call assert_true(body%instructions(1)%opcode == opcode_const .and. &
+            body%instructions(2)%opcode == opcode_const, trim(name)//' operands changed')
+        call assert_true(body%instructions(1)%literal_value == left .and. &
+            body%instructions(2)%literal_value == right, trim(name)//' literals changed')
+        call assert_true(body%instructions(1)%result%id == 0_int32 .and. &
+            body%instructions(2)%result%id == 1_int32 .and. &
+            body%instructions(3)%result%id == 2_int32 .and. &
+            body%instructions(4)%result%id == 2_int32 .and. &
+            body%instructions(5)%result%id == 2_int32, trim(name)//' result IDs changed')
+        call assert_true(all([(body%instructions(index)%result%kind == value_kind_integer, index = 1, 5)]), &
+            trim(name)//' result kind changed')
+        call assert_true(all([(trim(body%instructions(index)%result%type_name) == 'i32', index = 1, 5)]), &
+            trim(name)//' result type changed')
+        call assert_true(all([(trim(body%instructions(index)%source_rule) == &
+            'frontend-ast-v1/expression', index = 1, 5)]), trim(name)//' source rule changed')
+        call assert_true(body%instructions(3)%opcode == operator, trim(name)//' operator changed')
+    end subroutine assert_expression_route
 
     function common_sx(expression) result(serialized)
         character(len=*), intent(in) :: expression
