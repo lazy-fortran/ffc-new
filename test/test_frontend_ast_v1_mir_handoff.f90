@@ -11,6 +11,7 @@ program test_frontend_ast_v1_mir_handoff
     call check_type('integer', value_kind_integer, 'i32')
     call check_type('real', value_kind_real, 'f32')
     call check_type('complex', value_kind_complex, 'c32')
+    call check_generated_shape()
 
     call assert_false(ffc_lower_frontend_ast_v1_from_sx(v1_sx('logical'), body, message), &
         'unsupported v1 type spec was lowered')
@@ -35,6 +36,26 @@ contains
         call assert_equal(body%instructions(2)%result%type_name, expected_name, &
             'typed v1 return type changed: '//trim(type_spec))
     end subroutine check_type
+
+    subroutine check_generated_shape()
+        character(len=4096) :: serialized
+
+        serialized = '(program-unit (root (program-root (name main) (span '// &
+            '(source-span (file unit.f90) (start-byte 0) (end-byte 64) '// &
+            '(source-hash hash-unit))))) (declaration-count 1) '// &
+            '(declaration (program-declaration (declaration-kind program) '// &
+            '(name main) (span (source-span (file unit.f90) (start-byte 0) '// &
+            '(end-byte 64) (source-hash hash-unit))))) (variable-count 1) '// &
+            '(variable (variable-declaration (type-spec integer) (name x) '// &
+            '(span (source-span (file unit.f90) (start-byte 10) (end-byte 24) '// &
+            '(source-hash hash-unit))))))'
+        call assert_true(ffc_lower_frontend_ast_v1_from_sx(serialized, body, message), &
+            'generated frontend AST-v1 shape was rejected')
+        call assert_true(mir_validate_function_body(body, message), &
+            'generated frontend AST-v1 shape produced invalid MIR')
+        call assert_equal(body%function%name, 'main', &
+            'generated frontend AST-v1 name was not lowered')
+    end subroutine check_generated_shape
 
     function v1_sx(type_spec) result(serialized)
         character(len=*), intent(in) :: type_spec

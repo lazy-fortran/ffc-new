@@ -100,6 +100,7 @@ contains
         character(len=64) :: start_text, end_text
         integer :: token_count, position
         integer(int64) :: start_byte, end_byte
+        logical :: source_span_wrapped
 
         root = ffc_program_root_t()
         call clear_message(message)
@@ -117,6 +118,9 @@ contains
         if (.not. parsed) return
         parsed = expect_frontend_token(token, token_count, position, 'span', message)
         if (.not. parsed) return
+        parsed = consume_source_span_wrapper(token, token_count, position, source_span_wrapped, &
+            message)
+        if (.not. parsed) return
         parsed = read_frontend_atom(token, token_count, position, 'file', source_file, message)
         if (.not. parsed) return
         parsed = read_frontend_atom(token, token_count, position, 'start-byte', start_text, message)
@@ -131,6 +135,10 @@ contains
         if (.not. parsed) return
         parsed = expect_frontend_token(token, token_count, position, ')', message)
         if (.not. parsed) return
+        if (source_span_wrapped) then
+            parsed = expect_frontend_token(token, token_count, position, ')', message)
+            if (.not. parsed) return
+        end if
         parsed = expect_frontend_token(token, token_count, position, ')', message)
         if (.not. parsed) return
         if (position <= token_count) then
@@ -173,6 +181,7 @@ contains
         character(len=64) :: start_text, end_text
         integer :: token_count, position
         integer(int64) :: start_byte, end_byte
+        logical :: source_span_wrapped
 
         root = ffc_program_root_t()
         call clear_message(message)
@@ -211,6 +220,12 @@ contains
             call set_message(message, 'malformed-program-declaration-span')
             return
         end if
+        parsed = consume_source_span_wrapper(token, token_count, position, source_span_wrapped, &
+            message)
+        if (.not. parsed) then
+            call set_message(message, 'malformed-program-declaration-span')
+            return
+        end if
         parsed = read_frontend_atom(token, token_count, position, 'file', source_file, message)
         if (.not. parsed) then
             call set_message(message, 'malformed-program-declaration-file')
@@ -239,6 +254,13 @@ contains
         if (.not. parsed) then
             call set_message(message, 'malformed-program-declaration-span')
             return
+        end if
+        if (source_span_wrapped) then
+            parsed = expect_frontend_token(token, token_count, position, ')', message)
+            if (.not. parsed) then
+                call set_message(message, 'malformed-program-declaration-span')
+                return
+            end if
         end if
         parsed = expect_frontend_token(token, token_count, position, ')', message)
         if (.not. parsed) then
@@ -689,6 +711,25 @@ contains
         ok = token_count > 0
         if (.not. ok) call set_message(message, 'malformed-sx-record')
     end function tokenize_frontend_sx
+
+    logical function consume_source_span_wrapper(token, token_count, position, wrapped, &
+            message) result(ok)
+        character(len=*), intent(in) :: token(:)
+        integer, intent(in) :: token_count
+        integer, intent(inout) :: position
+        logical, intent(out) :: wrapped
+        character(len=:), allocatable, intent(out), optional :: message
+
+        wrapped = .false.
+        ok = .true.
+        call clear_message(message)
+        if (position > token_count) return
+        if (trim(token(position)) /= '(') return
+        if (position + 1 > token_count) return
+        if (trim(token(position + 1)) /= 'source-span') return
+        position = position + 2
+        wrapped = .true.
+    end function consume_source_span_wrapper
 
     logical function append_frontend_token(value, token, token_count, message) result(ok)
         character(len=*), intent(in) :: value
