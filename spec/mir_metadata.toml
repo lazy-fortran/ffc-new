@@ -182,6 +182,10 @@ value = 11
 name = "output"
 value = 12
 
+[[opcodes]]
+name = "pow"
+value = 13
+
 [[instruction_shapes]]
 name = "frontend_ast_v1_integer_program"
 opcodes = ["add", "return"]
@@ -199,6 +203,13 @@ source_rule = "frontend-ast-v2/print-stmt"
 [[instruction_shapes]]
 name = "frontend_ast_v2_print_variable"
 opcodes = ["const", "store", "load", "output", "return"]
+result_kind = "integer"
+result_type = "i32"
+source_rule = "frontend-ast-v2/print-stmt"
+
+[[instruction_shapes]]
+name = "v2_pow_print"
+opcodes = ["const", "store", "load", "const", "pow", "store", "load", "output", "return"]
 result_kind = "integer"
 result_type = "i32"
 source_rule = "frontend-ast-v2/print-stmt"
@@ -631,6 +642,15 @@ name = "program_unit_v2_print_variable_expression_23"
 expression = "(execution-part (assignment-sequence (assignment-count 2) (assignment x ( integer-literal 23 )) (assignment x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1)))) )"
 shape = "frontend_ast_v2_int_exec_2_print"
 literal_values = [23, 1]
+result_ids = [0, 1, 2, 3, 4, 4, 6, 6, 6]
+storage_keys = ["", "x", "x", "", "", "x", "x", "", ""]
+source_rules = ["frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt"]
+
+[[integer_expression_routes]]
+name = "program_unit_v2_print_variable_power_expression_8"
+expression = "(execution-part (assignment-sequence (assignment-count 2) (assignment x ( integer-literal 2 )) (assignment x (assignment-expression (kind binary-expression) (operator **) (left-operand x) (right-operand 3)))) )"
+shape = "v2_pow_print"
+literal_values = [2, 3]
 result_ids = [0, 1, 2, 3, 4, 4, 6, 6, 6]
 storage_keys = ["", "x", "x", "", "", "x", "x", "", ""]
 source_rules = ["frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt"]

@@ -2,7 +2,7 @@ program test_mir_opcode_count_query
     use, intrinsic :: iso_fortran_env, only: int32
     use ffc_mir, only: mir_function_body_t, mir_function_opcode_count_at, &
         mir_instruction_t, opcode_add, opcode_branch, opcode_call, opcode_compare, &
-        opcode_div, opcode_load, opcode_mul, opcode_return, opcode_store, opcode_sub, &
+        opcode_div, opcode_load, opcode_mul, opcode_pow, opcode_return, opcode_store, opcode_sub, &
         value_kind_integer
     implicit none
 
@@ -29,7 +29,7 @@ program test_mir_opcode_count_query
     call assert_equal(message, 'opcode is outside mir-v0', 'invalid opcode diagnostic changed')
 
     count = 99_int32
-    call assert_false(mir_function_opcode_count_at(body, opcode_return + 3_int32, count, &
+    call assert_false(mir_function_opcode_count_at(body, opcode_pow + 1_int32, count, &
         message), 'opcode above mir-v0 was accepted')
     call assert_equal_integer(count, 0_int32, 'high invalid opcode did not clear output')
 
