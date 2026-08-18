@@ -16,6 +16,25 @@ value = 3
 name = "address"
 value = 4
 
+[[value_kinds]]
+name = "complex"
+value = 5
+
+[[type_specs]]
+name = "integer"
+kind = "integer"
+type_name = "i32"
+
+[[type_specs]]
+name = "real"
+kind = "real"
+type_name = "f32"
+
+[[type_specs]]
+name = "complex"
+kind = "complex"
+type_name = "c32"
+
 [[opcodes]]
 name = "add"
 value = 1

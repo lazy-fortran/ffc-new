@@ -101,6 +101,10 @@ name = "frontend_ast_handoff"
 source-dir = "test"
 
 [[test]]
+name = "frontend_ast_v1_mir_handoff"
+source-dir = "test"
+
+[[test]]
 name = "frontend_mir_cli"
 source-dir = "test"
 

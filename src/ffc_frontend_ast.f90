@@ -2,7 +2,8 @@ module ffc_frontend_ast
     use, intrinsic :: iso_fortran_env, only: int64
     use ffc_lowering, only: ffc_lower_program_root, ffc_program_declaration_from_sx, &
         ffc_program_root_from_sx, ffc_program_root_t, ffc_validate_program_root
-    use ffc_mir, only: mir_function_body_t
+    use ffc_mir, only: mir_function_body_t, mir_make_function_witness, &
+        mir_type_spec_name, mir_type_spec_value_kind
     implicit none
     private
 
@@ -17,12 +18,154 @@ module ffc_frontend_ast
         logical :: declaration_present = .false.
     end type ffc_frontend_ast_v0_t
 
+    type, public :: ffc_frontend_variable_declaration_v1_t
+        character(len=128) :: type_spec = ''
+        character(len=128) :: name = ''
+        character(len=256) :: source_file = ''
+        character(len=128) :: source_hash = ''
+        integer(int64) :: start_byte = 0_int64
+        integer(int64) :: end_byte = 0_int64
+    end type ffc_frontend_variable_declaration_v1_t
+
+    type, public :: ffc_frontend_ast_v1_t
+        type(ffc_program_root_t) :: root
+        type(ffc_program_root_t) :: declaration
+        type(ffc_frontend_variable_declaration_v1_t) :: variable
+        integer(int64) :: declaration_count = 0_int64
+        integer(int64) :: variable_count = 0_int64
+    end type ffc_frontend_ast_v1_t
+
     public :: ffc_frontend_ast_v0_from_sx
     public :: ffc_lower_frontend_ast_v0
     public :: ffc_lower_frontend_ast_v0_from_sx
     public :: ffc_validate_frontend_ast_v0
+    public :: ffc_frontend_ast_v1_from_sx
+    public :: ffc_lower_frontend_ast_v1
+    public :: ffc_lower_frontend_ast_v1_from_sx
+    public :: ffc_validate_frontend_ast_v1
 
 contains
+
+    logical function ffc_frontend_ast_v1_from_sx(serialized, ast, message) result(parsed)
+        character(len=*), intent(in) :: serialized
+        type(ffc_frontend_ast_v1_t), intent(out) :: ast
+        character(len=:), allocatable, intent(out), optional :: message
+
+        character(len=frontend_ast_token_length) :: token(frontend_ast_token_capacity)
+        character(len=frontend_ast_expression_length) :: expression
+        character(len=64) :: count_text
+        integer :: token_count, position
+
+        ast = ffc_frontend_ast_v1_t()
+        call clear_message(message)
+        parsed = tokenize_frontend_ast_sx(serialized, token, token_count, message)
+        if (.not. parsed) return
+        position = 1
+        parsed = expect_token(token, token_count, position, '(', message)
+        if (.not. parsed) return
+        parsed = expect_token(token, token_count, position, 'program-unit', message)
+        if (.not. parsed) return
+        parsed = read_named_expression(token, token_count, position, 'root', expression, message)
+        if (.not. parsed) return
+        parsed = ffc_program_root_from_sx(trim(expression), ast%root, message)
+        if (.not. parsed) then
+            call set_message(message, 'malformed-frontend-ast-v1-root')
+            return
+        end if
+        parsed = read_named_atom(token, token_count, position, 'declaration-count', count_text, &
+            message)
+        if (.not. parsed) return
+        parsed = parse_count(count_text, ast%declaration_count, message)
+        if (.not. parsed) return
+        parsed = read_named_expression(token, token_count, position, 'declaration', expression, &
+            message)
+        if (.not. parsed) return
+        parsed = ffc_program_declaration_from_sx(trim(expression), ast%declaration, message)
+        if (.not. parsed) then
+            call set_message(message, 'malformed-frontend-ast-v1-declaration')
+            return
+        end if
+        parsed = read_named_atom(token, token_count, position, 'variable-count', count_text, &
+            message)
+        if (.not. parsed) return
+        parsed = parse_count(count_text, ast%variable_count, message)
+        if (.not. parsed) return
+        parsed = read_named_expression(token, token_count, position, 'variable', expression, message)
+        if (.not. parsed) return
+        parsed = parse_variable_declaration_v1(trim(expression), ast%variable, message)
+        if (.not. parsed) return
+        parsed = expect_token(token, token_count, position, ')', message)
+        if (.not. parsed) then
+            call set_message(message, 'malformed-frontend-ast-v1-variable-close')
+            return
+        end if
+        if (position <= token_count) then
+            call set_message(message, 'malformed-frontend-ast-v1')
+            parsed = .false.
+            return
+        end if
+        parsed = ffc_validate_frontend_ast_v1(ast, message)
+    end function ffc_frontend_ast_v1_from_sx
+
+    logical function ffc_validate_frontend_ast_v1(ast, message) result(valid)
+        type(ffc_frontend_ast_v1_t), intent(in) :: ast
+        character(len=:), allocatable, intent(out), optional :: message
+
+        call clear_message(message)
+        valid = .false.
+        if (.not. ffc_validate_program_root(ast%root, message)) return
+        if (ast%declaration_count /= 1_int64 .or. ast%variable_count /= 1_int64) then
+            call set_message(message, 'invalid-frontend-ast-v1-cardinality')
+            return
+        end if
+        if (.not. ffc_validate_program_root(ast%declaration, message)) return
+        if (trim(ast%root%name) /= trim(ast%declaration%name)) then
+            call set_message(message, 'frontend-ast-v1-declaration-name-mismatch')
+            return
+        end if
+        if (.not. ffc_validate_variable_declaration_v1(ast%variable, message)) return
+        if (trim(ast%root%source_file) /= trim(ast%variable%source_file) .or. &
+            trim(ast%root%source_hash) /= trim(ast%variable%source_hash)) then
+            call set_message(message, 'frontend-ast-v1-invalid-provenance')
+            return
+        end if
+        valid = .true.
+    end function ffc_validate_frontend_ast_v1
+
+    logical function ffc_lower_frontend_ast_v1(ast, body, message) result(lowered)
+        type(ffc_frontend_ast_v1_t), intent(in) :: ast
+        type(mir_function_body_t), intent(out) :: body
+        character(len=:), allocatable, intent(out), optional :: message
+
+        integer :: kind
+        character(len=32) :: type_name
+
+        call clear_message(message)
+        lowered = ffc_validate_frontend_ast_v1(ast, message)
+        if (.not. lowered) return
+        kind = mir_type_spec_value_kind(ast%variable%type_spec)
+        type_name = mir_type_spec_name(ast%variable%type_spec)
+        call mir_make_function_witness(body)
+        body%function%name = trim(ast%root%name)
+        body%instructions(1)%result%kind = kind
+        body%instructions(1)%result%type_name = trim(type_name)
+        body%instructions(2)%result = body%instructions(1)%result
+        body%instructions(1)%source_rule = 'frontend-ast-v1/program'
+        body%instructions(2)%source_rule = 'frontend-ast-v1/program'
+    end function ffc_lower_frontend_ast_v1
+
+    logical function ffc_lower_frontend_ast_v1_from_sx(serialized, body, message) result(lowered)
+        character(len=*), intent(in) :: serialized
+        type(mir_function_body_t), intent(out) :: body
+        character(len=:), allocatable, intent(out), optional :: message
+
+        type(ffc_frontend_ast_v1_t) :: ast
+
+        call clear_message(message)
+        lowered = ffc_frontend_ast_v1_from_sx(serialized, ast, message)
+        if (.not. lowered) return
+        lowered = ffc_lower_frontend_ast_v1(ast, body, message)
+    end function ffc_lower_frontend_ast_v1_from_sx
 
     logical function ffc_frontend_ast_v0_from_sx(serialized, ast, message) result(parsed)
         character(len=*), intent(in) :: serialized
@@ -193,6 +336,116 @@ contains
         ok = token_count > 0
         if (.not. ok) call set_message(message, 'malformed-frontend-ast-v0')
     end function tokenize_frontend_ast_sx
+
+    logical function parse_variable_declaration_v1(serialized, variable, message) result(parsed)
+        character(len=*), intent(in) :: serialized
+        type(ffc_frontend_variable_declaration_v1_t), intent(out) :: variable
+        character(len=:), allocatable, intent(out), optional :: message
+
+        character(len=frontend_ast_token_length) :: token(frontend_ast_token_capacity)
+        character(len=frontend_ast_expression_length) :: expression
+        character(len=128) :: type_spec, name
+        integer :: token_count, position
+
+        variable = ffc_frontend_variable_declaration_v1_t()
+        call clear_message(message)
+        parsed = tokenize_frontend_ast_sx(serialized, token, token_count, message)
+        if (.not. parsed) return
+        position = 1
+        parsed = expect_token(token, token_count, position, '(', message)
+        if (.not. parsed) return
+        parsed = expect_token(token, token_count, position, 'variable-declaration', message)
+        if (.not. parsed) return
+        parsed = read_named_atom(token, token_count, position, 'type-spec', type_spec, message)
+        if (.not. parsed) return
+        parsed = read_named_atom(token, token_count, position, 'name', name, message)
+        if (.not. parsed) return
+        parsed = read_named_expression(token, token_count, position, 'span', expression, message)
+        if (.not. parsed) return
+        parsed = parse_source_span_v1(trim(expression), variable%source_file, &
+            variable%start_byte, variable%end_byte, variable%source_hash, message)
+        if (.not. parsed) then
+            call set_message(message, 'malformed-frontend-ast-v1-span')
+            return
+        end if
+        parsed = expect_token(token, token_count, position, ')', message)
+        if (.not. parsed) then
+            call set_message(message, 'malformed-frontend-ast-v1-variable-close')
+            return
+        end if
+        variable%type_spec = type_spec
+        variable%name = name
+        parsed = ffc_validate_variable_declaration_v1(variable, message)
+    end function parse_variable_declaration_v1
+
+    logical function parse_source_span_v1(serialized, source_file, start_byte, end_byte, &
+            source_hash, message) result(parsed)
+        character(len=*), intent(in) :: serialized
+        character(len=*), intent(out) :: source_file, source_hash
+        integer(int64), intent(out) :: start_byte, end_byte
+        character(len=:), allocatable, intent(out), optional :: message
+
+        character(len=frontend_ast_token_length) :: token(frontend_ast_token_capacity)
+        character(len=64) :: start_text, end_text
+        integer :: token_count, position
+
+        source_file = ''
+        source_hash = ''
+        start_byte = 0_int64
+        end_byte = 0_int64
+        call clear_message(message)
+        parsed = tokenize_frontend_ast_sx(serialized, token, token_count, message)
+        if (.not. parsed) return
+        position = 1
+        parsed = expect_token(token, token_count, position, '(', message)
+        if (.not. parsed) return
+        parsed = expect_token(token, token_count, position, 'source-span', message)
+        if (.not. parsed) return
+        parsed = read_named_atom(token, token_count, position, 'file', source_file, message)
+        if (.not. parsed) return
+        parsed = read_named_atom(token, token_count, position, 'start-byte', start_text, message)
+        if (.not. parsed) return
+        parsed = parse_count(start_text, start_byte, message)
+        if (.not. parsed) return
+        parsed = read_named_atom(token, token_count, position, 'end-byte', end_text, message)
+        if (.not. parsed) return
+        parsed = parse_count(end_text, end_byte, message)
+        if (.not. parsed) return
+        parsed = read_named_atom(token, token_count, position, 'source-hash', source_hash, message)
+        if (.not. parsed) return
+        parsed = expect_token(token, token_count, position, ')', message)
+        if (.not. parsed) return
+        if (position <= token_count) then
+            call set_message(message, 'malformed-frontend-ast-v1-span')
+            parsed = .false.
+        end if
+    end function parse_source_span_v1
+
+    logical function ffc_validate_variable_declaration_v1(variable, message) result(valid)
+        type(ffc_frontend_variable_declaration_v1_t), intent(in) :: variable
+        character(len=:), allocatable, intent(out), optional :: message
+
+        call clear_message(message)
+        valid = .false.
+        if (len_trim(variable%type_spec) == 0) then
+            call set_message(message, 'invalid-frontend-ast-v1-type-spec')
+            return
+        end if
+        if (mir_type_spec_value_kind(variable%type_spec) == 0) then
+            call set_message(message, 'unsupported-frontend-ast-v1-type-spec')
+            return
+        end if
+        if (len_trim(variable%name) == 0 .or. len_trim(variable%source_file) == 0 .or. &
+            len_trim(variable%source_hash) == 0) then
+            call set_message(message, 'invalid-frontend-ast-v1-variable')
+            return
+        end if
+        if (variable%start_byte < 0_int64 .or. variable%end_byte < variable%start_byte) then
+            call set_message(message, 'invalid-frontend-ast-v1-variable-span')
+            return
+        end if
+        valid = .true.
+    end function ffc_validate_variable_declaration_v1
 
     logical function append_token(value, token, token_count, message) result(ok)
         character(len=*), intent(in) :: value

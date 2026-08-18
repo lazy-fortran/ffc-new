@@ -8,6 +8,7 @@ module ffc_mir_metadata
     integer(int32), parameter, public :: value_kind_real = 2_int32
     integer(int32), parameter, public :: value_kind_logical = 3_int32
     integer(int32), parameter, public :: value_kind_address = 4_int32
+    integer(int32), parameter, public :: value_kind_complex = 5_int32
 
     integer(int32), parameter, public :: opcode_add = 1_int32
     integer(int32), parameter, public :: opcode_sub = 2_int32
@@ -25,6 +26,7 @@ module ffc_mir_metadata
 
     public :: mir_opcode_name, mir_opcode_value
     public :: mir_value_kind_name, mir_value_kind_value
+    public :: mir_type_spec_value_kind, mir_type_spec_name
 
 contains
 
@@ -72,6 +74,7 @@ contains
         case (value_kind_real); mir_value_kind_name = 'real'
         case (value_kind_logical); mir_value_kind_name = 'logical'
         case (value_kind_address); mir_value_kind_name = 'address'
+        case (value_kind_complex); mir_value_kind_name = 'complex'
         case default; mir_value_kind_name = ''
         end select
     end function mir_value_kind_name
@@ -84,8 +87,31 @@ contains
         case ('real'); mir_value_kind_value = value_kind_real
         case ('logical'); mir_value_kind_value = value_kind_logical
         case ('address'); mir_value_kind_value = value_kind_address
+        case ('complex'); mir_value_kind_value = value_kind_complex
         case default; mir_value_kind_value = 0_int32
         end select
     end function mir_value_kind_value
+
+    integer(int32) function mir_type_spec_value_kind(type_spec)
+        character(len=*), intent(in) :: type_spec
+
+        select case (trim(type_spec))
+        case ('integer'); mir_type_spec_value_kind = value_kind_integer
+        case ('real'); mir_type_spec_value_kind = value_kind_real
+        case ('complex'); mir_type_spec_value_kind = value_kind_complex
+        case default; mir_type_spec_value_kind = 0_int32
+        end select
+    end function mir_type_spec_value_kind
+
+    character(len=32) function mir_type_spec_name(type_spec)
+        character(len=*), intent(in) :: type_spec
+
+        select case (trim(type_spec))
+        case ('integer'); mir_type_spec_name = 'i32'
+        case ('real'); mir_type_spec_name = 'f32'
+        case ('complex'); mir_type_spec_name = 'c32'
+        case default; mir_type_spec_name = ''
+        end select
+    end function mir_type_spec_name
 
 end module ffc_mir_metadata
