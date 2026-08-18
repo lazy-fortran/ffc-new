@@ -336,6 +336,7 @@ contains
                         instruction_shape_frontend_ast_v1_int_lit_assign_opcode_2
                     body%instructions(1)%result%kind = &
                         instruction_shape_frontend_ast_v1_int_lit_assign_result_kind
+                    body%instructions(1)%result%id = 1_int32
                     body%instructions(1)%result%type_name = &
                         instruction_shape_frontend_ast_v1_int_lit_assign_result_type
                     body%instructions(2)%result = body%instructions(1)%result

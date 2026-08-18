@@ -23,6 +23,10 @@ program test_ast_int_literal
     call assert_true(body%instructions(1)%opcode == opcode_const, 'literal did not emit const')
     call assert_true(body%instructions(1)%literal_value == 7_int32, &
         'literal value was not serialized into MIR')
+    call assert_true(body%instructions(1)%result%id == 1_int32 .and. &
+        body%instructions(2)%result%id == 1_int32 .and. &
+        body%instructions(3)%result%id == 1_int32, &
+        'literal result IDs changed')
     call assert_true(body%instructions(2)%opcode == opcode_store, 'literal store was omitted')
     call assert_true(body%instructions(3)%opcode == opcode_return, 'literal return was omitted')
     call assert_equal(body%instructions(1)%source_rule, 'frontend-ast-v1/assignment', &
