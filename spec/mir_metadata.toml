@@ -190,3 +190,23 @@ opcodes = ["add", "return"]
 result_kind = "character"
 result_type = "character"
 source_rule = "frontend-ast-v1/program"
+
+[[integer_expression_routes]]
+name = "add"
+expression = "( binary-expr ( operator + ) ( left 1 ) ( right 2 ) )"
+shape = "frontend_ast_v1_int_expr_assign"
+
+[[integer_expression_routes]]
+name = "mul"
+expression = "( binary-expr ( operator * ) ( left 2 ) ( right 3 ) )"
+shape = "frontend_ast_v1_int_mul_assign"
+
+[[integer_expression_routes]]
+name = "div"
+expression = "( binary-expr ( operator / ) ( left 6 ) ( right 2 ) )"
+shape = "frontend_ast_v1_int_div_assign"
+
+[[integer_expression_routes]]
+name = "sub"
+expression = "( binary-expr ( operator – ) ( left 5 ) ( right 3 ) )"
+shape = "frontend_ast_v1_int_sub_assign"

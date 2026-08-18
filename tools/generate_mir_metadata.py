@@ -52,6 +52,21 @@ def read_instruction_shapes(
     return entries
 
 
+def read_integer_expression_routes(
+    data: dict, instruction_shapes: list[dict[str, object]]
+) -> list[dict[str, str]]:
+    routes = data.get("integer_expression_routes", [])
+    shape_names = {entry["name"] for entry in instruction_shapes}
+    names = [entry["name"] for entry in routes]
+    expressions = [entry["expression"] for entry in routes]
+    if len(set(names)) != len(names) or len(set(expressions)) != len(expressions):
+        raise ValueError("integer expression route names and expressions must be unique")
+    for route in routes:
+        if route["shape"] not in shape_names:
+            raise ValueError("integer expression route contains an unknown shape")
+    return routes
+
+
 def shape_symbol(shape: str, suffix: str) -> str:
     """Return a legal Fortran identifier for a generated shape member."""
     compact_shape = shape.replace("double_precision", "dp")
@@ -66,6 +81,8 @@ def generate(spec_path: pathlib.Path) -> str:
     source_rules = read_source_rules(data)
     type_specs = data.get("type_specs", [])
     instruction_shapes = read_instruction_shapes(data, opcodes, kinds, source_rules)
+    integer_expression_routes = read_integer_expression_routes(data, instruction_shapes)
+    shapes_by_name = {entry["name"]: entry for entry in instruction_shapes}
     kind_names = {entry["name"] for entry in kinds}
     type_spec_names = {entry["name"] for entry in type_specs}
     if len(type_spec_names) != len(type_specs):
@@ -127,6 +144,12 @@ def generate(spec_path: pathlib.Path) -> str:
         "    public :: mir_value_kind_name, mir_value_kind_value",
         "    public :: mir_type_spec_value_kind, mir_type_spec_name",
         "    public :: mir_source_rule_name, mir_source_rule_value",
+        "    public :: mir_frontend_ast_v1_integer_expression_route",
+        "    public :: mir_frontend_ast_v1_integer_expression_instruction_count",
+        "    public :: mir_frontend_ast_v1_integer_expression_opcode",
+        "    public :: mir_frontend_ast_v1_integer_expression_result_kind",
+        "    public :: mir_frontend_ast_v1_integer_expression_result_type",
+        "    public :: mir_frontend_ast_v1_integer_expression_source_rule",
         "",
         "contains",
         "",
@@ -244,6 +267,103 @@ def generate(spec_path: pathlib.Path) -> str:
         "        case default; mir_source_rule_value = ''",
         "        end select",
         "    end function mir_source_rule_value",
+        "",
+        "    integer(int32) function mir_frontend_ast_v1_integer_expression_route(expression)",
+        "        character(len=*), intent(in) :: expression",
+        "",
+        "        select case (trim(expression))",
+    ]
+    for index, route in enumerate(integer_expression_routes, start=1):
+        lines.append(
+            f"        case ('{route['expression']}'); "
+            f"mir_frontend_ast_v1_integer_expression_route = {index}_int32"
+        )
+    lines += [
+        "        case default; mir_frontend_ast_v1_integer_expression_route = 0_int32",
+        "        end select",
+        "    end function mir_frontend_ast_v1_integer_expression_route",
+        "",
+        "    integer(int32) function mir_frontend_ast_v1_integer_expression_instruction_count(route)",
+        "        integer(int32), intent(in) :: route",
+        "",
+        "        select case (route)",
+    ]
+    for index, route in enumerate(integer_expression_routes, start=1):
+        shape = shapes_by_name[route["shape"]]
+        lines.append(
+            f"        case ({index}_int32); mir_frontend_ast_v1_integer_expression_instruction_count = "
+            f"{shape_symbol(route['shape'], 'count')}"
+        )
+    lines += [
+        "        case default; mir_frontend_ast_v1_integer_expression_instruction_count = 0_int32",
+        "        end select",
+        "    end function mir_frontend_ast_v1_integer_expression_instruction_count",
+        "",
+        "    integer(int32) function mir_frontend_ast_v1_integer_expression_opcode(route, index)",
+        "        integer(int32), intent(in) :: route, index",
+        "",
+        "        mir_frontend_ast_v1_integer_expression_opcode = 0_int32",
+        "        select case (route)",
+    ]
+    for index, route in enumerate(integer_expression_routes, start=1):
+        shape = shapes_by_name[route["shape"]]
+        lines.append(f"        case ({index}_int32)")
+        lines.append("            select case (index)")
+        for opcode_index in range(len(shape["opcodes"])):
+            lines.append(
+                f"            case ({opcode_index}_int32); "
+                f"mir_frontend_ast_v1_integer_expression_opcode = "
+                f"{shape_symbol(route['shape'], f'opcode_{opcode_index}')}"
+            )
+        lines.append("            end select")
+    lines += [
+        "        end select",
+        "    end function mir_frontend_ast_v1_integer_expression_opcode",
+        "",
+        "    integer(int32) function mir_frontend_ast_v1_integer_expression_result_kind(route)",
+        "        integer(int32), intent(in) :: route",
+        "",
+        "        mir_frontend_ast_v1_integer_expression_result_kind = 0_int32",
+        "        select case (route)",
+    ]
+    for index, route in enumerate(integer_expression_routes, start=1):
+        lines.append(
+            f"        case ({index}_int32); mir_frontend_ast_v1_integer_expression_result_kind = "
+            f"{shape_symbol(route['shape'], 'result_kind')}"
+        )
+    lines += [
+        "        end select",
+        "    end function mir_frontend_ast_v1_integer_expression_result_kind",
+        "",
+        "    character(len=32) function mir_frontend_ast_v1_integer_expression_result_type(route)",
+        "        integer(int32), intent(in) :: route",
+        "",
+        "        mir_frontend_ast_v1_integer_expression_result_type = ''",
+        "        select case (route)",
+    ]
+    for index, route in enumerate(integer_expression_routes, start=1):
+        lines.append(
+            f"        case ({index}_int32); mir_frontend_ast_v1_integer_expression_result_type = "
+            f"{shape_symbol(route['shape'], 'result_type')}"
+        )
+    lines += [
+        "        end select",
+        "    end function mir_frontend_ast_v1_integer_expression_result_type",
+        "",
+        "    character(len=64) function mir_frontend_ast_v1_integer_expression_source_rule(route)",
+        "        integer(int32), intent(in) :: route",
+        "",
+        "        mir_frontend_ast_v1_integer_expression_source_rule = ''",
+        "        select case (route)",
+    ]
+    for index, route in enumerate(integer_expression_routes, start=1):
+        lines.append(
+            f"        case ({index}_int32); mir_frontend_ast_v1_integer_expression_source_rule = "
+            f"{shape_symbol(route['shape'], 'source_rule')}"
+        )
+    lines += [
+        "        end select",
+        "    end function mir_frontend_ast_v1_integer_expression_source_rule",
         "",
         "end module ffc_mir_metadata",
         "",

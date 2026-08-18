@@ -1,5 +1,5 @@
 module ffc_frontend_ast
-    use, intrinsic :: iso_fortran_env, only: int64
+    use, intrinsic :: iso_fortran_env, only: int32, int64
     use ffc_lowering, only: ffc_lower_program_root, ffc_program_declaration_from_sx, &
         ffc_program_root_from_sx, ffc_program_root_t, ffc_validate_program_root
     use ffc_mir, only: mir_function_body_t, mir_make_function_witness, &
@@ -73,7 +73,13 @@ module ffc_frontend_ast
         instruction_shape_frontend_ast_v1_character_program_opcode_1, &
         instruction_shape_frontend_ast_v1_character_program_result_kind, &
         instruction_shape_frontend_ast_v1_character_program_result_type, &
-        instruction_shape_frontend_ast_v1_character_program_source_rule
+        instruction_shape_frontend_ast_v1_character_program_source_rule, &
+        mir_frontend_ast_v1_integer_expression_route, &
+        mir_frontend_ast_v1_integer_expression_instruction_count, &
+        mir_frontend_ast_v1_integer_expression_opcode, &
+        mir_frontend_ast_v1_integer_expression_result_kind, &
+        mir_frontend_ast_v1_integer_expression_result_type, &
+        mir_frontend_ast_v1_integer_expression_source_rule
     use ffc_lowering_policy, only: bounded_integer_declaration_count, &
         bounded_integer_variable_count
     implicit none
@@ -272,6 +278,7 @@ contains
         character(len=:), allocatable, intent(out), optional :: message
 
         integer :: kind
+        integer(int32) :: expression_route
         character(len=32) :: type_name
 
         call clear_message(message)
@@ -286,148 +293,20 @@ contains
         body%instructions(2)%result = body%instructions(1)%result
         if (trim(ast%variable%type_spec) == 'integer') then
             if (ast%assignment_count == 1_int64) then
-                if (trim(ast%assignment%value) == &
-                    '( binary-expr ( operator + ) ( left 1 ) ( right 2 ) )') then
-                    deallocate (body%instructions)
-                    allocate (body%instructions(3))
-                    body%function%instruction_count = &
-                        instruction_shape_frontend_ast_v1_int_expr_assign_count
-                    body%instructions(1)%id = 0
-                    body%instructions(2)%id = 1
-                    body%instructions(3)%id = 2
-                    body%instructions(1)%opcode = &
-                        instruction_shape_frontend_ast_v1_int_expr_assign_opcode_0
-                    body%instructions(2)%opcode = &
-                        instruction_shape_frontend_ast_v1_int_expr_assign_opcode_1
-                    body%instructions(3)%opcode = &
-                        instruction_shape_frontend_ast_v1_int_expr_assign_opcode_2
-                    body%instructions(1)%result%id = 2
-                    body%instructions(1)%result%kind = &
-                        instruction_shape_frontend_ast_v1_int_expr_assign_result_kind
-                    body%instructions(1)%result%type_name = &
-                        instruction_shape_frontend_ast_v1_int_expr_assign_result_type
-                    body%instructions(2)%result%id = 1
-                    body%instructions(2)%result%kind = &
-                        instruction_shape_frontend_ast_v1_int_expr_assign_result_kind
-                    body%instructions(2)%result%type_name = &
-                        instruction_shape_frontend_ast_v1_int_expr_assign_result_type
-                    body%instructions(3)%result = body%instructions(2)%result
-                    body%instructions(1)%source_rule = &
-                        instruction_shape_frontend_ast_v1_int_expr_assign_source_rule
-                    body%instructions(2)%source_rule = &
-                        instruction_shape_frontend_ast_v1_int_expr_assign_source_rule
-                    body%instructions(3)%source_rule = &
-                        instruction_shape_frontend_ast_v1_int_expr_assign_source_rule
-                    lowered = ffc_validate_frontend_ast_v1_int_expr_assignment_shape(&
-                        body, message)
-                    return
-                end if
-                if (trim(ast%assignment%value) == &
-                    '( binary-expr ( operator * ) ( left 2 ) ( right 3 ) )') then
-                    deallocate (body%instructions)
-                    allocate (body%instructions(3))
-                    body%function%instruction_count = &
-                        instruction_shape_frontend_ast_v1_int_mul_assign_count
-                    body%instructions(1)%id = 0
-                    body%instructions(2)%id = 1
-                    body%instructions(3)%id = 2
-                    body%instructions(1)%opcode = &
-                        instruction_shape_frontend_ast_v1_int_mul_assign_opcode_0
-                    body%instructions(2)%opcode = &
-                        instruction_shape_frontend_ast_v1_int_mul_assign_opcode_1
-                    body%instructions(3)%opcode = &
-                        instruction_shape_frontend_ast_v1_int_mul_assign_opcode_2
-                    body%instructions(1)%result%id = 2
-                    body%instructions(1)%result%kind = &
-                        instruction_shape_frontend_ast_v1_int_mul_assign_result_kind
-                    body%instructions(1)%result%type_name = &
-                        instruction_shape_frontend_ast_v1_int_mul_assign_result_type
-                    body%instructions(2)%result%id = 1
-                    body%instructions(2)%result%kind = &
-                        instruction_shape_frontend_ast_v1_int_mul_assign_result_kind
-                    body%instructions(2)%result%type_name = &
-                        instruction_shape_frontend_ast_v1_int_mul_assign_result_type
-                    body%instructions(3)%result = body%instructions(2)%result
-                    body%instructions(1)%source_rule = &
-                        instruction_shape_frontend_ast_v1_int_mul_assign_source_rule
-                    body%instructions(2)%source_rule = &
-                        instruction_shape_frontend_ast_v1_int_mul_assign_source_rule
-                    body%instructions(3)%source_rule = &
-                        instruction_shape_frontend_ast_v1_int_mul_assign_source_rule
-                    lowered = ffc_validate_frontend_ast_v1_int_mul_expr_assignment_shape(&
-                        body, message)
-                    return
-                end if
-                if (trim(ast%assignment%value) == &
-                    '( binary-expr ( operator – ) ( left 5 ) ( right 3 ) )') then
-                    deallocate (body%instructions)
-                    allocate (body%instructions(3))
-                    body%function%instruction_count = &
-                        instruction_shape_frontend_ast_v1_int_sub_assign_count
-                    body%instructions(1)%id = 0
-                    body%instructions(2)%id = 1
-                    body%instructions(3)%id = 2
-                    body%instructions(1)%opcode = &
-                        instruction_shape_frontend_ast_v1_int_sub_assign_opcode_0
-                    body%instructions(2)%opcode = &
-                        instruction_shape_frontend_ast_v1_int_sub_assign_opcode_1
-                    body%instructions(3)%opcode = &
-                        instruction_shape_frontend_ast_v1_int_sub_assign_opcode_2
-                    body%instructions(1)%result%id = 2
-                    body%instructions(1)%result%kind = &
-                        instruction_shape_frontend_ast_v1_int_sub_assign_result_kind
-                    body%instructions(1)%result%type_name = &
-                        instruction_shape_frontend_ast_v1_int_sub_assign_result_type
-                    body%instructions(2)%result%id = 1
-                    body%instructions(2)%result%kind = &
-                        instruction_shape_frontend_ast_v1_int_sub_assign_result_kind
-                    body%instructions(2)%result%type_name = &
-                        instruction_shape_frontend_ast_v1_int_sub_assign_result_type
-                    body%instructions(3)%result = body%instructions(2)%result
-                    body%instructions(1)%source_rule = &
-                        instruction_shape_frontend_ast_v1_int_sub_assign_source_rule
-                    body%instructions(2)%source_rule = &
-                        instruction_shape_frontend_ast_v1_int_sub_assign_source_rule
-                    body%instructions(3)%source_rule = &
-                        instruction_shape_frontend_ast_v1_int_sub_assign_source_rule
-                    lowered = ffc_validate_frontend_ast_v1_int_sub_expr_assignment_shape(&
-                        body, message)
-                    return
-                end if
-                if (trim(ast%assignment%value) == &
-                    '( binary-expr ( operator / ) ( left 6 ) ( right 2 ) )') then
-                    deallocate (body%instructions)
-                    allocate (body%instructions(3))
-                    body%function%instruction_count = &
-                        instruction_shape_frontend_ast_v1_int_div_assign_count
-                    body%instructions(1)%id = 0
-                    body%instructions(2)%id = 1
-                    body%instructions(3)%id = 2
-                    body%instructions(1)%opcode = &
-                        instruction_shape_frontend_ast_v1_int_div_assign_opcode_0
-                    body%instructions(2)%opcode = &
-                        instruction_shape_frontend_ast_v1_int_div_assign_opcode_1
-                    body%instructions(3)%opcode = &
-                        instruction_shape_frontend_ast_v1_int_div_assign_opcode_2
-                    body%instructions(1)%result%id = 2
-                    body%instructions(1)%result%kind = &
-                        instruction_shape_frontend_ast_v1_int_div_assign_result_kind
-                    body%instructions(1)%result%type_name = &
-                        instruction_shape_frontend_ast_v1_int_div_assign_result_type
-                    body%instructions(2)%result%id = 1
-                    body%instructions(2)%result%kind = &
-                        instruction_shape_frontend_ast_v1_int_div_assign_result_kind
-                    body%instructions(2)%result%type_name = &
-                        instruction_shape_frontend_ast_v1_int_div_assign_result_type
-                    body%instructions(3)%result = body%instructions(2)%result
-                    body%instructions(1)%source_rule = &
-                        instruction_shape_frontend_ast_v1_int_div_assign_source_rule
-                    body%instructions(2)%source_rule = &
-                        instruction_shape_frontend_ast_v1_int_div_assign_source_rule
-                    body%instructions(3)%source_rule = &
-                        instruction_shape_frontend_ast_v1_int_div_assign_source_rule
-                    lowered = ffc_validate_frontend_ast_v1_int_div_expr_assignment_shape(&
-                        body, message)
+                expression_route = mir_frontend_ast_v1_integer_expression_route(&
+                    trim(ast%assignment%value))
+                if (expression_route > 0_int32) then
+                    call emit_frontend_ast_v1_integer_expression(body, expression_route)
+                    select case (expression_route)
+                    case (1_int32); lowered = ffc_validate_frontend_ast_v1_int_expr_assignment_shape(&
+                            body, message)
+                    case (2_int32); lowered = ffc_validate_frontend_ast_v1_int_mul_expr_assignment_shape(&
+                            body, message)
+                    case (3_int32); lowered = ffc_validate_frontend_ast_v1_int_div_expr_assignment_shape(&
+                            body, message)
+                    case (4_int32); lowered = ffc_validate_frontend_ast_v1_int_sub_expr_assignment_shape(&
+                            body, message)
+                    end select
                     return
                 end if
                 body%function%instruction_count = &
@@ -553,6 +432,36 @@ contains
         body%instructions(1)%source_rule = 'frontend-ast-v1/program'
         body%instructions(2)%source_rule = 'frontend-ast-v1/program'
     end function ffc_lower_frontend_ast_v1
+
+    subroutine emit_frontend_ast_v1_integer_expression(body, route)
+        type(mir_function_body_t), intent(inout) :: body
+        integer(int32), intent(in) :: route
+
+        integer(int32) :: index, instruction_count
+
+        deallocate (body%instructions)
+        instruction_count = mir_frontend_ast_v1_integer_expression_instruction_count(route)
+        allocate (body%instructions(instruction_count))
+        body%function%instruction_count = instruction_count
+        do index = 0_int32, instruction_count - 1_int32
+            body%instructions(index + 1)%id = index
+            body%instructions(index + 1)%opcode = &
+                mir_frontend_ast_v1_integer_expression_opcode(route, index)
+            body%instructions(index + 1)%source_rule = &
+                trim(mir_frontend_ast_v1_integer_expression_source_rule(route))
+        end do
+        body%instructions(1)%result%id = 2
+        body%instructions(1)%result%kind = &
+            mir_frontend_ast_v1_integer_expression_result_kind(route)
+        body%instructions(1)%result%type_name = &
+            trim(mir_frontend_ast_v1_integer_expression_result_type(route))
+        body%instructions(2)%result%id = 1
+        body%instructions(2)%result%kind = &
+            mir_frontend_ast_v1_integer_expression_result_kind(route)
+        body%instructions(2)%result%type_name = &
+            trim(mir_frontend_ast_v1_integer_expression_result_type(route))
+        body%instructions(3)%result = body%instructions(2)%result
+    end subroutine emit_frontend_ast_v1_integer_expression
 
     logical function ffc_validate_frontend_ast_v1_integer_program_shape(body, message) &
             result(valid)
