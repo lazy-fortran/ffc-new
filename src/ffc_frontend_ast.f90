@@ -225,6 +225,9 @@ module ffc_frontend_ast
         instruction_shape_v2_pow_print_61_80_result_kind, &
         instruction_shape_v2_pow_print_61_80_result_type, &
         instruction_shape_v2_pow_print_61_80_source_rule, &
+        instruction_shape_v2_pow_print_81_100_result_kind, &
+        instruction_shape_v2_pow_print_81_100_result_type, &
+        instruction_shape_v2_pow_print_81_100_source_rule, &
         instruction_shape_frontend_ast_v1_int_assign_count, &
         instruction_shape_frontend_ast_v1_int_assign_opcode_0, &
         instruction_shape_frontend_ast_v1_int_assign_opcode_1, &
@@ -930,6 +933,17 @@ contains
                         return
                     end if
                 end do
+                do assignment_index = 81, 100
+                    if (frontend_ast_v2_print_variable_item_count_match(print_statement, assignment_index)) then
+                        call emit_frontend_ast_v2_print_variable_items_81_to_100(body, assignment_index)
+                        lowered = ffc_validate_frontend_ast_v2_print_variable_items_shape(body, assignment_index, &
+                            int(2 * assignment_index + 7, int32), &
+                            instruction_shape_v2_pow_print_81_100_result_kind, &
+                            instruction_shape_v2_pow_print_81_100_result_type, &
+                            instruction_shape_v2_pow_print_81_100_source_rule, message)
+                        return
+                    end if
+                end do
                 if (frontend_ast_v2_print_variable_item_count_match(print_statement, 10)) then
                     call emit_frontend_ast_v2_print_variable_ten_items(body)
                     lowered = ffc_validate_frontend_ast_v2_print_variable_ten_items_shape(body, message)
@@ -1313,6 +1327,29 @@ contains
             instruction_shape_v2_pow_print_61_80_result_kind, &
             instruction_shape_v2_pow_print_61_80_result_type, instruction_shape_v2_pow_print_61_80_source_rule)
     end subroutine emit_frontend_ast_v2_print_variable_items_61_to_80
+
+    subroutine emit_frontend_ast_v2_print_variable_items_81_to_100(body, item_count)
+        type(mir_function_body_t), intent(inout) :: body
+        integer, intent(in) :: item_count
+        integer(int32) :: opcodes(2 * item_count + 7)
+        integer :: output_index
+
+        opcodes = opcode_load
+        opcodes(1) = opcode_const
+        opcodes(2) = opcode_store
+        opcodes(3) = opcode_load
+        opcodes(4) = opcode_const
+        opcodes(5) = opcode_pow
+        opcodes(6) = opcode_store
+        do output_index = 1, item_count
+            opcodes(7 + 2 * (output_index - 1)) = opcode_load
+            opcodes(8 + 2 * (output_index - 1)) = opcode_output
+        end do
+        opcodes(2 * item_count + 7) = opcode_return
+        call emit_frontend_ast_v2_print_variable_items(body, item_count, 3, 2, int(size(opcodes), int32), opcodes, &
+            instruction_shape_v2_pow_print_81_100_result_kind, &
+            instruction_shape_v2_pow_print_81_100_result_type, instruction_shape_v2_pow_print_81_100_source_rule)
+    end subroutine emit_frontend_ast_v2_print_variable_items_81_to_100
 
     subroutine emit_frontend_ast_v2_print_variable_seven_items(body)
         type(mir_function_body_t), intent(inout) :: body
