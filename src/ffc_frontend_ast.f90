@@ -626,7 +626,15 @@ contains
             return
         end if
         if (len_trim(print_statement) > 0) then
-            if (assignment_count /= 1 .or. trim(assignments(1)%target) /= 'x' .or. &
+            if ((assignment_count /= 1 .and. assignment_count /= 2) .or. &
+                trim(assignments(1)%target) /= 'x' .or. &
+                (assignment_count == 1 .and. trim(assignments(1)%value) /= &
+                '( integer-literal 17 )' .and. trim(assignments(1)%value) /= &
+                '( integer-literal 23 )') .or. &
+                (assignment_count == 2 .and. &
+                (trim(assignments(1)%value) /= '( integer-literal 23 )' .or. &
+                trim(assignments(2)%target) /= 'x' .or. trim(assignments(2)%value) /= &
+                '(assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))')) .or. &
                 .not. frontend_ast_v2_print_variable_match(print_statement)) then
                 call set_message(message, 'unsupported-frontend-ast-v2-execution-part')
                 return
@@ -639,6 +647,13 @@ contains
                 trim(root%source_hash) /= trim(assignments(1)%source_hash)) then
                 call set_message(message, 'frontend-ast-v2-invalid-provenance')
                 return
+            end if
+            if (assignment_count == 2) then
+                if (trim(root%source_file) /= trim(assignments(2)%source_file) .or. &
+                    trim(root%source_hash) /= trim(assignments(2)%source_hash)) then
+                    call set_message(message, 'frontend-ast-v2-invalid-provenance')
+                    return
+                end if
             end if
             call mir_make_function_witness(body)
             body%function%name = trim(root%name)
