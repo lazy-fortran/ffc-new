@@ -4,7 +4,8 @@ program test_frontend_ast_v2_print
         ffc_validate_frontend_ast_v2_print_7_shape, &
         ffc_validate_frontend_ast_v2_print_7_8_shape, &
         ffc_validate_frontend_ast_v2_print_7_8_9_shape, &
-        ffc_validate_frontend_ast_v2_print_7_8_9_10_shape
+        ffc_validate_frontend_ast_v2_print_7_8_9_10_shape, &
+        ffc_validate_frontend_ast_v2_print_7_8_9_10_11_shape
     use ffc_mir, only: mir_function_body_t, mir_validate_function_body, opcode_const, &
         opcode_output, opcode_return
     implicit none
@@ -103,6 +104,35 @@ program test_frontend_ast_v2_print
         replace_text(envelope_four_sx(), '(print-stmt ', '(write-stmt '), body, message), &
         'WRITE four-item mutation was accepted')
 
+    call assert_true(ffc_lower_frontend_ast_v2_from_sx(envelope_five_sx(), body, message), &
+        'PRINT star 7, 8, 9, 10, 11 envelope was rejected')
+    call assert_true(ffc_validate_frontend_ast_v2_print_7_8_9_10_11_shape(body, message), &
+        'PRINT 7, 8, 9, 10, 11 MIR shape was rejected')
+    call assert_equal(body%instructions(1)%opcode, opcode_const, 'fifth-route first const changed')
+    call assert_equal(body%instructions(2)%opcode, opcode_output, 'fifth-route first output missing')
+    call assert_equal(body%instructions(3)%opcode, opcode_const, 'fifth-route second const changed')
+    call assert_equal(body%instructions(4)%opcode, opcode_output, 'fifth-route second output missing')
+    call assert_equal(body%instructions(5)%opcode, opcode_const, 'fifth-route third const changed')
+    call assert_equal(body%instructions(6)%opcode, opcode_output, 'fifth-route third output missing')
+    call assert_equal(body%instructions(7)%opcode, opcode_const, 'fifth-route fourth const changed')
+    call assert_equal(body%instructions(8)%opcode, opcode_output, 'fifth-route fourth output missing')
+    call assert_equal(body%instructions(9)%opcode, opcode_const, 'fifth-route fifth const changed')
+    call assert_equal(body%instructions(10)%opcode, opcode_output, 'fifth-route fifth output missing')
+    call assert_equal(body%instructions(11)%opcode, opcode_return, 'fifth-route return changed')
+    call assert_equal(body%instructions(9)%literal_value, 11, 'fifth-route literal changed')
+    call assert_true(.not. ffc_lower_frontend_ast_v2_from_sx(&
+        replace_text(envelope_five_sx(), '(output-value-5 11)', '(output-value-5 10)'), body, message), &
+        'PRINT wrong fifth item was accepted')
+    call assert_true(.not. ffc_lower_frontend_ast_v2_from_sx(&
+        replace_text(envelope_five_sx(), '(output-value-5 11)', '(output-value-5)'), body, message), &
+        'PRINT malformed fifth item was accepted')
+    call assert_true(.not. ffc_lower_frontend_ast_v2_from_sx(&
+        replace_text(envelope_five_sx(), '(output-kind-5 integer-literal)', '(output-kind-5)'), body, message), &
+        'PRINT missing fifth kind was accepted')
+    call assert_true(.not. ffc_lower_frontend_ast_v2_from_sx(&
+        replace_text(envelope_five_sx(), '(print-stmt ', '(write-stmt '), body, message), &
+        'WRITE five-item mutation was accepted')
+
     write (*, '(a)') 'frontend AST v2 PRINT star 7 checks: ok'
 
 contains
@@ -175,6 +205,25 @@ contains
             '(statement-page 242) (format-page 244) (output-page 248) '// &
             '(source-hash print-test))))'
     end function envelope_four_sx
+
+    function envelope_five_sx() result(value)
+        character(len=4096) :: value
+
+        value = '(program-unit-v2 (root (program-root (name p) (span (source-span '// &
+            '(file main.f90) (start-byte 0) (end-byte 48) (source-hash print-test))))) '// &
+            '(declaration-count 0) (declaration) (variable-count 0) (variable) '// &
+            '(execution-part (print-stmt (format-kind default-char-expr) (format-value *) '// &
+            '(output-kind integer-literal) (output-value 7) (output-count 5) '// &
+            '(output-kind-2 integer-literal) (output-value-2 8) (output-rule-2 R1217) '// &
+            '(output-kind-3 integer-literal) (output-value-3 9) (output-rule-3 R1217) '// &
+            '(output-kind-4 integer-literal) (output-value-4 10) (output-rule-4 R1217) '// &
+            '(output-kind-5 integer-literal) (output-value-5 11) (output-rule-5 R1217) '// &
+            '(statement-rule R1212) (format-rule R1215) (output-rule R1217) '// &
+            '(source-document J3-24-007) (statement-clause 12.6.1) '// &
+            '(format-clause 12.6.2.2) (output-clause 12.6.3) '// &
+            '(statement-page 242) (format-page 244) (output-page 248) '// &
+            '(source-hash print-test))))'
+    end function envelope_five_sx
 
     function replace_text(value, old, new) result(replaced)
         character(len=*), intent(in) :: value, old, new
