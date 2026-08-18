@@ -822,7 +822,9 @@ contains
                 index(trim(assignments(1)%value), ' 3 ') == 0 .or. &
                 (index(print_statement, '( kind integer-expression )') /= 0 .and. &
                 index(print_statement, '( output-item ( kind integer-expression ) ( operator + ) '// &
-                '( left x ) ( right 1 ) ( rule R1217 ) ( clause 12.6.3 ) ( page 248 ) )') == 0)) then
+                '( left x ) ( right 1 ) ( rule R1217 ) ( clause 12.6.3 ) ( page 248 ) )') == 0 .and. &
+                index(print_statement, '( output-item ( kind integer-expression ) ( operator + ) '// &
+                '( left x ) ( right x ) ( rule R1217 ) ( clause 12.6.3 ) ( page 248 ) )') == 0)) then
                 call set_message(message, 'unsupported-frontend-ast-v2-execution-part')
                 return
             end if
@@ -1453,7 +1455,7 @@ contains
                 return
             end if
             if (.not. read_named_atom(token, token_count, position, 'right', item_value, message)) return
-            if (trim(item_value) /= '1') then
+            if (trim(item_value) /= '1' .and. trim(item_value) /= 'x') then
                 call set_message(message, 'unsupported-frontend-ast-v2-print-expression-right')
                 parsed = .false.
                 return
@@ -1555,10 +1557,15 @@ contains
                 instruction_index = instruction_index + 1
                 body%instructions(instruction_index)%opcode = opcode_load
                 body%instructions(instruction_index)%storage_key = 'x'
-                body%instructions(instruction_index + 1)%opcode = opcode_const
-                read (item_value(item_index), *, iostat=io_status) value
-                if (io_status /= 0) value = 0
-                body%instructions(instruction_index + 1)%literal_value = value
+                if (trim(item_value(item_index)) == '1') then
+                    body%instructions(instruction_index + 1)%opcode = opcode_const
+                    read (item_value(item_index), *, iostat=io_status) value
+                    if (io_status /= 0) value = 0
+                    body%instructions(instruction_index + 1)%literal_value = value
+                else
+                    body%instructions(instruction_index + 1)%opcode = opcode_load
+                    body%instructions(instruction_index + 1)%storage_key = 'x'
+                end if
                 body%instructions(instruction_index + 2)%opcode = opcode_add
                 body%instructions(instruction_index + 3)%opcode = opcode_output
                 body%instructions(instruction_index)%source_rule = 'frontend-ast-v2/print-stmt'
