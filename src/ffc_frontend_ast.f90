@@ -218,10 +218,10 @@ module ffc_frontend_ast
         instruction_shape_v2_pow_print_ten_items_result_kind, &
         instruction_shape_v2_pow_print_ten_items_result_type, &
         instruction_shape_v2_pow_print_ten_items_source_rule, &
-        instruction_shape_v2_pow_print_21_40_count, &
-        instruction_shape_v2_pow_print_21_40_result_kind, &
-        instruction_shape_v2_pow_print_21_40_result_type, &
-        instruction_shape_v2_pow_print_21_40_source_rule, &
+        instruction_shape_v2_pow_print_41_60_count, &
+        instruction_shape_v2_pow_print_41_60_result_kind, &
+        instruction_shape_v2_pow_print_41_60_result_type, &
+        instruction_shape_v2_pow_print_41_60_source_rule, &
         instruction_shape_frontend_ast_v1_int_assign_count, &
         instruction_shape_frontend_ast_v1_int_assign_opcode_0, &
         instruction_shape_frontend_ast_v1_int_assign_opcode_1, &
@@ -468,7 +468,7 @@ module ffc_frontend_ast
 
     integer, parameter :: frontend_ast_token_capacity = 1024
     integer, parameter :: frontend_ast_token_length = 256
-    integer, parameter :: frontend_ast_expression_length = 4096
+    integer, parameter :: frontend_ast_expression_length = 16384
 
     type, public :: ffc_frontend_ast_v0_t
         type(ffc_program_root_t) :: root
@@ -905,14 +905,14 @@ contains
                 return
             end if
             if (index(print_statement, '( output-count ') /= 0) then
-                do assignment_index = 11, 40
+                do assignment_index = 11, 60
                     if (frontend_ast_v2_print_variable_item_count_match(print_statement, assignment_index)) then
-                        call emit_frontend_ast_v2_print_variable_twenty_one_to_forty_items(body, assignment_index)
+                        call emit_frontend_ast_v2_print_variable_items_11_to_60(body, assignment_index)
                         lowered = ffc_validate_frontend_ast_v2_print_variable_items_shape(body, assignment_index, &
                             int(2 * assignment_index + 7, int32), &
-                            instruction_shape_v2_pow_print_21_40_result_kind, &
-                            instruction_shape_v2_pow_print_21_40_result_type, &
-                            instruction_shape_v2_pow_print_21_40_source_rule, message)
+                            instruction_shape_v2_pow_print_41_60_result_kind, &
+                            instruction_shape_v2_pow_print_41_60_result_type, &
+                            instruction_shape_v2_pow_print_41_60_source_rule, message)
                         return
                     end if
                 end do
@@ -1253,7 +1253,7 @@ contains
         end do
     end function frontend_ast_v2_print_variable_item_count_match
 
-    subroutine emit_frontend_ast_v2_print_variable_twenty_one_to_forty_items(body, item_count)
+    subroutine emit_frontend_ast_v2_print_variable_items_11_to_60(body, item_count)
         type(mir_function_body_t), intent(inout) :: body
         integer, intent(in) :: item_count
         integer(int32) :: opcodes(2 * item_count + 7)
@@ -1272,10 +1272,10 @@ contains
         end do
         opcodes(2 * item_count + 7) = opcode_return
         call emit_frontend_ast_v2_print_variable_items(body, item_count, 3, 2, int(size(opcodes), int32), opcodes, &
-            instruction_shape_v2_pow_print_21_40_result_kind, &
-            instruction_shape_v2_pow_print_21_40_result_type, &
-            instruction_shape_v2_pow_print_21_40_source_rule)
-    end subroutine emit_frontend_ast_v2_print_variable_twenty_one_to_forty_items
+            instruction_shape_v2_pow_print_41_60_result_kind, &
+            instruction_shape_v2_pow_print_41_60_result_type, &
+            instruction_shape_v2_pow_print_41_60_source_rule)
+    end subroutine emit_frontend_ast_v2_print_variable_items_11_to_60
 
     subroutine emit_frontend_ast_v2_print_variable_seven_items(body)
         type(mir_function_body_t), intent(inout) :: body

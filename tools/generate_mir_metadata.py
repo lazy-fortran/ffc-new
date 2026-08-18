@@ -44,6 +44,14 @@ def read_instruction_shapes(
     source_rules: list[dict[str, str]],
 ) -> list[dict[str, object]]:
     entries = data.get("instruction_shapes", [])
+    for entry in entries:
+        if "repeat_opcodes" in entry:
+            repeat_opcodes = entry["repeat_opcodes"]
+            repeat_count = entry["repeat_count"]
+            trailing_opcodes = entry.get("trailing_opcodes", [])
+            if not repeat_opcodes or repeat_count < 1 or not trailing_opcodes:
+                raise ValueError("repeated instruction shape is incomplete")
+            entry["opcodes"] = entry.get("opcodes", []) + repeat_opcodes * repeat_count + trailing_opcodes
     opcode_names = {entry["name"] for entry in opcodes}
     kind_names = {entry["name"] for entry in kinds}
     source_rule_values = {entry["value"] for entry in source_rules}
