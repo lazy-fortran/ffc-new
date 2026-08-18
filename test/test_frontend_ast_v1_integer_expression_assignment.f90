@@ -90,6 +90,9 @@ program test_frontend_ast_v1_integer_expression_assignment
     ast%assignment%value = '( binary-expr ( operator * ) ( left 2 ) ( right 2 ) )'
     call assert_false(ffc_lower_frontend_ast_v1(ast, body, message), &
         'unsupported multiplication operand was accepted')
+    ast%assignment%value = '( binary-expr ( operator * ) ( left 1 ) ( right 3 ) )'
+    call assert_false(ffc_lower_frontend_ast_v1(ast, body, message), &
+        'unsupported multiplication left operand was accepted')
     write (*, '(a)') 'frontend AST-v1 integer expression assignment checks: ok'
 
 contains
@@ -141,7 +144,7 @@ contains
 
         ok = ffc_frontend_ast_v1_from_sx(common_sx(&
             '(assignment-expression (kind binary-expression) (operator *) '// &
-            '(left-operand 1) (right-operand 2))'), ast, message)
+            '(left-operand 2) (right-operand 3))'), ast, message)
         if (.not. ok) return
         ok = ffc_lower_frontend_ast_v1(ast, body, message)
     end function lower_multiplication

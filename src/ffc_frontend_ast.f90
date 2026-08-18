@@ -307,7 +307,7 @@ contains
                     return
                 end if
                 if (trim(ast%assignment%value) == &
-                    '( binary-expr ( operator * ) ( left 1 ) ( right 2 ) )') then
+                    '( binary-expr ( operator * ) ( left 2 ) ( right 3 ) )') then
                     deallocate (body%instructions)
                     allocate (body%instructions(3))
                     body%function%instruction_count = &
@@ -1215,7 +1215,7 @@ contains
         end if
         if (trim(assignment%value) /= '1' .and. trim(assignment%value) /= &
             '( binary-expr ( operator + ) ( left 1 ) ( right 2 ) )' .and. &
-            trim(assignment%value) /= '( binary-expr ( operator * ) ( left 1 ) ( right 2 ) )') then
+            trim(assignment%value) /= '( binary-expr ( operator * ) ( left 2 ) ( right 3 ) )') then
             call set_message(message, 'unsupported-frontend-ast-v1-assignment')
             return
         end if
@@ -1304,14 +1304,17 @@ contains
                         if (.not. ok) return
                         if (trim(kind) /= 'binary-expression' .or. &
                             (trim(operator) /= '+' .and. trim(operator) /= '*') .or. &
-                            trim(left_operand) /= '1' .or. trim(right_operand) /= '2') then
+                            (trim(operator) == '+' .and. (trim(left_operand) /= '1' .or. &
+                            trim(right_operand) /= '2')) .or. &
+                            (trim(operator) == '*' .and. (trim(left_operand) /= '2' .or. &
+                            trim(right_operand) /= '3'))) then
                             call set_message(message, &
                                 'unsupported-frontend-ast-v1-assignment-expression')
                             ok = .false.
                             return
                         end if
-                        value = '( binary-expr ( operator '//trim(operator)// &
-                            ' ) ( left 1 ) ( right 2 ) )'
+                        value = '( binary-expr ( operator '//trim(operator)//' ) ( left '// &
+                            trim(left_operand)//' ) ( right '//trim(right_operand)//' ) )'
                     end if
                 else
                     ok = read_expression(token, token_count, position, value, message)
