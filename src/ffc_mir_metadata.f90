@@ -29,6 +29,7 @@ module ffc_mir_metadata
     character(len=26), parameter, public :: source_rule_frontend_ast_v1_assignment = 'frontend-ast-v1/assignment'
     character(len=26), parameter, public :: source_rule_frontend_ast_v1_expression = 'frontend-ast-v1/expression'
     character(len=32), parameter, public :: source_rule_frontend_ast_v1_storage_sequence = 'frontend-ast-v1/storage-sequence'
+    character(len=34), parameter, public :: source_rule_frontend_ast_v1_storage_sequence_3 = 'frontend-ast-v1/storage-sequence-3'
 
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_integer_program_count = 2_int32
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_integer_program_opcode_0 = opcode_add
@@ -128,7 +129,7 @@ module ffc_mir_metadata
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_int_seq_3_opcode_10 = opcode_return
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_int_seq_3_result_kind = value_kind_integer
     character(len=3), parameter, public :: instruction_shape_frontend_ast_v1_int_seq_3_result_type = 'i32'
-    character(len=32), parameter, public :: instruction_shape_frontend_ast_v1_int_seq_3_source_rule = 'frontend-ast-v1/storage-sequence'
+    character(len=34), parameter, public :: instruction_shape_frontend_ast_v1_int_seq_3_source_rule = 'frontend-ast-v1/storage-sequence-3'
 
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_logical_program_count = 2_int32
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_logical_program_opcode_0 = opcode_add
@@ -288,6 +289,7 @@ contains
         case (source_rule_frontend_ast_v1_assignment); mir_source_rule_name = 'frontend_ast_v1_assignment'
         case (source_rule_frontend_ast_v1_expression); mir_source_rule_name = 'frontend_ast_v1_expression'
         case (source_rule_frontend_ast_v1_storage_sequence); mir_source_rule_name = 'frontend_ast_v1_storage_sequence'
+        case (source_rule_frontend_ast_v1_storage_sequence_3); mir_source_rule_name = 'frontend_ast_v1_storage_sequence_3'
         case default; mir_source_rule_name = ''
         end select
     end function mir_source_rule_name
@@ -302,6 +304,7 @@ contains
         case ('frontend_ast_v1_assignment'); mir_source_rule_value = source_rule_frontend_ast_v1_assignment
         case ('frontend_ast_v1_expression'); mir_source_rule_value = source_rule_frontend_ast_v1_expression
         case ('frontend_ast_v1_storage_sequence'); mir_source_rule_value = source_rule_frontend_ast_v1_storage_sequence
+        case ('frontend_ast_v1_storage_sequence_3'); mir_source_rule_value = source_rule_frontend_ast_v1_storage_sequence_3
         case default; mir_source_rule_value = ''
         end select
     end function mir_source_rule_value

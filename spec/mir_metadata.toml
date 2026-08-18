@@ -24,6 +24,10 @@ value = "frontend-ast-v1/expression"
 name = "frontend_ast_v1_storage_sequence"
 value = "frontend-ast-v1/storage-sequence"
 
+[[source_rules]]
+name = "frontend_ast_v1_storage_sequence_3"
+value = "frontend-ast-v1/storage-sequence-3"
+
 [[value_kinds]]
 name = "integer"
 value = 1
@@ -190,7 +194,7 @@ name = "frontend_ast_v1_int_seq_3"
 opcodes = ["const", "store", "load", "const", "add", "store", "load", "const", "add", "store", "return"]
 result_kind = "integer"
 result_type = "i32"
-source_rule = "frontend-ast-v1/storage-sequence"
+source_rule = "frontend-ast-v1/storage-sequence-3"
 
 [[instruction_shapes]]
 name = "frontend_ast_v1_logical_program"
