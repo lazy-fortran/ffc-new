@@ -147,6 +147,13 @@ result_type = "i32"
 source_rule = "frontend-ast-v1/expression"
 
 [[instruction_shapes]]
+name = "frontend_ast_v1_int_var_assign"
+opcodes = ["load", "const", "add", "store", "return"]
+result_kind = "integer"
+result_type = "i32"
+source_rule = "frontend-ast-v1/expression"
+
+[[instruction_shapes]]
 name = "frontend_ast_v1_int_mul_assign"
 opcodes = ["const", "const", "mul", "store", "return"]
 result_kind = "integer"
@@ -207,6 +214,13 @@ name = "add"
 expression = "( binary-expr ( operator + ) ( left 1 ) ( right 2 ) )"
 shape = "frontend_ast_v1_int_expr_assign"
 literal_values = [1, 2]
+result_ids = [0, 1, 2, 2, 2]
+
+[[integer_expression_routes]]
+name = "variable_add"
+expression = "(assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))"
+shape = "frontend_ast_v1_int_var_assign"
+literal_values = [1]
 result_ids = [0, 1, 2, 2, 2]
 
 [[integer_expression_routes]]

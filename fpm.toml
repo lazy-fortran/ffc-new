@@ -146,6 +146,10 @@ name = "frontend_ast_v1_integer_add"
 source-dir = "test"
 
 [[test]]
+name = "frontend_ast_v1_integer_variable_add"
+source-dir = "test"
+
+[[test]]
 name = "frontend_ast_v1_real_policy"
 source-dir = "test"
 

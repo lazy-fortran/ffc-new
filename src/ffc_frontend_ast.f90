@@ -32,6 +32,15 @@ module ffc_frontend_ast
         instruction_shape_frontend_ast_v1_int_expr_assign_result_kind, &
         instruction_shape_frontend_ast_v1_int_expr_assign_result_type, &
         instruction_shape_frontend_ast_v1_int_expr_assign_source_rule, &
+        instruction_shape_frontend_ast_v1_int_var_assign_count, &
+        instruction_shape_frontend_ast_v1_int_var_assign_opcode_0, &
+        instruction_shape_frontend_ast_v1_int_var_assign_opcode_1, &
+        instruction_shape_frontend_ast_v1_int_var_assign_opcode_2, &
+        instruction_shape_frontend_ast_v1_int_var_assign_opcode_3, &
+        instruction_shape_frontend_ast_v1_int_var_assign_opcode_4, &
+        instruction_shape_frontend_ast_v1_int_var_assign_result_kind, &
+        instruction_shape_frontend_ast_v1_int_var_assign_result_type, &
+        instruction_shape_frontend_ast_v1_int_var_assign_source_rule, &
         instruction_shape_frontend_ast_v1_int_mul_assign_count, &
         instruction_shape_frontend_ast_v1_int_mul_assign_opcode_0, &
         instruction_shape_frontend_ast_v1_int_mul_assign_opcode_1, &
@@ -147,6 +156,7 @@ module ffc_frontend_ast
     public :: ffc_validate_frontend_ast_v1_integer_assignment_program_shape
     public :: ffc_validate_frontend_ast_v1_int_literal_assignment_shape
     public :: ffc_validate_frontend_ast_v1_int_expr_assignment_shape
+    public :: ffc_validate_frontend_ast_v1_int_var_assignment_shape
     public :: ffc_validate_frontend_ast_v1_int_mul_expr_assignment_shape
     public :: ffc_validate_frontend_ast_v1_int_div_expr_assignment_shape
     public :: ffc_validate_frontend_ast_v1_int_sub_expr_assignment_shape
@@ -312,11 +322,13 @@ contains
                     select case (expression_route)
                     case (1_int32); lowered = ffc_validate_frontend_ast_v1_int_expr_assignment_shape(&
                             body, message)
-                    case (2_int32); lowered = ffc_validate_frontend_ast_v1_int_mul_expr_assignment_shape(&
+                    case (2_int32); lowered = ffc_validate_frontend_ast_v1_int_var_assignment_shape(&
                             body, message)
-                    case (3_int32); lowered = ffc_validate_frontend_ast_v1_int_div_expr_assignment_shape(&
+                    case (3_int32); lowered = ffc_validate_frontend_ast_v1_int_mul_expr_assignment_shape(&
                             body, message)
-                    case (4_int32); lowered = ffc_validate_frontend_ast_v1_int_sub_expr_assignment_shape(&
+                    case (4_int32); lowered = ffc_validate_frontend_ast_v1_int_div_expr_assignment_shape(&
+                            body, message)
+                    case (5_int32); lowered = ffc_validate_frontend_ast_v1_int_sub_expr_assignment_shape(&
                             body, message)
                     end select
                     return
@@ -483,12 +495,13 @@ contains
         type(mir_function_body_t), intent(inout) :: body
         integer(int32), intent(in) :: route
 
-        integer(int32) :: index, instruction_count
+        integer(int32) :: index, instruction_count, literal_index
 
         deallocate (body%instructions)
         instruction_count = mir_frontend_ast_v1_integer_expression_instruction_count(route)
         allocate (body%instructions(instruction_count))
         body%function%instruction_count = instruction_count
+        literal_index = 0_int32
         do index = 0_int32, instruction_count - 1_int32
             body%instructions(index + 1)%id = index
             body%instructions(index + 1)%opcode = &
@@ -497,7 +510,8 @@ contains
                 trim(mir_frontend_ast_v1_integer_expression_source_rule(route))
             if (body%instructions(index + 1)%opcode == opcode_const) then
                 body%instructions(index + 1)%literal_value = &
-                    mir_frontend_ast_v1_integer_expression_literal_value(route, index)
+                    mir_frontend_ast_v1_integer_expression_literal_value(route, literal_index)
+                literal_index = literal_index + 1_int32
             end if
         end do
         if (mir_frontend_ast_v1_integer_expression_result_id(route, 0_int32) >= 0_int32) then
@@ -739,6 +753,59 @@ contains
         end if
         valid = .true.
     end function ffc_validate_frontend_ast_v1_int_expr_assignment_shape
+
+    logical function ffc_validate_frontend_ast_v1_int_var_assignment_shape(&
+            body, message) result(valid)
+        type(mir_function_body_t), intent(in) :: body
+        character(len=:), allocatable, intent(out), optional :: message
+
+        integer :: index
+
+        call clear_message(message)
+        valid = .false.
+        if (.not. mir_validate_function_body(body, message)) return
+        if (body%function%instruction_count /= &
+            instruction_shape_frontend_ast_v1_int_var_assign_count) then
+            call set_message(message, 'frontend-ast-v1 integer variable expression instruction count changed')
+            return
+        end if
+        if (body%instructions(1)%opcode /= &
+            instruction_shape_frontend_ast_v1_int_var_assign_opcode_0 .or. &
+            body%instructions(2)%opcode /= &
+            instruction_shape_frontend_ast_v1_int_var_assign_opcode_1 .or. &
+            body%instructions(3)%opcode /= &
+            instruction_shape_frontend_ast_v1_int_var_assign_opcode_2 .or. &
+            body%instructions(4)%opcode /= &
+            instruction_shape_frontend_ast_v1_int_var_assign_opcode_3 .or. &
+            body%instructions(5)%opcode /= &
+            instruction_shape_frontend_ast_v1_int_var_assign_opcode_4) then
+            call set_message(message, 'frontend-ast-v1 integer variable expression opcode shape changed')
+            return
+        end if
+        if (body%instructions(1)%literal_value /= 0_int32 .or. &
+            body%instructions(2)%literal_value /= 1_int32 .or. &
+            body%instructions(1)%result%id /= 0_int32 .or. &
+            body%instructions(2)%result%id /= 1_int32 .or. &
+            body%instructions(3)%result%id /= 2_int32 .or. &
+            body%instructions(4)%result%id /= 2_int32 .or. &
+            body%instructions(5)%result%id /= 2_int32) then
+            call set_message(message, 'frontend-ast-v1 integer variable expression result shape changed')
+            return
+        end if
+        do index = 1, 5
+            if (body%instructions(index)%result%kind /= &
+                instruction_shape_frontend_ast_v1_int_var_assign_result_kind .or. &
+                trim(body%instructions(index)%result%type_name) /= &
+                instruction_shape_frontend_ast_v1_int_var_assign_result_type .or. &
+                trim(body%instructions(index)%source_rule) /= &
+                instruction_shape_frontend_ast_v1_int_var_assign_source_rule) then
+                call set_message(message, &
+                    'frontend-ast-v1 integer variable expression metadata changed')
+                return
+            end if
+        end do
+        valid = .true.
+    end function ffc_validate_frontend_ast_v1_int_var_assignment_shape
 
     logical function ffc_validate_frontend_ast_v1_int_mul_expr_assignment_shape(&
             body, message) result(valid)
@@ -1458,7 +1525,9 @@ contains
             '( binary-expr ( operator + ) ( left 1 ) ( right 2 ) )' .and. &
             trim(assignment%value) /= '( binary-expr ( operator * ) ( left 2 ) ( right 3 ) )' &
             .and. trim(assignment%value) /= '( binary-expr ( operator / ) ( left 6 ) ( right 2 ) )' &
-            .and. trim(assignment%value) /= '( binary-expr ( operator – ) ( left 5 ) ( right 3 ) )') then
+            .and. trim(assignment%value) /= '( binary-expr ( operator – ) ( left 5 ) ( right 3 ) )' &
+            .and. trim(assignment%value) /= &
+            '(assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))') then
             call set_message(message, 'unsupported-frontend-ast-v1-assignment')
             return
         end if
@@ -1554,8 +1623,9 @@ contains
                         if (trim(kind) /= 'binary-expression' .or. &
                             (trim(operator) /= '+' .and. trim(operator) /= '*' .and. &
                             trim(operator) /= '/' .and. trim(operator) /= '–') .or. &
-                            (trim(operator) == '+' .and. (trim(left_operand) /= '1' .or. &
-                            trim(right_operand) /= '2')) .or. &
+                            (trim(operator) == '+' .and. &
+                            ((trim(left_operand) /= '1' .or. trim(right_operand) /= '2') .and. &
+                            (trim(left_operand) /= 'x' .or. trim(right_operand) /= '1'))) .or. &
                             (trim(operator) == '*' .and. (trim(left_operand) /= '2' .or. &
                             trim(right_operand) /= '3')) .or. &
                             (trim(operator) == '/' .and. (trim(left_operand) /= '6' .or. &
@@ -1567,8 +1637,14 @@ contains
                             ok = .false.
                             return
                         end if
-                        value = '( binary-expr ( operator '//trim(operator)//' ) ( left '// &
-                            trim(left_operand)//' ) ( right '//trim(right_operand)//' ) )'
+                        if (trim(operator) == '+' .and. trim(left_operand) == 'x' .and. &
+                            trim(right_operand) == '1') then
+                            value = '(assignment-expression (kind binary-expression) '// &
+                                '(operator +) (left-operand x) (right-operand 1))'
+                        else
+                            value = '( binary-expr ( operator '//trim(operator)//' ) ( left '// &
+                                trim(left_operand)//' ) ( right '//trim(right_operand)//' ) )'
+                        end if
                     end if
                 else
                     ok = read_expression(token, token_count, position, value, message)
