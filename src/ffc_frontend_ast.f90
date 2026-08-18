@@ -260,9 +260,9 @@ contains
         character(len=:), allocatable, intent(out), optional :: message
 
         character(len=frontend_ast_token_length) :: token(frontend_ast_token_capacity)
-        character(len=frontend_ast_expression_length) :: assignment_text(5)
+        character(len=frontend_ast_expression_length) :: assignment_text(6)
         character(len=64) :: count_text
-        type(ffc_frontend_assignment_v1_t) :: assignments(5)
+        type(ffc_frontend_assignment_v1_t) :: assignments(6)
         character(len=frontend_ast_expression_length) :: route_key
         integer :: assignment_count, assignment_index, token_count, position
         integer(int32) :: route
@@ -276,7 +276,7 @@ contains
         if (.not. read_named_atom(token, token_count, position, 'assignment-count', count_text, &
             message)) return
         if (trim(count_text) /= '2' .and. trim(count_text) /= '3' .and. trim(count_text) /= '4' .and. &
-            trim(count_text) /= '5') then
+            trim(count_text) /= '5' .and. trim(count_text) /= '6') then
             call set_message(message, 'unsupported-assignment-sequence')
             return
         end if
@@ -479,6 +479,7 @@ contains
         case (3); sequence_position_name = 'third'
         case (4); sequence_position_name = 'fourth'
         case (5); sequence_position_name = 'fifth'
+        case (6); sequence_position_name = 'sixth'
         case default; sequence_position_name = ''
         end select
     end function sequence_position_name
