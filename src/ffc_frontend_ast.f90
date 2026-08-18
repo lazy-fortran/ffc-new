@@ -10,6 +10,12 @@ module ffc_frontend_ast
         instruction_shape_frontend_ast_v1_integer_program_result_kind, &
         instruction_shape_frontend_ast_v1_integer_program_result_type, &
         instruction_shape_frontend_ast_v1_integer_program_source_rule, &
+        instruction_shape_frontend_ast_v1_int_assign_count, &
+        instruction_shape_frontend_ast_v1_int_assign_opcode_0, &
+        instruction_shape_frontend_ast_v1_int_assign_opcode_1, &
+        instruction_shape_frontend_ast_v1_int_assign_result_kind, &
+        instruction_shape_frontend_ast_v1_int_assign_result_type, &
+        instruction_shape_frontend_ast_v1_int_assign_source_rule, &
         instruction_shape_frontend_ast_v1_logical_program_count, &
         instruction_shape_frontend_ast_v1_logical_program_opcode_0, &
         instruction_shape_frontend_ast_v1_logical_program_opcode_1, &
@@ -65,12 +71,23 @@ module ffc_frontend_ast
         integer(int64) :: end_byte = 0_int64
     end type ffc_frontend_variable_declaration_v1_t
 
+    type, public :: ffc_frontend_assignment_v1_t
+        character(len=128) :: target = ''
+        character(len=128) :: value = ''
+        character(len=256) :: source_file = ''
+        character(len=128) :: source_hash = ''
+        integer(int64) :: start_byte = 0_int64
+        integer(int64) :: end_byte = 0_int64
+    end type ffc_frontend_assignment_v1_t
+
     type, public :: ffc_frontend_ast_v1_t
         type(ffc_program_root_t) :: root
         type(ffc_program_root_t) :: declaration
         type(ffc_frontend_variable_declaration_v1_t) :: variable
+        type(ffc_frontend_assignment_v1_t) :: assignment
         integer(int64) :: declaration_count = 0_int64
         integer(int64) :: variable_count = 0_int64
+        integer(int64) :: assignment_count = 0_int64
     end type ffc_frontend_ast_v1_t
 
     public :: ffc_frontend_ast_v0_from_sx
@@ -82,6 +99,7 @@ module ffc_frontend_ast
     public :: ffc_lower_frontend_ast_v1_from_sx
     public :: ffc_validate_frontend_ast_v1
     public :: ffc_validate_frontend_ast_v1_integer_program_shape
+    public :: ffc_validate_frontend_ast_v1_integer_assignment_program_shape
     public :: ffc_validate_frontend_ast_v1_logical_program_shape
     public :: ffc_validate_frontend_ast_v1_real_program_shape
     public :: ffc_validate_frontend_ast_v1_double_precision_program_shape
@@ -138,6 +156,27 @@ contains
         if (.not. parsed) return
         parsed = parse_variable_declaration_v1(trim(expression), ast%variable, message)
         if (.not. parsed) return
+        if (position < token_count .and. trim(token(position)) /= ')') then
+            parsed = read_named_atom(token, token_count, position, 'assignment-count', count_text, &
+                message)
+            if (.not. parsed) then
+                call set_message(message, 'malformed-frontend-ast-v1-assignment-count')
+                return
+            end if
+            parsed = parse_count(count_text, ast%assignment_count, message)
+            if (.not. parsed) return
+            parsed = read_named_expression(token, token_count, position, 'assignment', expression, &
+                message)
+            if (.not. parsed) then
+                call set_message(message, 'malformed-frontend-ast-v1-assignment-field')
+                return
+            end if
+            parsed = parse_assignment_v1(trim(expression), ast%assignment, message)
+            if (.not. parsed) then
+                call set_message(message, 'malformed-frontend-ast-v1-assignment-record')
+                return
+            end if
+        end if
         parsed = expect_token(token, token_count, position, ')', message)
         if (.not. parsed) then
             call set_message(message, 'malformed-frontend-ast-v1-variable-close')
@@ -174,6 +213,24 @@ contains
             call set_message(message, 'frontend-ast-v1-invalid-provenance')
             return
         end if
+        if (ast%assignment_count < 0_int64 .or. ast%assignment_count > 1_int64) then
+            call set_message(message, 'invalid-frontend-ast-v1-assignment-cardinality')
+            return
+        end if
+        if (ast%assignment_count == 0_int64) then
+            valid = .true.
+            return
+        end if
+        if (.not. ffc_validate_assignment_v1(ast%assignment, message)) return
+        if (trim(ast%assignment%source_file) /= trim(ast%root%source_file) .or. &
+            trim(ast%assignment%source_hash) /= trim(ast%root%source_hash)) then
+            call set_message(message, 'frontend-ast-v1-invalid-provenance')
+            return
+        end if
+        if (trim(ast%variable%type_spec) /= 'integer') then
+            call set_message(message, 'unsupported-frontend-ast-v1-assignment-type')
+            return
+        end if
         valid = .true.
     end function ffc_validate_frontend_ast_v1
 
@@ -196,6 +253,26 @@ contains
         body%instructions(1)%result%type_name = trim(type_name)
         body%instructions(2)%result = body%instructions(1)%result
         if (trim(ast%variable%type_spec) == 'integer') then
+            if (ast%assignment_count == 1_int64) then
+                body%function%instruction_count = &
+                    instruction_shape_frontend_ast_v1_int_assign_count
+                body%instructions(1)%opcode = &
+                    instruction_shape_frontend_ast_v1_int_assign_opcode_0
+                body%instructions(2)%opcode = &
+                    instruction_shape_frontend_ast_v1_int_assign_opcode_1
+                body%instructions(1)%result%kind = &
+                    instruction_shape_frontend_ast_v1_int_assign_result_kind
+                body%instructions(1)%result%type_name = &
+                    instruction_shape_frontend_ast_v1_int_assign_result_type
+                body%instructions(2)%result = body%instructions(1)%result
+                body%instructions(1)%source_rule = &
+                    instruction_shape_frontend_ast_v1_int_assign_source_rule
+                body%instructions(2)%source_rule = &
+                    instruction_shape_frontend_ast_v1_int_assign_source_rule
+                lowered = ffc_validate_frontend_ast_v1_integer_assignment_program_shape(body, &
+                    message)
+                return
+            end if
             body%function%instruction_count = instruction_shape_frontend_ast_v1_integer_program_count
             body%instructions(1)%opcode = instruction_shape_frontend_ast_v1_integer_program_opcode_0
             body%instructions(2)%opcode = instruction_shape_frontend_ast_v1_integer_program_opcode_1
@@ -344,6 +421,50 @@ contains
         end if
         valid = .true.
     end function ffc_validate_frontend_ast_v1_integer_program_shape
+
+    logical function ffc_validate_frontend_ast_v1_integer_assignment_program_shape(body, message) &
+            result(valid)
+        type(mir_function_body_t), intent(in) :: body
+        character(len=:), allocatable, intent(out), optional :: message
+
+        call clear_message(message)
+        valid = .false.
+        if (.not. mir_validate_function_body(body, message)) return
+        if (body%function%instruction_count /= &
+            instruction_shape_frontend_ast_v1_int_assign_count) then
+            call set_message(message, 'frontend-ast-v1 integer assignment instruction count changed')
+            return
+        end if
+        if (body%instructions(1)%opcode /= &
+            instruction_shape_frontend_ast_v1_int_assign_opcode_0 .or. &
+            body%instructions(2)%opcode /= &
+            instruction_shape_frontend_ast_v1_int_assign_opcode_1) then
+            call set_message(message, 'frontend-ast-v1 integer assignment opcode shape changed')
+            return
+        end if
+        if (body%instructions(1)%result%kind /= &
+            instruction_shape_frontend_ast_v1_int_assign_result_kind .or. &
+            trim(body%instructions(1)%result%type_name) /= &
+            instruction_shape_frontend_ast_v1_int_assign_result_type) then
+            call set_message(message, 'frontend-ast-v1 integer assignment result shape changed')
+            return
+        end if
+        if (body%instructions(2)%result%kind /= &
+            instruction_shape_frontend_ast_v1_int_assign_result_kind .or. &
+            trim(body%instructions(2)%result%type_name) /= &
+            instruction_shape_frontend_ast_v1_int_assign_result_type) then
+            call set_message(message, 'frontend-ast-v1 integer assignment return shape changed')
+            return
+        end if
+        if (trim(body%instructions(1)%source_rule) /= &
+            instruction_shape_frontend_ast_v1_int_assign_source_rule .or. &
+            trim(body%instructions(2)%source_rule) /= &
+            instruction_shape_frontend_ast_v1_int_assign_source_rule) then
+            call set_message(message, 'frontend-ast-v1 integer assignment source rule changed')
+            return
+        end if
+        valid = .true.
+    end function ffc_validate_frontend_ast_v1_integer_assignment_program_shape
 
     logical function ffc_validate_frontend_ast_v1_logical_program_shape(body, message) &
             result(valid)
@@ -781,6 +902,46 @@ contains
         parsed = ffc_validate_variable_declaration_v1(variable, message)
     end function parse_variable_declaration_v1
 
+    logical function parse_assignment_v1(serialized, assignment, message) result(parsed)
+        character(len=*), intent(in) :: serialized
+        type(ffc_frontend_assignment_v1_t), intent(out) :: assignment
+        character(len=:), allocatable, intent(out), optional :: message
+
+        character(len=frontend_ast_token_length) :: token(frontend_ast_token_capacity)
+        character(len=frontend_ast_expression_length) :: expression
+        character(len=128) :: target, value
+        integer :: token_count, position
+
+        assignment = ffc_frontend_assignment_v1_t()
+        call clear_message(message)
+        parsed = tokenize_frontend_ast_sx(serialized, token, token_count, message)
+        if (.not. parsed) return
+        position = 1
+        parsed = expect_token(token, token_count, position, '(', message)
+        if (.not. parsed) return
+        parsed = expect_token(token, token_count, position, 'assignment', message)
+        if (.not. parsed) return
+        parsed = read_named_atom(token, token_count, position, 'target', target, message)
+        if (.not. parsed) return
+        parsed = read_named_atom(token, token_count, position, 'value', value, message)
+        if (.not. parsed) return
+        parsed = read_named_expression(token, token_count, position, 'span', expression, message)
+        if (.not. parsed) return
+        parsed = parse_source_span_v1(trim(expression), assignment%source_file, &
+            assignment%start_byte, assignment%end_byte, assignment%source_hash, message)
+        if (.not. parsed) return
+        parsed = expect_token(token, token_count, position, ')', message)
+        if (.not. parsed) return
+        if (position <= token_count) then
+            call set_message(message, 'malformed-frontend-ast-v1-assignment')
+            parsed = .false.
+            return
+        end if
+        assignment%target = target
+        assignment%value = value
+        parsed = ffc_validate_assignment_v1(assignment, message)
+    end function parse_assignment_v1
+
     logical function parse_source_span_v1(serialized, source_file, start_byte, end_byte, &
             source_hash, message) result(parsed)
         character(len=*), intent(in) :: serialized
@@ -849,6 +1010,27 @@ contains
         end if
         valid = .true.
     end function ffc_validate_variable_declaration_v1
+
+    logical function ffc_validate_assignment_v1(assignment, message) result(valid)
+        type(ffc_frontend_assignment_v1_t), intent(in) :: assignment
+        character(len=:), allocatable, intent(out), optional :: message
+
+        call clear_message(message)
+        valid = .false.
+        if (trim(assignment%target) /= 'x' .or. trim(assignment%value) /= '1') then
+            call set_message(message, 'unsupported-frontend-ast-v1-assignment')
+            return
+        end if
+        if (len_trim(assignment%source_file) == 0 .or. len_trim(assignment%source_hash) == 0) then
+            call set_message(message, 'invalid-frontend-ast-v1-assignment')
+            return
+        end if
+        if (assignment%start_byte < 0_int64 .or. assignment%end_byte < assignment%start_byte) then
+            call set_message(message, 'invalid-frontend-ast-v1-assignment-span')
+            return
+        end if
+        valid = .true.
+    end function ffc_validate_assignment_v1
 
     logical function append_token(value, token, token_count, message) result(ok)
         character(len=*), intent(in) :: value

@@ -130,6 +130,10 @@ name = "frontend_ast_v1_integer_policy"
 source-dir = "test"
 
 [[test]]
+name = "ast_int_assign"
+source-dir = "test"
+
+[[test]]
 name = "frontend_ast_v1_real_policy"
 source-dir = "test"
 
