@@ -52,6 +52,7 @@ program test_frontend_ast_v1_assignment_sequence
     call assert_rejected(missing_third_sx(), 'missing-third sequence was accepted')
     call assert_rejected(wrong_operator_sx(), 'wrong-operator sequence was accepted')
     call assert_count4()
+    call assert_count5()
     write (*, '(a)') 'frontend AST v1 assignment sequence behavioral checks: ok'
 
 contains
@@ -161,6 +162,65 @@ contains
         call assert_storage4(14)
     end subroutine assert_count4
 
+    subroutine assert_count5()
+        integer(int32) :: opcodes(19)
+        integer(int32) :: literals(19)
+        integer(int32) :: result_ids(19)
+        integer :: index
+
+        opcodes = [opcode_const, opcode_store, opcode_load, opcode_const, opcode_add, opcode_store, &
+            opcode_load, opcode_const, opcode_add, opcode_store, opcode_load, opcode_const, &
+            opcode_add, opcode_store, opcode_load, opcode_const, opcode_add, opcode_store, opcode_return]
+        literals = [7_int32, 0_int32, 0_int32, 1_int32, 0_int32, 0_int32, 0_int32, 1_int32, &
+            0_int32, 0_int32, 0_int32, 1_int32, 0_int32, 0_int32, 0_int32, 1_int32, 0_int32, &
+            0_int32, 0_int32]
+        result_ids = [0_int32, 1_int32, 2_int32, 3_int32, 4_int32, 4_int32, 6_int32, 7_int32, &
+            8_int32, 8_int32, 10_int32, 11_int32, 12_int32, 12_int32, 14_int32, 15_int32, &
+            16_int32, 16_int32, 16_int32]
+        if (.not. ffc_lower_frontend_ast_v1_assignment_sequence_from_sx(sequence5_sx(), body, message)) then
+            error stop 'five-assignment sequence was rejected'
+        end if
+        call assert_true(body%function%instruction_count == 19, 'five-assignment instruction count changed')
+        do index = 1, 19
+            call assert_true(body%instructions(index)%opcode == opcodes(index), &
+                'five-assignment opcode order changed')
+            call assert_true(body%instructions(index)%literal_value == literals(index), &
+                'five-assignment literal shape changed')
+            call assert_true(body%instructions(index)%result%id == result_ids(index), &
+                'five-assignment result IDs changed')
+            call assert_equal(body%instructions(index)%source_rule, 'frontend-ast-v1/storage-sequence-5', &
+                'five-assignment source rule changed')
+        end do
+        do index = 2, 18
+            if (mod(index - 2, 4) <= 1) call assert_storage5(index)
+        end do
+        call assert_no_storage5(1)
+        call assert_no_storage5(4)
+        call assert_no_storage5(5)
+        call assert_no_storage5(8)
+        call assert_no_storage5(9)
+        call assert_no_storage5(12)
+        call assert_no_storage5(13)
+        call assert_no_storage5(16)
+        call assert_no_storage5(17)
+        call assert_no_storage5(19)
+        call assert_rejected(sequence5_wrong_count_sx(), 'wrong count-five sequence was accepted')
+    end subroutine assert_count5
+
+    subroutine assert_storage5(index)
+        integer, intent(in) :: index
+
+        call assert_true(allocated(body%instructions(index)%storage_key), 'five-assignment storage key missing')
+        call assert_equal(body%instructions(index)%storage_key, 'x', 'five-assignment storage key changed')
+    end subroutine assert_storage5
+
+    subroutine assert_no_storage5(index)
+        integer, intent(in) :: index
+
+        call assert_true(.not. allocated(body%instructions(index)%storage_key), &
+            'five-assignment storage key was unexpected')
+    end subroutine assert_no_storage5
+
     subroutine assert_storage4(index)
         integer, intent(in) :: index
 
@@ -189,6 +249,38 @@ contains
             '(right-operand 1))) (span (source-span (file sequence.f90) (start-byte 70) '// &
             '(end-byte 80) (source-hash l3-raw-program-four-assignment-v1))))))'
     end function sequence4_sx
+
+    function sequence5_sx() result(value)
+        character(len=4096) :: value
+
+        value = '(assignment-sequence (assignment-count 5) '// &
+            '(assignment (assignment-stmt (variable x) (expression '// &
+            '(assignment-expression (kind integer-literal) (operator ) (left-operand 7) '// &
+            '(right-operand ))) (span (source-span (file sequence.f90) (start-byte 41) '// &
+            '(end-byte 47) (source-hash l3-raw-program-five-assignment-v1))))) '// &
+            '(assignment (assignment-stmt (variable x) (expression '// &
+            '(assignment-expression (kind binary-expression) (operator +) (left-operand x) '// &
+            '(right-operand 1))) (span (source-span (file sequence.f90) (start-byte 48) '// &
+            '(end-byte 58) (source-hash l3-raw-program-five-assignment-v1))))) '// &
+            '(assignment (assignment-stmt (variable x) (expression '// &
+            '(assignment-expression (kind binary-expression) (operator +) (left-operand x) '// &
+            '(right-operand 1))) (span (source-span (file sequence.f90) (start-byte 59) '// &
+            '(end-byte 69) (source-hash l3-raw-program-five-assignment-v1))))) '// &
+            '(assignment (assignment-stmt (variable x) (expression '// &
+            '(assignment-expression (kind binary-expression) (operator +) (left-operand x) '// &
+            '(right-operand 1))) (span (source-span (file sequence.f90) (start-byte 70) '// &
+            '(end-byte 80) (source-hash l3-raw-program-five-assignment-v1))))) '// &
+            '(assignment (assignment-stmt (variable x) (expression '// &
+            '(assignment-expression (kind binary-expression) (operator +) (left-operand x) '// &
+            '(right-operand 1))) (span (source-span (file sequence.f90) (start-byte 81) '// &
+            '(end-byte 91) (source-hash l3-raw-program-five-assignment-v1)))))'
+    end function sequence5_sx
+
+    function sequence5_wrong_count_sx() result(value)
+        character(len=4096) :: value
+
+        value = replace_text(sequence5_sx(), '(assignment-count 5)', '(assignment-count 4)')
+    end function sequence5_wrong_count_sx
 
     function replace_text(input, old, new) result(output)
         character(len=*), intent(in) :: input, old, new
