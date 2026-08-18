@@ -40,6 +40,7 @@ module ffc_mir_metadata
     character(len=30), parameter, public :: source_rule_frontend_ast_v2_execution_part = 'frontend-ast-v2/execution-part'
     character(len=32), parameter, public :: source_rule_frontend_ast_v2_execution_part_5 = 'frontend-ast-v2/execution-part-5'
     character(len=32), parameter, public :: source_rule_frontend_ast_v2_execution_part_6 = 'frontend-ast-v2/execution-part-6'
+    character(len=25), parameter, public :: source_rule_frontend_ast_v2_stop_stmt = 'frontend-ast-v2/stop-stmt'
 
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_integer_program_count = 2_int32
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_integer_program_opcode_0 = opcode_add
@@ -429,6 +430,13 @@ module ffc_mir_metadata
     character(len=3), parameter, public :: instruction_shape_frontend_ast_v2_int_exec_6_result_type = 'i32'
     character(len=32), parameter, public :: instruction_shape_frontend_ast_v2_int_exec_6_source_rule = 'frontend-ast-v2/execution-part-6'
 
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_stop_7_count = 2_int32
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_stop_7_opcode_0 = opcode_const
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_stop_7_opcode_1 = opcode_return
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_stop_7_result_kind = value_kind_integer
+    character(len=3), parameter, public :: instruction_shape_frontend_ast_v2_stop_7_result_type = 'i32'
+    character(len=25), parameter, public :: instruction_shape_frontend_ast_v2_stop_7_source_rule = 'frontend-ast-v2/stop-stmt'
+
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_logical_program_count = 2_int32
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_logical_program_opcode_0 = opcode_add
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_logical_program_opcode_1 = opcode_return
@@ -598,6 +606,7 @@ contains
         case (source_rule_frontend_ast_v2_execution_part); mir_source_rule_name = 'frontend_ast_v2_execution_part'
         case (source_rule_frontend_ast_v2_execution_part_5); mir_source_rule_name = 'frontend_ast_v2_execution_part_5'
         case (source_rule_frontend_ast_v2_execution_part_6); mir_source_rule_name = 'frontend_ast_v2_execution_part_6'
+        case (source_rule_frontend_ast_v2_stop_stmt); mir_source_rule_name = 'frontend_ast_v2_stop_stmt'
         case default; mir_source_rule_name = ''
         end select
     end function mir_source_rule_name
@@ -623,6 +632,7 @@ contains
         case ('frontend_ast_v2_execution_part'); mir_source_rule_value = source_rule_frontend_ast_v2_execution_part
         case ('frontend_ast_v2_execution_part_5'); mir_source_rule_value = source_rule_frontend_ast_v2_execution_part_5
         case ('frontend_ast_v2_execution_part_6'); mir_source_rule_value = source_rule_frontend_ast_v2_execution_part_6
+        case ('frontend_ast_v2_stop_stmt'); mir_source_rule_value = source_rule_frontend_ast_v2_stop_stmt
         case default; mir_source_rule_value = ''
         end select
     end function mir_source_rule_value
@@ -648,6 +658,7 @@ contains
         case ('(assignment-sequence (assignment-count 9) (first x ( integer-literal 7 )) (second x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (third x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (fourth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (fifth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (sixth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (seventh x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (eighth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (ninth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))))'); mir_frontend_ast_v1_integer_expression_route = 15_int32
         case ('(assignment-sequence (assignment-count 10) (first x ( integer-literal 7 )) (second x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (third x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (fourth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (fifth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (sixth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (seventh x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (eighth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (ninth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (tenth x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))))'); mir_frontend_ast_v1_integer_expression_route = 16_int32
         case ('(execution-part (assignment-sequence (assignment-count 6) (assignment x ( integer-literal 7 )) (assignment x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (assignment x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (assignment x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (assignment x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (assignment x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1)))) )'); mir_frontend_ast_v1_integer_expression_route = 17_int32
+        case ('(execution-part ( stop-stmt ( stop-code 7 ) ))'); mir_frontend_ast_v1_integer_expression_route = 18_int32
         case default; mir_frontend_ast_v1_integer_expression_route = 0_int32
         end select
     end function mir_frontend_ast_v1_integer_expression_route
@@ -673,6 +684,7 @@ contains
         case (15_int32); mir_frontend_ast_v1_integer_expression_instruction_count = instruction_shape_frontend_ast_v1_int_seq_9_count
         case (16_int32); mir_frontend_ast_v1_integer_expression_instruction_count = instruction_shape_frontend_ast_v1_int_seq_10_count
         case (17_int32); mir_frontend_ast_v1_integer_expression_instruction_count = instruction_shape_frontend_ast_v2_int_exec_6_count
+        case (18_int32); mir_frontend_ast_v1_integer_expression_instruction_count = instruction_shape_frontend_ast_v2_stop_7_count
         case default; mir_frontend_ast_v1_integer_expression_instruction_count = 0_int32
         end select
     end function mir_frontend_ast_v1_integer_expression_instruction_count
@@ -1014,6 +1026,11 @@ contains
             case (21_int32); mir_frontend_ast_v1_integer_expression_opcode = instruction_shape_frontend_ast_v2_int_exec_6_opcode_21
             case (22_int32); mir_frontend_ast_v1_integer_expression_opcode = instruction_shape_frontend_ast_v2_int_exec_6_opcode_22
             end select
+        case (18_int32)
+            select case (index)
+            case (0_int32); mir_frontend_ast_v1_integer_expression_opcode = instruction_shape_frontend_ast_v2_stop_7_opcode_0
+            case (1_int32); mir_frontend_ast_v1_integer_expression_opcode = instruction_shape_frontend_ast_v2_stop_7_opcode_1
+            end select
         end select
     end function mir_frontend_ast_v1_integer_expression_opcode
 
@@ -1039,6 +1056,7 @@ contains
         case (15_int32); mir_frontend_ast_v1_integer_expression_result_kind = instruction_shape_frontend_ast_v1_int_seq_9_result_kind
         case (16_int32); mir_frontend_ast_v1_integer_expression_result_kind = instruction_shape_frontend_ast_v1_int_seq_10_result_kind
         case (17_int32); mir_frontend_ast_v1_integer_expression_result_kind = instruction_shape_frontend_ast_v2_int_exec_6_result_kind
+        case (18_int32); mir_frontend_ast_v1_integer_expression_result_kind = instruction_shape_frontend_ast_v2_stop_7_result_kind
         end select
     end function mir_frontend_ast_v1_integer_expression_result_kind
 
@@ -1064,6 +1082,7 @@ contains
         case (15_int32); mir_frontend_ast_v1_integer_expression_result_type = instruction_shape_frontend_ast_v1_int_seq_9_result_type
         case (16_int32); mir_frontend_ast_v1_integer_expression_result_type = instruction_shape_frontend_ast_v1_int_seq_10_result_type
         case (17_int32); mir_frontend_ast_v1_integer_expression_result_type = instruction_shape_frontend_ast_v2_int_exec_6_result_type
+        case (18_int32); mir_frontend_ast_v1_integer_expression_result_type = instruction_shape_frontend_ast_v2_stop_7_result_type
         end select
     end function mir_frontend_ast_v1_integer_expression_result_type
 
@@ -1089,6 +1108,7 @@ contains
         case (15_int32); mir_frontend_ast_v1_integer_expression_source_rule = instruction_shape_frontend_ast_v1_int_seq_9_source_rule
         case (16_int32); mir_frontend_ast_v1_integer_expression_source_rule = instruction_shape_frontend_ast_v1_int_seq_10_source_rule
         case (17_int32); mir_frontend_ast_v1_integer_expression_source_rule = instruction_shape_frontend_ast_v2_int_exec_6_source_rule
+        case (18_int32); mir_frontend_ast_v1_integer_expression_source_rule = instruction_shape_frontend_ast_v2_stop_7_source_rule
         end select
     end function mir_frontend_ast_v1_integer_expression_source_rule
 
@@ -1223,6 +1243,10 @@ contains
             case (3_int32); mir_frontend_ast_v1_integer_expression_literal_value = 1_int32
             case (4_int32); mir_frontend_ast_v1_integer_expression_literal_value = 1_int32
             case (5_int32); mir_frontend_ast_v1_integer_expression_literal_value = 1_int32
+            end select
+        case (18_int32)
+            select case (index)
+            case (0_int32); mir_frontend_ast_v1_integer_expression_literal_value = 7_int32
             end select
         end select
     end function mir_frontend_ast_v1_integer_expression_literal_value
@@ -1564,6 +1588,11 @@ contains
             case (21_int32); mir_frontend_ast_v1_integer_expression_result_id = 20_int32
             case (22_int32); mir_frontend_ast_v1_integer_expression_result_id = 20_int32
             end select
+        case (18_int32)
+            select case (index)
+            case (0_int32); mir_frontend_ast_v1_integer_expression_result_id = 0_int32
+            case (1_int32); mir_frontend_ast_v1_integer_expression_result_id = 0_int32
+            end select
         end select
     end function mir_frontend_ast_v1_integer_expression_result_id
 
@@ -1883,6 +1912,9 @@ contains
             case (20_int32); mir_frontend_ast_v1_integer_expression_storage_key = ''
             case (21_int32); mir_frontend_ast_v1_integer_expression_storage_key = 'x'
             case (22_int32); mir_frontend_ast_v1_integer_expression_storage_key = ''
+            end select
+        case (18_int32)
+            select case (index)
             end select
         end select
     end function mir_frontend_ast_v1_integer_expression_storage_key

@@ -68,6 +68,12 @@ value = "frontend-ast-v2/execution-part-5"
 name = "frontend_ast_v2_execution_part_6"
 value = "frontend-ast-v2/execution-part-6"
 
+# J3/24-007, R1162 and R1164, printed page 214.  This slice accepts only
+# scalar integer stop-code 7 in the main program.
+[[source_rules]]
+name = "frontend_ast_v2_stop_stmt"
+value = "frontend-ast-v2/stop-stmt"
+
 [[value_kinds]]
 name = "integer"
 value = 1
@@ -307,6 +313,13 @@ result_type = "i32"
 source_rule = "frontend-ast-v2/execution-part-6"
 
 [[instruction_shapes]]
+name = "frontend_ast_v2_stop_7"
+opcodes = ["const", "return"]
+result_kind = "integer"
+result_type = "i32"
+source_rule = "frontend-ast-v2/stop-stmt"
+
+[[instruction_shapes]]
 name = "frontend_ast_v1_logical_program"
 opcodes = ["add", "return"]
 result_kind = "logical"
@@ -472,3 +485,10 @@ shape = "frontend_ast_v2_int_exec_6"
 literal_values = [7, 1, 1, 1, 1, 1]
 result_ids = [0, 1, 2, 3, 4, 4, 6, 7, 8, 8, 10, 11, 12, 12, 14, 15, 16, 16, 18, 19, 20, 20, 20]
 storage_keys = ["", "x", "x", "", "", "x", "x", "", "", "x", "x", "", "", "x", "x", "", "", "x", "x", "", "", "x", ""]
+
+[[integer_expression_routes]]
+name = "program_unit_v2_stop_7"
+expression = "(execution-part ( stop-stmt ( stop-code 7 ) ))"
+shape = "frontend_ast_v2_stop_7"
+literal_values = [7]
+result_ids = [0, 0]

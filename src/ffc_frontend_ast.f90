@@ -92,6 +92,12 @@ module ffc_frontend_ast
         instruction_shape_frontend_ast_v1_character_program_result_kind, &
         instruction_shape_frontend_ast_v1_character_program_result_type, &
         instruction_shape_frontend_ast_v1_character_program_source_rule, &
+        instruction_shape_frontend_ast_v2_stop_7_count, &
+        instruction_shape_frontend_ast_v2_stop_7_opcode_0, &
+        instruction_shape_frontend_ast_v2_stop_7_opcode_1, &
+        instruction_shape_frontend_ast_v2_stop_7_result_kind, &
+        instruction_shape_frontend_ast_v2_stop_7_result_type, &
+        instruction_shape_frontend_ast_v2_stop_7_source_rule, &
         mir_frontend_ast_v1_integer_expression_route, &
         mir_frontend_ast_v1_integer_expression_instruction_count, &
         mir_frontend_ast_v1_integer_expression_opcode, &
@@ -168,6 +174,7 @@ module ffc_frontend_ast
     public :: ffc_validate_frontend_ast_v1_double_precision_program_shape
     public :: ffc_validate_frontend_ast_v1_complex_program_shape
     public :: ffc_validate_frontend_ast_v1_character_program_shape
+    public :: ffc_validate_frontend_ast_v2_stop_7_shape
 
 contains
 
@@ -336,6 +343,42 @@ contains
         if (.not. read_named_atom(token, token_count, position, 'declaration-count', count_text, &
             message)) return
         if (.not. parse_count(count_text, declaration_count, message)) return
+        if (declaration_count == 0_int64) then
+            if (.not. expect_token(token, token_count, position, '(', message)) return
+            if (.not. expect_token(token, token_count, position, 'declaration', message)) return
+            if (.not. expect_token(token, token_count, position, ')', message)) return
+            if (.not. read_named_atom(token, token_count, position, 'variable-count', count_text, &
+                message)) return
+            if (.not. parse_count(count_text, variable_count, message)) return
+            if (variable_count /= 0_int64) then
+                call set_message(message, 'invalid-frontend-ast-v2-stop-variable-count')
+                return
+            end if
+            if (.not. expect_token(token, token_count, position, '(', message)) return
+            if (.not. expect_token(token, token_count, position, 'variable', message)) return
+            if (.not. expect_token(token, token_count, position, ')', message)) return
+            if (.not. read_named_expression(token, token_count, position, 'execution-part', &
+                expression, message)) return
+            route = frontend_ast_v2_stop_route(expression)
+            if (route /= 18_int32) then
+                call set_message(message, 'unsupported-frontend-ast-v2-stop-stmt')
+                return
+            end if
+            if (.not. expect_token(token, token_count, position, ')', message)) return
+            if (position <= token_count) then
+                call set_message(message, 'malformed-frontend-ast-v2')
+                return
+            end if
+            if (trim(root%name) /= 'p') then
+                call set_message(message, 'unsupported-frontend-ast-v2-stop-stmt')
+                return
+            end if
+            call mir_make_function_witness(body)
+            body%function%name = trim(root%name)
+            call emit_frontend_ast_v1_integer_expression(body, route)
+            lowered = ffc_validate_frontend_ast_v2_stop_7_shape(body, message)
+            return
+        end if
         if (declaration_count /= 1_int64) then
             call set_message(message, 'invalid-frontend-ast-v2-declaration-count')
             return
@@ -355,11 +398,33 @@ contains
         if (.not. parse_variable_declaration_v1(trim(expression), variable, message)) return
         if (.not. read_named_expression(token, token_count, position, 'execution-part', expression, &
             message)) return
-        if (.not. parse_v2_assignment_sequence(trim(expression), assignments, assignment_count, &
-            message)) return
+        route = mir_frontend_ast_v1_integer_expression_route(&
+            '(execution-part '//trim(expression)//')')
+        if (route /= 18_int32) then
+            if (.not. parse_v2_assignment_sequence(trim(expression), assignments, assignment_count, &
+                message)) return
+        end if
         if (.not. expect_token(token, token_count, position, ')', message)) return
         if (position <= token_count) then
             call set_message(message, 'malformed-frontend-ast-v2')
+            return
+        end if
+        if (route == 18_int32) then
+            if (trim(root%name) /= 'p' .or. trim(declaration%name) /= 'p') then
+                call set_message(message, 'unsupported-frontend-ast-v2-stop-stmt')
+                return
+            end if
+            if (trim(root%source_file) /= trim(declaration%source_file) .or. &
+                trim(root%source_hash) /= trim(declaration%source_hash) .or. &
+                trim(root%source_file) /= trim(variable%source_file) .or. &
+                trim(root%source_hash) /= trim(variable%source_hash)) then
+                call set_message(message, 'frontend-ast-v2-invalid-provenance')
+                return
+            end if
+            call mir_make_function_witness(body)
+            body%function%name = trim(root%name)
+            call emit_frontend_ast_v1_integer_expression(body, route)
+            lowered = ffc_validate_frontend_ast_v2_stop_7_shape(body, message)
             return
         end if
         if (trim(root%name) /= 'main' .or. trim(declaration%name) /= 'main' .or. &
@@ -1438,6 +1503,61 @@ contains
         end if
         valid = .true.
     end function ffc_validate_frontend_ast_v1_character_program_shape
+
+    logical function ffc_validate_frontend_ast_v2_stop_7_shape(body, message) &
+            result(valid)
+        type(mir_function_body_t), intent(in) :: body
+        character(len=:), allocatable, intent(out), optional :: message
+
+        call clear_message(message)
+        valid = .false.
+        if (.not. mir_validate_function_body(body, message)) return
+        if (body%function%instruction_count /= instruction_shape_frontend_ast_v2_stop_7_count) then
+            call set_message(message, 'frontend-ast-v2 stop-7 instruction count changed')
+            return
+        end if
+        if (body%instructions(1)%opcode /= instruction_shape_frontend_ast_v2_stop_7_opcode_0 .or. &
+            body%instructions(2)%opcode /= instruction_shape_frontend_ast_v2_stop_7_opcode_1) then
+            call set_message(message, 'frontend-ast-v2 stop-7 opcode shape changed')
+            return
+        end if
+        if (body%instructions(1)%literal_value /= 7_int32 .or. &
+            body%instructions(1)%result%id /= 0_int32 .or. &
+            body%instructions(2)%result%id /= 0_int32 .or. &
+            body%instructions(1)%result%kind /= instruction_shape_frontend_ast_v2_stop_7_result_kind .or. &
+            trim(body%instructions(1)%result%type_name) /= &
+                instruction_shape_frontend_ast_v2_stop_7_result_type .or. &
+            body%instructions(2)%result%kind /= instruction_shape_frontend_ast_v2_stop_7_result_kind .or. &
+            trim(body%instructions(2)%result%type_name) /= &
+                instruction_shape_frontend_ast_v2_stop_7_result_type) then
+            call set_message(message, 'frontend-ast-v2 stop-7 typed result shape changed')
+            return
+        end if
+        if (trim(body%instructions(1)%source_rule) /= &
+            instruction_shape_frontend_ast_v2_stop_7_source_rule .or. &
+            trim(body%instructions(2)%source_rule) /= &
+            instruction_shape_frontend_ast_v2_stop_7_source_rule) then
+            call set_message(message, 'frontend-ast-v2 stop-7 source rule changed')
+            return
+        end if
+        valid = .true.
+    end function ffc_validate_frontend_ast_v2_stop_7_shape
+
+    integer(int32) function frontend_ast_v2_stop_route(expression) result(route)
+        character(len=*), intent(in) :: expression
+        character(len=:), allocatable :: canonical
+
+        canonical = trim(expression)
+        route = mir_frontend_ast_v1_integer_expression_route(&
+            '(execution-part '//canonical//')')
+        if (route /= 0_int32) return
+        if (index(canonical, '( stop-stmt ') /= 1) return
+        if (index(canonical, '( code 7 )') == 0) return
+        if (index(canonical, '( source-rule R1162 )') == 0) return
+        if (index(canonical, '( code-rule R1164 )') == 0) return
+        if (index(canonical, '( quiet ') /= 0) return
+        route = 18_int32
+    end function frontend_ast_v2_stop_route
 
     logical function ffc_lower_frontend_ast_v1_from_sx(serialized, body, message) result(lowered)
         character(len=*), intent(in) :: serialized

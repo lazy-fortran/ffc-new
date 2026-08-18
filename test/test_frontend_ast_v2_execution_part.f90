@@ -1,6 +1,7 @@
 program test_frontend_ast_v2_execution_part
     use, intrinsic :: iso_fortran_env, only: int32
-    use ffc_frontend_ast, only: ffc_lower_frontend_ast_v2_from_sx
+    use ffc_frontend_ast, only: ffc_lower_frontend_ast_v2_from_sx, &
+        ffc_validate_frontend_ast_v2_stop_7_shape
     use ffc_mir, only: mir_function_body_t, opcode_add, opcode_const, opcode_load, &
         opcode_return, opcode_store, mir_validate_function_body
     implicit none
@@ -105,6 +106,19 @@ program test_frontend_ast_v2_execution_part
         '(type-spec real)'), 'wrong type was accepted')
     call assert_rejected(replace_text(envelope_sx(), '(left-operand x) (right-operand 1)', &
         '(left-operand 1) (right-operand x)'), 'wrong execution order was accepted')
+    if (.not. ffc_lower_frontend_ast_v2_from_sx(stop_envelope_sx(), body, message)) then
+        if (allocated(message)) write (*, '(a)') trim(message)
+        error stop 'exact program-unit-v2 STOP 7 envelope was rejected'
+    end if
+    call assert_true(ffc_validate_frontend_ast_v2_stop_7_shape(body, message), &
+        'STOP 7 MIR shape was rejected')
+    call assert_true(body%instructions(1)%literal_value == 7, 'STOP 7 literal changed')
+    call assert_equal(body%instructions(1)%source_rule, 'frontend-ast-v2/stop-stmt', &
+        'STOP 7 source rule changed')
+    call assert_equal(body%instructions(2)%source_rule, 'frontend-ast-v2/stop-stmt', &
+        'STOP 7 terminal source rule changed')
+    call assert_rejected(replace_text(stop_envelope_sx(), '(code 7)', '(code 8)'), &
+        'mutated STOP code was accepted')
     write (*, '(a)') 'frontend AST v2 execution-part behavioral checks: ok'
 
 contains
@@ -140,6 +154,17 @@ contains
             '(span (source-span (file main.f90) (start-byte 36) (end-byte 46) '// &
             '(source-hash l3-raw-program-two-assignment-v1))))))))'
     end function envelope_sx
+
+    function stop_envelope_sx() result(value)
+        character(len=8192) :: value
+
+        value = '(program-unit-v2 (root (program-root (name p) (span (source-span '// &
+            '(file main.f90) (start-byte 0) (end-byte 40) (source-hash v2-test))))) '// &
+            '(declaration-count 0) (declaration) (variable-count 0) (variable) '// &
+            '(execution-part (stop-stmt (code 7) (span (source-span (file main.f90) '// &
+            '(start-byte 28) (end-byte 34) (source-hash stop-test))) '// &
+            '(source-rule R1162) (code-rule R1164))))'
+    end function stop_envelope_sx
 
     function envelope_sx_five() result(value)
         character(len=8192) :: value
