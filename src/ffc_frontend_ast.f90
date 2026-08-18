@@ -3,7 +3,7 @@ module ffc_frontend_ast
     use ffc_lowering, only: ffc_lower_program_root, ffc_program_declaration_from_sx, &
         ffc_program_root_from_sx, ffc_program_root_t, ffc_validate_program_root
     use ffc_mir, only: mir_function_body_t, mir_make_function_witness, opcode_const, &
-        opcode_load, opcode_output, opcode_return, opcode_store, mir_type_spec_name, &
+        opcode_load, opcode_output, opcode_pow, opcode_return, opcode_store, mir_type_spec_name, &
         mir_type_spec_value_kind, mir_validate_function_body
     use ffc_mir_metadata, only: instruction_shape_frontend_ast_v1_integer_program_count, &
         instruction_shape_frontend_ast_v1_integer_program_opcode_0, &
@@ -218,6 +218,10 @@ module ffc_frontend_ast
         instruction_shape_v2_pow_print_ten_items_result_kind, &
         instruction_shape_v2_pow_print_ten_items_result_type, &
         instruction_shape_v2_pow_print_ten_items_source_rule, &
+        instruction_shape_v2_pow_print_11_20_count, &
+        instruction_shape_v2_pow_print_11_20_result_kind, &
+        instruction_shape_v2_pow_print_11_20_result_type, &
+        instruction_shape_v2_pow_print_11_20_source_rule, &
         instruction_shape_frontend_ast_v1_int_assign_count, &
         instruction_shape_frontend_ast_v1_int_assign_opcode_0, &
         instruction_shape_frontend_ast_v1_int_assign_opcode_1, &
@@ -901,6 +905,17 @@ contains
                 return
             end if
             if (index(print_statement, '( output-count ') /= 0) then
+                do assignment_index = 11, 20
+                    if (frontend_ast_v2_print_variable_item_count_match(print_statement, assignment_index)) then
+                        call emit_frontend_ast_v2_print_variable_eleven_to_twenty_items(body, assignment_index)
+                        lowered = ffc_validate_frontend_ast_v2_print_variable_items_shape(body, assignment_index, &
+                            int(2 * assignment_index + 7, int32), &
+                            instruction_shape_v2_pow_print_11_20_result_kind, &
+                            instruction_shape_v2_pow_print_11_20_result_type, &
+                            instruction_shape_v2_pow_print_11_20_source_rule, message)
+                        return
+                    end if
+                end do
                 if (frontend_ast_v2_print_variable_item_count_match(print_statement, 10)) then
                     call emit_frontend_ast_v2_print_variable_ten_items(body)
                     lowered = ffc_validate_frontend_ast_v2_print_variable_ten_items_shape(body, message)
@@ -1237,6 +1252,30 @@ contains
                 index(canonical, '( output-rule-'//trim(item_text)//' R901 )') /= 0
         end do
     end function frontend_ast_v2_print_variable_item_count_match
+
+    subroutine emit_frontend_ast_v2_print_variable_eleven_to_twenty_items(body, item_count)
+        type(mir_function_body_t), intent(inout) :: body
+        integer, intent(in) :: item_count
+        integer(int32) :: opcodes(2 * item_count + 7)
+        integer :: output_index
+
+        opcodes = opcode_load
+        opcodes(1) = opcode_const
+        opcodes(2) = opcode_store
+        opcodes(3) = opcode_load
+        opcodes(4) = opcode_const
+        opcodes(5) = opcode_pow
+        opcodes(6) = opcode_store
+        do output_index = 1, item_count
+            opcodes(7 + 2 * (output_index - 1)) = opcode_load
+            opcodes(8 + 2 * (output_index - 1)) = opcode_output
+        end do
+        opcodes(2 * item_count + 7) = opcode_return
+        call emit_frontend_ast_v2_print_variable_items(body, item_count, 3, 2, int(size(opcodes), int32), opcodes, &
+            instruction_shape_v2_pow_print_11_20_result_kind, &
+            instruction_shape_v2_pow_print_11_20_result_type, &
+            instruction_shape_v2_pow_print_11_20_source_rule)
+    end subroutine emit_frontend_ast_v2_print_variable_eleven_to_twenty_items
 
     subroutine emit_frontend_ast_v2_print_variable_seven_items(body)
         type(mir_function_body_t), intent(inout) :: body
