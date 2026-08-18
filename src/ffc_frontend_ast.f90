@@ -1241,7 +1241,7 @@ contains
     subroutine emit_frontend_ast_v2_print_variable_seven_items(body)
         type(mir_function_body_t), intent(inout) :: body
 
-        call emit_frontend_ast_v2_print_variable_items(body, 7, 4, 2, instruction_shape_v2_pow_print_seven_items_count, &
+        call emit_frontend_ast_v2_print_variable_items(body, 7, 3, 2, instruction_shape_v2_pow_print_seven_items_count, &
             [instruction_shape_v2_pow_print_seven_items_opcode_0, instruction_shape_v2_pow_print_seven_items_opcode_1, &
             instruction_shape_v2_pow_print_seven_items_opcode_2, instruction_shape_v2_pow_print_seven_items_opcode_3, &
             instruction_shape_v2_pow_print_seven_items_opcode_4, instruction_shape_v2_pow_print_seven_items_opcode_5, &
@@ -1259,7 +1259,7 @@ contains
     subroutine emit_frontend_ast_v2_print_variable_eight_items(body)
         type(mir_function_body_t), intent(inout) :: body
 
-        call emit_frontend_ast_v2_print_variable_items(body, 8, 5, 2, instruction_shape_v2_pow_print_eight_items_count, &
+        call emit_frontend_ast_v2_print_variable_items(body, 8, 3, 2, instruction_shape_v2_pow_print_eight_items_count, &
             [instruction_shape_v2_pow_print_eight_items_opcode_0, instruction_shape_v2_pow_print_eight_items_opcode_1, &
             instruction_shape_v2_pow_print_eight_items_opcode_2, instruction_shape_v2_pow_print_eight_items_opcode_3, &
             instruction_shape_v2_pow_print_eight_items_opcode_4, instruction_shape_v2_pow_print_eight_items_opcode_5, &
@@ -1278,7 +1278,7 @@ contains
     subroutine emit_frontend_ast_v2_print_variable_nine_items(body)
         type(mir_function_body_t), intent(inout) :: body
 
-        call emit_frontend_ast_v2_print_variable_items(body, 9, 3, 3, instruction_shape_v2_pow_print_nine_items_count, &
+        call emit_frontend_ast_v2_print_variable_items(body, 9, 3, 2, instruction_shape_v2_pow_print_nine_items_count, &
             [instruction_shape_v2_pow_print_nine_items_opcode_0, instruction_shape_v2_pow_print_nine_items_opcode_1, &
             instruction_shape_v2_pow_print_nine_items_opcode_2, instruction_shape_v2_pow_print_nine_items_opcode_3, &
             instruction_shape_v2_pow_print_nine_items_opcode_4, instruction_shape_v2_pow_print_nine_items_opcode_5, &
@@ -1298,7 +1298,7 @@ contains
     subroutine emit_frontend_ast_v2_print_variable_ten_items(body)
         type(mir_function_body_t), intent(inout) :: body
 
-        call emit_frontend_ast_v2_print_variable_items(body, 10, 2, 2, instruction_shape_v2_pow_print_ten_items_count, &
+        call emit_frontend_ast_v2_print_variable_items(body, 10, 3, 2, instruction_shape_v2_pow_print_ten_items_count, &
             [instruction_shape_v2_pow_print_ten_items_opcode_0, instruction_shape_v2_pow_print_ten_items_opcode_1, &
             instruction_shape_v2_pow_print_ten_items_opcode_2, instruction_shape_v2_pow_print_ten_items_opcode_3, &
             instruction_shape_v2_pow_print_ten_items_opcode_4, instruction_shape_v2_pow_print_ten_items_opcode_5, &

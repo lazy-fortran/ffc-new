@@ -59,10 +59,7 @@ contains
         integer :: item_index, literal_value, exponent
 
         select case (item_count)
-        case (7); literal_value = 4; exponent = 2
-        case (8); literal_value = 5; exponent = 2
-        case (9); literal_value = 3; exponent = 3
-        case (10); literal_value = 2; exponent = 2
+        case (7, 8, 9, 10); literal_value = 3; exponent = 2
         end select
         write (count_text, '(i0)') item_count
         value = '(program-unit-v2 (root (program-root (name main) (span (source-span '// &
@@ -105,10 +102,7 @@ contains
         integer, intent(in) :: item_count
 
         select case (item_count)
-        case (7); value = 4
-        case (8); value = 5
-        case (9); value = 3
-        case (10); value = 2
+        case (7, 8, 9, 10); value = 3
         end select
     end function literal_value_for
 
@@ -116,9 +110,7 @@ contains
         integer, intent(in) :: item_count
 
         select case (item_count)
-        case (7, 8); value = 2
-        case (9); value = 3
-        case (10); value = 2
+        case (7, 8, 9, 10); value = 2
         end select
     end function exponent_for
 
