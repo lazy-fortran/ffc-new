@@ -166,6 +166,10 @@ name = "frontend_ast_v2_print_variable_expression"
 source-dir = "test"
 
 [[test]]
+name = "ast_mul"
+source-dir = "test"
+
+[[test]]
 name = "frontend_ast_v1_real_policy"
 source-dir = "test"
 
