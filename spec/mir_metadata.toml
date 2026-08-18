@@ -75,7 +75,7 @@ name = "frontend_ast_v2_stop_stmt"
 value = "frontend-ast-v2/stop-stmt"
 
 # J3/24-007, R1212/R1215/R1217, printed pages 242, 244 and 248.  This slice
-# accepts only list-directed integer literal output item 7.
+# accepts only list-directed integer literal output items 7, 8 and 9.
 [[source_rules]]
 name = "frontend_ast_v2_print_stmt"
 value = "frontend-ast-v2/print-stmt"
@@ -199,6 +199,13 @@ source_rule = "frontend-ast-v2/print-stmt"
 [[instruction_shapes]]
 name = "frontend_ast_v2_print_7_8"
 opcodes = ["const", "output", "const", "output", "return"]
+result_kind = "integer"
+result_type = "i32"
+source_rule = "frontend-ast-v2/print-stmt"
+
+[[instruction_shapes]]
+name = "frontend_ast_v2_print_7_8_9"
+opcodes = ["const", "output", "const", "output", "const", "output", "return"]
 result_kind = "integer"
 result_type = "i32"
 source_rule = "frontend-ast-v2/print-stmt"
