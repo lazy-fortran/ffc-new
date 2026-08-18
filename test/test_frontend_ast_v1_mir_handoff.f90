@@ -13,7 +13,7 @@ program test_frontend_ast_v1_mir_handoff
     call check_type('complex', value_kind_complex, 'c32')
     call check_generated_shape()
 
-    call assert_false(ffc_lower_frontend_ast_v1_from_sx(v1_sx('logical'), body, message), &
+    call assert_false(ffc_lower_frontend_ast_v1_from_sx(v1_sx('unsupported'), body, message), &
         'unsupported v1 type spec was lowered')
     call assert_equal(message, 'unsupported-frontend-ast-v1-type-spec', &
         'unsupported v1 type diagnostic changed')

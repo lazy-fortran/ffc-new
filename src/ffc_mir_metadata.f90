@@ -32,6 +32,13 @@ module ffc_mir_metadata
     character(len=3), parameter, public :: instruction_shape_frontend_ast_v1_integer_program_result_type = 'i32'
     character(len=23), parameter, public :: instruction_shape_frontend_ast_v1_integer_program_source_rule = 'frontend-ast-v1/program'
 
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_logical_program_count = 2_int32
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_logical_program_opcode_0 = opcode_add
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_logical_program_opcode_1 = opcode_return
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_logical_program_result_kind = value_kind_logical
+    character(len=7), parameter, public :: instruction_shape_frontend_ast_v1_logical_program_result_type = 'logical'
+    character(len=23), parameter, public :: instruction_shape_frontend_ast_v1_logical_program_source_rule = 'frontend-ast-v1/program'
+
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_real_program_count = 2_int32
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_real_program_opcode_0 = opcode_add
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_real_program_opcode_1 = opcode_return
@@ -130,6 +137,7 @@ contains
 
         select case (trim(type_spec))
         case ('integer'); mir_type_spec_value_kind = value_kind_integer
+        case ('logical'); mir_type_spec_value_kind = value_kind_logical
         case ('real'); mir_type_spec_value_kind = value_kind_real
         case ('double-precision'); mir_type_spec_value_kind = value_kind_real
         case ('complex'); mir_type_spec_value_kind = value_kind_complex
@@ -142,6 +150,7 @@ contains
 
         select case (trim(type_spec))
         case ('integer'); mir_type_spec_name = 'i32'
+        case ('logical'); mir_type_spec_name = 'logical'
         case ('real'); mir_type_spec_name = 'f32'
         case ('double-precision'); mir_type_spec_name = 'f64'
         case ('complex'); mir_type_spec_name = 'c32'

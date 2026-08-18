@@ -35,7 +35,7 @@ program test_frontend_ast_v1_real_policy
         'real variable-count neighbor was accepted')
     call assert_equal(message, 'invalid-frontend-ast-v1-cardinality', &
         'real variable-count diagnostic changed')
-    call assert_false(ffc_lower_frontend_ast_v1_from_sx(real_v1_sx_with_type('logical'), body, &
+    call assert_false(ffc_lower_frontend_ast_v1_from_sx(real_v1_sx_with_type('unsupported'), body, &
         message), 'unsupported real-slice type was accepted')
     call assert_equal(message, 'unsupported-frontend-ast-v1-type-spec', &
         'unsupported type diagnostic changed')

@@ -38,6 +38,11 @@ kind = "integer"
 type_name = "i32"
 
 [[type_specs]]
+name = "logical"
+kind = "logical"
+type_name = "logical"
+
+[[type_specs]]
 name = "real"
 kind = "real"
 type_name = "f32"
@@ -97,6 +102,13 @@ name = "frontend_ast_v1_integer_program"
 opcodes = ["add", "return"]
 result_kind = "integer"
 result_type = "i32"
+source_rule = "frontend-ast-v1/program"
+
+[[instruction_shapes]]
+name = "frontend_ast_v1_logical_program"
+opcodes = ["add", "return"]
+result_kind = "logical"
+result_type = "logical"
 source_rule = "frontend-ast-v1/program"
 
 [[instruction_shapes]]
