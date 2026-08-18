@@ -54,6 +54,13 @@ program test_frontend_ast_v1_integer_expression_assignment
     call assert_true(body%function%instruction_count == 2_int32, &
         'literal integer assignment instruction count changed')
 
+    call assert_true(lower_wrapped_literal(ast, body, message), &
+        'wrapped integer literal AST-v1 was not lowered')
+    call assert_true(ffc_validate_frontend_ast_v1_integer_assignment_program_shape(body, message), &
+        'wrapped integer literal assignment shape was not preserved')
+    call assert_true(body%function%instruction_count == 2_int32, &
+        'wrapped integer literal assignment instruction count changed')
+
     ast%assignment%value = '( binary-expr ( operator - ) ( left 1 ) ( right 2 ) )'
     call assert_false(ffc_lower_frontend_ast_v1(ast, body, message), &
         'unsupported expression operator was accepted')
@@ -106,6 +113,18 @@ contains
         if (.not. ok) return
         ok = ffc_lower_frontend_ast_v1(ast, body, message)
     end function lower_assignment
+
+    logical function lower_wrapped_literal(ast, body, message) result(ok)
+        type(ffc_frontend_ast_v1_t), intent(out) :: ast
+        type(mir_function_body_t), intent(out) :: body
+        character(len=:), allocatable, intent(out) :: message
+
+        ok = ffc_frontend_ast_v1_from_sx(common_sx(&
+            '(assignment-expression (kind integer-literal) (operator ) '// &
+            '(left-operand 1) (right-operand ))'), ast, message)
+        if (.not. ok) return
+        ok = ffc_lower_frontend_ast_v1(ast, body, message)
+    end function lower_wrapped_literal
 
     subroutine assert_true(value, description)
         logical, intent(in) :: value

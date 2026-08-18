@@ -1158,6 +1158,42 @@ contains
                         position = position + 2
                         ok = read_named_atom(token, token_count, position, 'kind', kind, message)
                         if (.not. ok) return
+                        if (trim(kind) == 'integer-literal') then
+                            ok = expect_token(token, token_count, position, '(', message)
+                            if (.not. ok) return
+                            ok = expect_token(token, token_count, position, 'operator', message)
+                            if (.not. ok) return
+                            ok = expect_token(token, token_count, position, ')', message)
+                            if (.not. ok) return
+                            ok = expect_token(token, token_count, position, '(', message)
+                            if (.not. ok) return
+                            ok = expect_token(token, token_count, position, 'left-operand', &
+                                message)
+                            if (.not. ok) return
+                            ok = read_atom(token, token_count, position, left_operand, message)
+                            if (.not. ok) return
+                            ok = expect_token(token, token_count, position, ')', message)
+                            if (.not. ok) return
+                            ok = expect_token(token, token_count, position, '(', message)
+                            if (.not. ok) return
+                            ok = expect_token(token, token_count, position, 'right-operand', &
+                                message)
+                            if (.not. ok) return
+                            ok = expect_token(token, token_count, position, ')', message)
+                            if (.not. ok) return
+                            ok = expect_token(token, token_count, position, ')', message)
+                            if (.not. ok) return
+                            if (trim(left_operand) /= '1') then
+                                call set_message(message, &
+                                    'unsupported-frontend-ast-v1-assignment-expression')
+                                ok = .false.
+                                return
+                            end if
+                            value = '1'
+                            ok = expect_token(token, token_count, position, ')', message)
+                            if (.not. ok) return
+                            return
+                        end if
                         ok = read_named_atom(token, token_count, position, 'operator', operator, &
                             message)
                         if (.not. ok) return
