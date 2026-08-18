@@ -59,6 +59,16 @@ module ffc_mir_metadata
     character(len=3), parameter, public :: instruction_shape_frontend_ast_v2_print_7_result_type = 'i32'
     character(len=26), parameter, public :: instruction_shape_frontend_ast_v2_print_7_source_rule = 'frontend-ast-v2/print-stmt'
 
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_7_8_count = 5_int32
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_7_8_opcode_0 = opcode_const
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_7_8_opcode_1 = opcode_output
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_7_8_opcode_2 = opcode_const
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_7_8_opcode_3 = opcode_output
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_7_8_opcode_4 = opcode_return
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v2_print_7_8_result_kind = value_kind_integer
+    character(len=3), parameter, public :: instruction_shape_frontend_ast_v2_print_7_8_result_type = 'i32'
+    character(len=26), parameter, public :: instruction_shape_frontend_ast_v2_print_7_8_source_rule = 'frontend-ast-v2/print-stmt'
+
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_int_assign_count = 2_int32
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_int_assign_opcode_0 = opcode_store
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_int_assign_opcode_1 = opcode_return

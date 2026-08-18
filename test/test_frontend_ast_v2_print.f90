@@ -1,7 +1,8 @@
 program test_frontend_ast_v2_print
     use, intrinsic :: iso_fortran_env, only: int32
     use ffc_frontend_ast, only: ffc_lower_frontend_ast_v2_from_sx, &
-        ffc_validate_frontend_ast_v2_print_7_shape
+        ffc_validate_frontend_ast_v2_print_7_shape, &
+        ffc_validate_frontend_ast_v2_print_7_8_shape
     use ffc_mir, only: mir_function_body_t, mir_validate_function_body, opcode_const, &
         opcode_output, opcode_return
     implicit none
@@ -28,6 +29,27 @@ program test_frontend_ast_v2_print
         replace_text(envelope_sx(), '(output-value 7)', '(output-value)'), body, message), &
         'missing PRINT item was accepted')
 
+    call assert_true(ffc_lower_frontend_ast_v2_from_sx(envelope_two_sx(), body, message), &
+        'PRINT star 7, 8 envelope was rejected')
+    call assert_true(ffc_validate_frontend_ast_v2_print_7_8_shape(body, message), &
+        'PRINT 7, 8 MIR shape was rejected')
+    call assert_equal(body%instructions(1)%opcode, opcode_const, 'first PRINT literal opcode changed')
+    call assert_equal(body%instructions(2)%opcode, opcode_output, 'first PRINT output opcode missing')
+    call assert_equal(body%instructions(3)%opcode, opcode_const, 'second PRINT literal opcode changed')
+    call assert_equal(body%instructions(4)%opcode, opcode_output, 'second PRINT output opcode missing')
+    call assert_equal(body%instructions(5)%opcode, opcode_return, 'PRINT 7, 8 return opcode changed')
+    call assert_equal(body%instructions(1)%literal_value, 7, 'first PRINT literal changed')
+    call assert_equal(body%instructions(3)%literal_value, 8, 'second PRINT literal changed')
+    call assert_true(.not. ffc_lower_frontend_ast_v2_from_sx(&
+        replace_text(envelope_two_sx(), '(output-value 8)', '(output-value 9)'), body, message), &
+        'PRINT wrong second item was accepted')
+    call assert_true(.not. ffc_lower_frontend_ast_v2_from_sx(&
+        replace_text(envelope_two_sx(), '(output-value 8)', '(output-value)'), body, message), &
+        'PRINT missing second item was accepted')
+    call assert_true(.not. ffc_lower_frontend_ast_v2_from_sx(&
+        replace_text(envelope_two_sx(), '(print-stmt ', '(write-stmt '), body, message), &
+        'WRITE two-item mutation was accepted')
+
     write (*, '(a)') 'frontend AST v2 PRINT star 7 checks: ok'
 
 contains
@@ -46,6 +68,22 @@ contains
             '(statement-page 242) (format-page 244) (output-page 248) '// &
             '(source-hash print-test))))'
     end function envelope_sx
+
+    function envelope_two_sx() result(value)
+        character(len=4096) :: value
+
+        value = '(program-unit-v2 (root (program-root (name p) (span (source-span '// &
+            '(file main.f90) (start-byte 0) (end-byte 42) (source-hash print-test))))) '// &
+            '(declaration-count 0) (declaration) (variable-count 0) (variable) '// &
+            '(execution-part (print-stmt (format-kind default-char-expr) (format-value *) '// &
+            '(output-kind integer-literal) (output-value 7) '// &
+            '(output-kind integer-literal) (output-value 8) '// &
+            '(statement-rule R1212) (format-rule R1215) (output-rule R1217) '// &
+            '(source-document J3-24-007) (statement-clause 12.6.1) '// &
+            '(format-clause 12.6.2.2) (output-clause 12.6.3) '// &
+            '(statement-page 242) (format-page 244) (output-page 248) '// &
+            '(source-hash print-test))))'
+    end function envelope_two_sx
 
     function replace_text(value, old, new) result(replaced)
         character(len=*), intent(in) :: value, old, new
