@@ -2,7 +2,7 @@ module ffc_frontend_ast
     use, intrinsic :: iso_fortran_env, only: int32, int64
     use ffc_lowering, only: ffc_lower_program_root, ffc_program_declaration_from_sx, &
         ffc_program_root_from_sx, ffc_program_root_t, ffc_validate_program_root
-    use ffc_mir, only: mir_function_body_t, mir_make_function_witness, opcode_const, &
+    use ffc_mir, only: mir_function_body_t, mir_make_function_witness, opcode_add, opcode_const, &
         opcode_load, opcode_output, opcode_pow, opcode_return, opcode_store, mir_type_spec_name, &
         mir_type_spec_value_kind, mir_validate_function_body, value_kind_integer
     use ffc_mir_metadata, only: instruction_shape_frontend_ast_v1_integer_program_count, &
@@ -819,7 +819,10 @@ contains
             if (.not. frontend_ast_v2_print_generic_list_match(print_statement) .or. &
                 assignment_count /= 1 .or. trim(assignments(1)%target) /= 'x' .or. &
                 index(trim(assignments(1)%value), 'integer-literal') == 0 .or. &
-                index(trim(assignments(1)%value), ' 3 ') == 0) then
+                index(trim(assignments(1)%value), ' 3 ') == 0 .or. &
+                (index(print_statement, '( kind integer-expression )') /= 0 .and. &
+                index(print_statement, '( output-item ( kind integer-expression ) ( operator + ) '// &
+                '( left x ) ( right 1 ) ( rule R1217 ) ( clause 12.6.3 ) ( page 248 ) )') == 0)) then
                 call set_message(message, 'unsupported-frontend-ast-v2-execution-part')
                 return
             end if
@@ -1436,6 +1439,25 @@ contains
                 parsed = .false.
                 return
             end if
+        else if (trim(item_kind) == 'integer-expression') then
+            if (.not. read_named_atom(token, token_count, position, 'operator', item_clause, message)) return
+            if (trim(item_clause) /= '+') then
+                call set_message(message, 'unsupported-frontend-ast-v2-print-expression-operator')
+                parsed = .false.
+                return
+            end if
+            if (.not. read_named_atom(token, token_count, position, 'left', item_clause, message)) return
+            if (trim(item_clause) /= 'x') then
+                call set_message(message, 'unsupported-frontend-ast-v2-print-expression-left')
+                parsed = .false.
+                return
+            end if
+            if (.not. read_named_atom(token, token_count, position, 'right', item_value, message)) return
+            if (trim(item_value) /= '1') then
+                call set_message(message, 'unsupported-frontend-ast-v2-print-expression-right')
+                parsed = .false.
+                return
+            end if
         else if (trim(item_kind) == 'integer-literal') then
             if (.not. read_named_atom(token, token_count, position, 'value', item_value, message)) return
             if (.not. parse_count(item_value, numeric_value, message)) return
@@ -1446,7 +1468,8 @@ contains
         end if
         if (.not. read_named_atom(token, token_count, position, 'rule', item_rule, message)) return
         if ((trim(item_kind) == 'variable' .and. trim(item_rule) /= 'R901') .or. &
-            (trim(item_kind) == 'integer-literal' .and. trim(item_rule) /= 'R1217')) then
+            ((trim(item_kind) == 'integer-literal' .or. trim(item_kind) == 'integer-expression') .and. &
+            trim(item_rule) /= 'R1217')) then
             call set_message(message, 'invalid-frontend-ast-v2-print-item-rule')
             parsed = .false.
             return
@@ -1477,13 +1500,23 @@ contains
         integer :: item_count, item_index, instruction_index, instruction_count, value, io_status
 
         if (.not. parse_frontend_ast_v2_print_generic_list(expression, item_kind, item_value, &
-            item_rule, item_count, message)) return
+            item_rule, item_count, message)) then
+            body%function%instruction_count = 0
+            return
+        end if
         item_count = 0
         do while (item_count < size(item_kind))
             if (len_trim(item_kind(item_count + 1)) == 0) exit
             item_count = item_count + 1
         end do
-        instruction_count = 2 + 2 * item_count + 1
+        instruction_count = 3
+        do item_index = 1, item_count
+            if (trim(item_kind(item_index)) == 'integer-expression') then
+                instruction_count = instruction_count + 4
+            else
+                instruction_count = instruction_count + 2
+            end if
+        end do
         if (allocated(body%instructions)) deallocate (body%instructions)
         allocate (body%instructions(instruction_count))
         body%function%instruction_count = instruction_count
@@ -1498,20 +1531,42 @@ contains
         body%instructions(1)%literal_value = 3
         body%instructions(2)%opcode = opcode_store
         body%instructions(2)%storage_key = 'x'
+        instruction_index = 2
         do item_index = 1, item_count
-            instruction_index = 2 + 2 * item_index - 1
             if (trim(item_kind(item_index)) == 'variable') then
+                instruction_index = instruction_index + 1
                 body%instructions(instruction_index)%opcode = opcode_load
                 body%instructions(instruction_index)%storage_key = trim(item_value(item_index))
-            else
+                body%instructions(instruction_index + 1)%opcode = opcode_output
+                body%instructions(instruction_index)%source_rule = 'frontend-ast-v2/print-stmt'
+                body%instructions(instruction_index + 1)%source_rule = 'frontend-ast-v2/print-stmt'
+                instruction_index = instruction_index + 1
+            else if (trim(item_kind(item_index)) == 'integer-literal') then
+                instruction_index = instruction_index + 1
                 body%instructions(instruction_index)%opcode = opcode_const
                 read (item_value(item_index), *, iostat=io_status) value
                 if (io_status /= 0) value = 0
                 body%instructions(instruction_index)%literal_value = value
+                body%instructions(instruction_index + 1)%opcode = opcode_output
+                body%instructions(instruction_index)%source_rule = 'frontend-ast-v2/print-stmt'
+                body%instructions(instruction_index + 1)%source_rule = 'frontend-ast-v2/print-stmt'
+                instruction_index = instruction_index + 1
+            else
+                instruction_index = instruction_index + 1
+                body%instructions(instruction_index)%opcode = opcode_load
+                body%instructions(instruction_index)%storage_key = 'x'
+                body%instructions(instruction_index + 1)%opcode = opcode_const
+                read (item_value(item_index), *, iostat=io_status) value
+                if (io_status /= 0) value = 0
+                body%instructions(instruction_index + 1)%literal_value = value
+                body%instructions(instruction_index + 2)%opcode = opcode_add
+                body%instructions(instruction_index + 3)%opcode = opcode_output
+                body%instructions(instruction_index)%source_rule = 'frontend-ast-v2/print-stmt'
+                body%instructions(instruction_index + 1)%source_rule = 'frontend-ast-v2/print-stmt'
+                body%instructions(instruction_index + 2)%source_rule = 'frontend-ast-v2/print-stmt'
+                body%instructions(instruction_index + 3)%source_rule = 'frontend-ast-v2/print-stmt'
+                instruction_index = instruction_index + 3
             end if
-            body%instructions(instruction_index + 1)%opcode = opcode_output
-            body%instructions(instruction_index)%source_rule = 'frontend-ast-v2/print-stmt'
-            body%instructions(instruction_index + 1)%source_rule = 'frontend-ast-v2/print-stmt'
         end do
         body%instructions(instruction_count)%opcode = opcode_return
         body%instructions(instruction_count)%source_rule = 'frontend-ast-v2/print-stmt'
