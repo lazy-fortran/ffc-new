@@ -770,12 +770,13 @@ contains
             result_kind_text = mir_value_kind_name(body%instructions(index)%result%kind)
             canonical = trim(canonical)//' (instruction (id '//trim(id_text)//') '// &
                 '(opcode '//trim(opcode_text)//')'
+            canonical = trim(canonical)//' (source-rule '// &
+                trim(body%instructions(index)%source_rule)//')'
             if (body%instructions(index)%opcode == opcode_const) then
                 canonical = trim(canonical)//' (literal '// &
                     trim(itoa(body%instructions(index)%literal_value))//')'
             end if
-            canonical = trim(canonical)//' (source-rule '// &
-                trim(body%instructions(index)%source_rule)//') (result (id '// &
+            canonical = trim(canonical)//' (result (id '// &
                 trim(result_id_text)//') (kind '//trim(result_kind_text)//') (type '// &
                 trim(body%instructions(index)%result%type_name)// &
                 ')))'
@@ -1089,14 +1090,14 @@ contains
             return
         end if
         instruction%literal_value = 0_int32
+        ok = read_named_atom(token, token_count, position, 'source-rule', &
+            instruction%source_rule, message)
+        if (.not. ok) return
         if (instruction%opcode == opcode_const) then
             ok = read_named_integer(token, token_count, position, 'literal', &
                 instruction%literal_value, message)
             if (.not. ok) return
         end if
-        ok = read_named_atom(token, token_count, position, 'source-rule', &
-            instruction%source_rule, message)
-        if (.not. ok) return
         ok = read_value(token, token_count, position, instruction%result, message)
         if (.not. ok) return
         ok = expect_token(token, token_count, position, ')', message)

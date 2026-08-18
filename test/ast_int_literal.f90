@@ -30,8 +30,9 @@ program test_ast_int_literal
 
     call mir_function_body_to_sx(body, serialized, ok, message)
     call assert_true(ok, 'literal MIR was not serialized: '//trim(message))
-    call assert_true(index(trim(serialized), '(literal 7)') > 0, &
-        'serialized MIR omitted literal value')
+    call assert_true(index(trim(serialized), &
+        '(opcode const) (source-rule frontend-ast-v1/assignment) (literal 7)') > 0, &
+        'serialized MIR const field order changed')
     call mir_function_body_from_sx(trim(serialized), roundtrip_body, ok, message)
     call assert_true(ok, 'serialized literal MIR was not readable: '//trim(message))
     call assert_true(roundtrip_body%instructions(1)%literal_value == 7_int32, &
