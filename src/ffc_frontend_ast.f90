@@ -2,7 +2,7 @@ module ffc_frontend_ast
     use, intrinsic :: iso_fortran_env, only: int32, int64
     use ffc_lowering, only: ffc_lower_program_root, ffc_program_declaration_from_sx, &
         ffc_program_root_from_sx, ffc_program_root_t, ffc_validate_program_root
-    use ffc_mir, only: mir_function_body_t, mir_make_function_witness, &
+    use ffc_mir, only: mir_function_body_t, mir_make_function_witness, opcode_const, &
         mir_type_spec_name, mir_type_spec_value_kind, mir_validate_function_body
     use ffc_mir_metadata, only: instruction_shape_frontend_ast_v1_integer_program_count, &
         instruction_shape_frontend_ast_v1_integer_program_opcode_0, &
@@ -27,6 +27,8 @@ module ffc_frontend_ast
         instruction_shape_frontend_ast_v1_int_expr_assign_opcode_0, &
         instruction_shape_frontend_ast_v1_int_expr_assign_opcode_1, &
         instruction_shape_frontend_ast_v1_int_expr_assign_opcode_2, &
+        instruction_shape_frontend_ast_v1_int_expr_assign_opcode_3, &
+        instruction_shape_frontend_ast_v1_int_expr_assign_opcode_4, &
         instruction_shape_frontend_ast_v1_int_expr_assign_result_kind, &
         instruction_shape_frontend_ast_v1_int_expr_assign_result_type, &
         instruction_shape_frontend_ast_v1_int_expr_assign_source_rule, &
@@ -86,7 +88,9 @@ module ffc_frontend_ast
         mir_frontend_ast_v1_integer_expression_opcode, &
         mir_frontend_ast_v1_integer_expression_result_kind, &
         mir_frontend_ast_v1_integer_expression_result_type, &
-        mir_frontend_ast_v1_integer_expression_source_rule
+        mir_frontend_ast_v1_integer_expression_source_rule, &
+        mir_frontend_ast_v1_integer_expression_literal_value, &
+        mir_frontend_ast_v1_integer_expression_result_id
     use ffc_lowering_policy, only: bounded_integer_declaration_count, &
         bounded_integer_variable_count
     implicit none
@@ -491,18 +495,38 @@ contains
                 mir_frontend_ast_v1_integer_expression_opcode(route, index)
             body%instructions(index + 1)%source_rule = &
                 trim(mir_frontend_ast_v1_integer_expression_source_rule(route))
+            if (body%instructions(index + 1)%opcode == opcode_const) then
+                body%instructions(index + 1)%literal_value = &
+                    mir_frontend_ast_v1_integer_expression_literal_value(route, index)
+            end if
         end do
-        body%instructions(1)%result%id = 2
-        body%instructions(1)%result%kind = &
-            mir_frontend_ast_v1_integer_expression_result_kind(route)
-        body%instructions(1)%result%type_name = &
-            trim(mir_frontend_ast_v1_integer_expression_result_type(route))
-        body%instructions(2)%result%id = 1
-        body%instructions(2)%result%kind = &
-            mir_frontend_ast_v1_integer_expression_result_kind(route)
-        body%instructions(2)%result%type_name = &
-            trim(mir_frontend_ast_v1_integer_expression_result_type(route))
-        body%instructions(3)%result = body%instructions(2)%result
+        if (mir_frontend_ast_v1_integer_expression_result_id(route, 0_int32) >= 0_int32) then
+            do index = 0_int32, instruction_count - 1_int32
+                body%instructions(index + 1)%result%id = &
+                    mir_frontend_ast_v1_integer_expression_result_id(route, index)
+                body%instructions(index + 1)%result%kind = &
+                    mir_frontend_ast_v1_integer_expression_result_kind(route)
+                body%instructions(index + 1)%result%type_name = &
+                    trim(mir_frontend_ast_v1_integer_expression_result_type(route))
+            end do
+        else
+            body%instructions(1)%result%id = 2
+            body%instructions(1)%result%kind = &
+                mir_frontend_ast_v1_integer_expression_result_kind(route)
+            body%instructions(1)%result%type_name = &
+                trim(mir_frontend_ast_v1_integer_expression_result_type(route))
+            body%instructions(2)%result%id = 1
+            body%instructions(2)%result%kind = &
+                mir_frontend_ast_v1_integer_expression_result_kind(route)
+            body%instructions(2)%result%type_name = &
+                trim(mir_frontend_ast_v1_integer_expression_result_type(route))
+            body%instructions(3)%result = body%instructions(2)%result
+            if (instruction_count > 3_int32) then
+                do index = 4_int32, instruction_count
+                    body%instructions(index)%result = body%instructions(3)%result
+                end do
+            end if
+        end if
     end subroutine emit_frontend_ast_v1_integer_expression
 
     logical function ffc_validate_frontend_ast_v1_integer_program_shape(body, message) &
@@ -663,24 +687,39 @@ contains
             body%instructions(2)%opcode /= &
             instruction_shape_frontend_ast_v1_int_expr_assign_opcode_1 .or. &
             body%instructions(3)%opcode /= &
-            instruction_shape_frontend_ast_v1_int_expr_assign_opcode_2) then
+            instruction_shape_frontend_ast_v1_int_expr_assign_opcode_2 .or. &
+            body%instructions(4)%opcode /= &
+            instruction_shape_frontend_ast_v1_int_expr_assign_opcode_3 .or. &
+            body%instructions(5)%opcode /= &
+            instruction_shape_frontend_ast_v1_int_expr_assign_opcode_4) then
             call set_message(message, 'frontend-ast-v1 integer expression opcode shape changed')
             return
         end if
-        if (body%instructions(1)%result%kind /= &
+        if (body%instructions(1)%literal_value /= 1_int32 .or. &
+            body%instructions(2)%literal_value /= 2_int32 .or. &
+            body%instructions(1)%result%id /= 0_int32 .or. &
+            body%instructions(2)%result%id /= 1_int32 .or. &
+            body%instructions(3)%result%id /= 2_int32 .or. &
+            body%instructions(4)%result%id /= 2_int32 .or. &
+            body%instructions(5)%result%id /= 2_int32 .or. &
+            body%instructions(1)%result%kind /= &
             instruction_shape_frontend_ast_v1_int_expr_assign_result_kind .or. &
             trim(body%instructions(1)%result%type_name) /= &
             instruction_shape_frontend_ast_v1_int_expr_assign_result_type) then
             call set_message(message, 'frontend-ast-v1 integer expression result shape changed')
             return
         end if
-        if (body%instructions(2)%result%kind /= &
-            instruction_shape_frontend_ast_v1_int_expr_assign_result_kind .or. &
-            trim(body%instructions(2)%result%type_name) /= &
-            instruction_shape_frontend_ast_v1_int_expr_assign_result_type .or. &
-            body%instructions(3)%result%kind /= &
+        if (body%instructions(3)%result%kind /= &
             instruction_shape_frontend_ast_v1_int_expr_assign_result_kind .or. &
             trim(body%instructions(3)%result%type_name) /= &
+            instruction_shape_frontend_ast_v1_int_expr_assign_result_type .or. &
+            body%instructions(4)%result%kind /= &
+            instruction_shape_frontend_ast_v1_int_expr_assign_result_kind .or. &
+            trim(body%instructions(4)%result%type_name) /= &
+            instruction_shape_frontend_ast_v1_int_expr_assign_result_type .or. &
+            body%instructions(5)%result%kind /= &
+            instruction_shape_frontend_ast_v1_int_expr_assign_result_kind .or. &
+            trim(body%instructions(5)%result%type_name) /= &
             instruction_shape_frontend_ast_v1_int_expr_assign_result_type) then
             call set_message(message, 'frontend-ast-v1 integer expression return shape changed')
             return
@@ -690,6 +729,10 @@ contains
             trim(body%instructions(2)%source_rule) /= &
             instruction_shape_frontend_ast_v1_int_expr_assign_source_rule .or. &
             trim(body%instructions(3)%source_rule) /= &
+            instruction_shape_frontend_ast_v1_int_expr_assign_source_rule .or. &
+            trim(body%instructions(4)%source_rule) /= &
+            instruction_shape_frontend_ast_v1_int_expr_assign_source_rule .or. &
+            trim(body%instructions(5)%source_rule) /= &
             instruction_shape_frontend_ast_v1_int_expr_assign_source_rule) then
             call set_message(message, 'frontend-ast-v1 integer expression source rule changed')
             return

@@ -64,7 +64,7 @@ def read_instruction_shapes(
 
 def read_integer_expression_routes(
     data: dict, instruction_shapes: list[dict[str, object]]
-) -> list[dict[str, str]]:
+) -> list[dict[str, object]]:
     routes = data.get("integer_expression_routes", [])
     shape_names = {entry["name"] for entry in instruction_shapes}
     names = [entry["name"] for entry in routes]
@@ -74,6 +74,19 @@ def read_integer_expression_routes(
     for route in routes:
         if route["shape"] not in shape_names:
             raise ValueError("integer expression route contains an unknown shape")
+        if "literal_values" in route and any(
+            not isinstance(value, int) for value in route["literal_values"]
+        ):
+            raise ValueError("integer expression route literal values must be integers")
+        if "result_ids" in route and any(
+            not isinstance(value, int) for value in route["result_ids"]
+        ):
+            raise ValueError("integer expression route result ids must be integers")
+        shape = next(shape for shape in instruction_shapes if shape["name"] == route["shape"])
+        if "literal_values" in route and len(route["literal_values"]) != shape["opcodes"].count("const"):
+            raise ValueError("integer expression route literal values must match const opcodes")
+        if "result_ids" in route and len(route["result_ids"]) != len(shape["opcodes"]):
+            raise ValueError("integer expression route result ids must match instruction count")
     return routes
 
 
@@ -160,6 +173,8 @@ def generate(spec_path: pathlib.Path) -> str:
         "    public :: mir_frontend_ast_v1_integer_expression_result_kind",
         "    public :: mir_frontend_ast_v1_integer_expression_result_type",
         "    public :: mir_frontend_ast_v1_integer_expression_source_rule",
+        "    public :: mir_frontend_ast_v1_integer_expression_literal_value",
+        "    public :: mir_frontend_ast_v1_integer_expression_result_id",
         "",
         "contains",
         "",
@@ -374,6 +389,44 @@ def generate(spec_path: pathlib.Path) -> str:
     lines += [
         "        end select",
         "    end function mir_frontend_ast_v1_integer_expression_source_rule",
+        "",
+        "    integer(int32) function mir_frontend_ast_v1_integer_expression_literal_value(route, index)",
+        "        integer(int32), intent(in) :: route, index",
+        "",
+        "        mir_frontend_ast_v1_integer_expression_literal_value = 0_int32",
+        "        select case (route)",
+    ]
+    for index, route in enumerate(integer_expression_routes, start=1):
+        lines.append(f"        case ({index}_int32)")
+        lines.append("            select case (index)")
+        for literal_index, literal in enumerate(route.get("literal_values", [])):
+            lines.append(
+                f"            case ({literal_index}_int32); "
+                f"mir_frontend_ast_v1_integer_expression_literal_value = {literal}_int32"
+            )
+        lines.append("            end select")
+    lines += [
+        "        end select",
+        "    end function mir_frontend_ast_v1_integer_expression_literal_value",
+        "",
+        "    integer(int32) function mir_frontend_ast_v1_integer_expression_result_id(route, index)",
+        "        integer(int32), intent(in) :: route, index",
+        "",
+        "        mir_frontend_ast_v1_integer_expression_result_id = -1_int32",
+        "        select case (route)",
+    ]
+    for index, route in enumerate(integer_expression_routes, start=1):
+        lines.append(f"        case ({index}_int32)")
+        lines.append("            select case (index)")
+        for result_index, result_id in enumerate(route.get("result_ids", [])):
+            lines.append(
+                f"            case ({result_index}_int32); "
+                f"mir_frontend_ast_v1_integer_expression_result_id = {result_id}_int32"
+            )
+        lines.append("            end select")
+    lines += [
+        "        end select",
+        "    end function mir_frontend_ast_v1_integer_expression_result_id",
         "",
         "end module ffc_mir_metadata",
         "",

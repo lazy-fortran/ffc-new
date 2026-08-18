@@ -141,7 +141,7 @@ source_rule = "frontend-ast-v1/assignment"
 
 [[instruction_shapes]]
 name = "frontend_ast_v1_int_expr_assign"
-opcodes = ["add", "store", "return"]
+opcodes = ["const", "const", "add", "store", "return"]
 result_kind = "integer"
 result_type = "i32"
 source_rule = "frontend-ast-v1/expression"
@@ -206,6 +206,8 @@ source_rule = "frontend-ast-v1/program"
 name = "add"
 expression = "( binary-expr ( operator + ) ( left 1 ) ( right 2 ) )"
 shape = "frontend_ast_v1_int_expr_assign"
+literal_values = [1, 2]
+result_ids = [0, 1, 2, 2, 2]
 
 [[integer_expression_routes]]
 name = "mul"

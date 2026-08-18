@@ -51,10 +51,12 @@ module ffc_mir_metadata
     character(len=3), parameter, public :: instruction_shape_frontend_ast_v1_int_lit_assign_result_type = 'i32'
     character(len=26), parameter, public :: instruction_shape_frontend_ast_v1_int_lit_assign_source_rule = 'frontend-ast-v1/assignment'
 
-    integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_int_expr_assign_count = 3_int32
-    integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_int_expr_assign_opcode_0 = opcode_add
-    integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_int_expr_assign_opcode_1 = opcode_store
-    integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_int_expr_assign_opcode_2 = opcode_return
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_int_expr_assign_count = 5_int32
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_int_expr_assign_opcode_0 = opcode_const
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_int_expr_assign_opcode_1 = opcode_const
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_int_expr_assign_opcode_2 = opcode_add
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_int_expr_assign_opcode_3 = opcode_store
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_int_expr_assign_opcode_4 = opcode_return
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_int_expr_assign_result_kind = value_kind_integer
     character(len=3), parameter, public :: instruction_shape_frontend_ast_v1_int_expr_assign_result_type = 'i32'
     character(len=26), parameter, public :: instruction_shape_frontend_ast_v1_int_expr_assign_source_rule = 'frontend-ast-v1/expression'
@@ -131,6 +133,8 @@ module ffc_mir_metadata
     public :: mir_frontend_ast_v1_integer_expression_result_kind
     public :: mir_frontend_ast_v1_integer_expression_result_type
     public :: mir_frontend_ast_v1_integer_expression_source_rule
+    public :: mir_frontend_ast_v1_integer_expression_literal_value
+    public :: mir_frontend_ast_v1_integer_expression_result_id
 
 contains
 
@@ -288,6 +292,8 @@ contains
             case (0_int32); mir_frontend_ast_v1_integer_expression_opcode = instruction_shape_frontend_ast_v1_int_expr_assign_opcode_0
             case (1_int32); mir_frontend_ast_v1_integer_expression_opcode = instruction_shape_frontend_ast_v1_int_expr_assign_opcode_1
             case (2_int32); mir_frontend_ast_v1_integer_expression_opcode = instruction_shape_frontend_ast_v1_int_expr_assign_opcode_2
+            case (3_int32); mir_frontend_ast_v1_integer_expression_opcode = instruction_shape_frontend_ast_v1_int_expr_assign_opcode_3
+            case (4_int32); mir_frontend_ast_v1_integer_expression_opcode = instruction_shape_frontend_ast_v1_int_expr_assign_opcode_4
             end select
         case (2_int32)
             select case (index)
@@ -345,5 +351,52 @@ contains
         case (4_int32); mir_frontend_ast_v1_integer_expression_source_rule = instruction_shape_frontend_ast_v1_int_sub_assign_source_rule
         end select
     end function mir_frontend_ast_v1_integer_expression_source_rule
+
+    integer(int32) function mir_frontend_ast_v1_integer_expression_literal_value(route, index)
+        integer(int32), intent(in) :: route, index
+
+        mir_frontend_ast_v1_integer_expression_literal_value = 0_int32
+        select case (route)
+        case (1_int32)
+            select case (index)
+            case (0_int32); mir_frontend_ast_v1_integer_expression_literal_value = 1_int32
+            case (1_int32); mir_frontend_ast_v1_integer_expression_literal_value = 2_int32
+            end select
+        case (2_int32)
+            select case (index)
+            end select
+        case (3_int32)
+            select case (index)
+            end select
+        case (4_int32)
+            select case (index)
+            end select
+        end select
+    end function mir_frontend_ast_v1_integer_expression_literal_value
+
+    integer(int32) function mir_frontend_ast_v1_integer_expression_result_id(route, index)
+        integer(int32), intent(in) :: route, index
+
+        mir_frontend_ast_v1_integer_expression_result_id = -1_int32
+        select case (route)
+        case (1_int32)
+            select case (index)
+            case (0_int32); mir_frontend_ast_v1_integer_expression_result_id = 0_int32
+            case (1_int32); mir_frontend_ast_v1_integer_expression_result_id = 1_int32
+            case (2_int32); mir_frontend_ast_v1_integer_expression_result_id = 2_int32
+            case (3_int32); mir_frontend_ast_v1_integer_expression_result_id = 2_int32
+            case (4_int32); mir_frontend_ast_v1_integer_expression_result_id = 2_int32
+            end select
+        case (2_int32)
+            select case (index)
+            end select
+        case (3_int32)
+            select case (index)
+            end select
+        case (4_int32)
+            select case (index)
+            end select
+        end select
+    end function mir_frontend_ast_v1_integer_expression_result_id
 
 end module ffc_mir_metadata
