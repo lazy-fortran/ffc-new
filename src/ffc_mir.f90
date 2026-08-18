@@ -4,13 +4,14 @@ module ffc_mir
         mir_opcode_value, mir_value_kind_name, mir_value_kind_value, opcode_add, &
         opcode_branch, opcode_call, opcode_compare, opcode_div, opcode_load, &
         opcode_mul, opcode_return, opcode_store, opcode_sub, value_kind_address, &
-        value_kind_complex, value_kind_integer, value_kind_logical, value_kind_real, &
+        value_kind_character, value_kind_complex, value_kind_integer, value_kind_logical, &
+        value_kind_real, &
         mir_type_spec_name, mir_type_spec_value_kind
     implicit none
     private
 
     public :: value_kind_integer, value_kind_real, value_kind_logical, value_kind_address, &
-        value_kind_complex
+        value_kind_complex, value_kind_character
     public :: mir_type_spec_name, mir_type_spec_value_kind
     public :: opcode_add, opcode_sub, opcode_mul, opcode_div, opcode_load, opcode_store
     public :: opcode_compare, opcode_branch, opcode_call, opcode_return
@@ -93,7 +94,7 @@ contains
             call set_message(message, "value id must be non-negative")
             return
         end if
-        if (value%kind < value_kind_integer .or. value%kind > value_kind_complex) then
+        if (value%kind < value_kind_integer .or. value%kind > value_kind_character) then
             call set_message(message, "value kind is outside mir-v0")
             return
         end if

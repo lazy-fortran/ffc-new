@@ -1,7 +1,7 @@
 program test_mir_metadata_behavior
     use, intrinsic :: iso_fortran_env, only: int32
     use ffc_mir, only: mir_function_body_from_sx, mir_function_body_t, &
-        opcode_add, opcode_return, value_kind_address, value_kind_integer
+        opcode_add, opcode_return, value_kind_address, value_kind_character, value_kind_integer
     use ffc_mir_metadata, only: mir_source_rule_name, mir_source_rule_value, &
         source_rule_frontend_ast_v1_program, source_rule_frontend_v0_program, &
         source_rule_program_root
@@ -10,8 +10,8 @@ program test_mir_metadata_behavior
     character(len=32), parameter :: opcode_names(10) = [character(len=32) :: &
         'add', 'sub', 'mul', 'div', 'load', 'store', 'compare', 'branch', 'call', &
         'return']
-    character(len=32), parameter :: kind_names(4) = [character(len=32) :: &
-        'integer', 'real', 'logical', 'address']
+    character(len=32), parameter :: kind_names(6) = [character(len=32) :: &
+        'integer', 'real', 'logical', 'address', 'complex', 'character']
     type(mir_function_body_t) :: body
     character(len=512) :: sx
     character(len=:), allocatable :: message
@@ -42,7 +42,7 @@ program test_mir_metadata_behavior
             'opcode value changed from the independent metadata oracle')
     end do
 
-    do index = value_kind_integer, value_kind_address
+    do index = value_kind_integer, value_kind_character
         sx = '(mir-function (name kind) (entry-block 0) (instruction-count 1) '// &
             '(instructions (instruction (id 0) (opcode add) '// &
             '(source-rule metadata/kind) (result (id 1) (kind '// &

@@ -9,6 +9,7 @@ module ffc_mir_metadata
     integer(int32), parameter, public :: value_kind_logical = 3_int32
     integer(int32), parameter, public :: value_kind_address = 4_int32
     integer(int32), parameter, public :: value_kind_complex = 5_int32
+    integer(int32), parameter, public :: value_kind_character = 6_int32
 
     integer(int32), parameter, public :: opcode_add = 1_int32
     integer(int32), parameter, public :: opcode_sub = 2_int32
@@ -59,6 +60,13 @@ module ffc_mir_metadata
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_complex_program_result_kind = value_kind_complex
     character(len=3), parameter, public :: instruction_shape_frontend_ast_v1_complex_program_result_type = 'c32'
     character(len=23), parameter, public :: instruction_shape_frontend_ast_v1_complex_program_source_rule = 'frontend-ast-v1/program'
+
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_character_program_count = 2_int32
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_character_program_opcode_0 = opcode_add
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_character_program_opcode_1 = opcode_return
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_character_program_result_kind = value_kind_character
+    character(len=9), parameter, public :: instruction_shape_frontend_ast_v1_character_program_result_type = 'character'
+    character(len=23), parameter, public :: instruction_shape_frontend_ast_v1_character_program_source_rule = 'frontend-ast-v1/program'
 
     integer(int32), parameter, public :: mir_opcode_histogram_size = &
         opcode_return - opcode_add + 1_int32
@@ -115,6 +123,7 @@ contains
         case (value_kind_logical); mir_value_kind_name = 'logical'
         case (value_kind_address); mir_value_kind_name = 'address'
         case (value_kind_complex); mir_value_kind_name = 'complex'
+        case (value_kind_character); mir_value_kind_name = 'character'
         case default; mir_value_kind_name = ''
         end select
     end function mir_value_kind_name
@@ -128,6 +137,7 @@ contains
         case ('logical'); mir_value_kind_value = value_kind_logical
         case ('address'); mir_value_kind_value = value_kind_address
         case ('complex'); mir_value_kind_value = value_kind_complex
+        case ('character'); mir_value_kind_value = value_kind_character
         case default; mir_value_kind_value = 0_int32
         end select
     end function mir_value_kind_value
@@ -141,6 +151,7 @@ contains
         case ('real'); mir_type_spec_value_kind = value_kind_real
         case ('double-precision'); mir_type_spec_value_kind = value_kind_real
         case ('complex'); mir_type_spec_value_kind = value_kind_complex
+        case ('character'); mir_type_spec_value_kind = value_kind_character
         case default; mir_type_spec_value_kind = 0_int32
         end select
     end function mir_type_spec_value_kind
@@ -154,6 +165,7 @@ contains
         case ('real'); mir_type_spec_name = 'f32'
         case ('double-precision'); mir_type_spec_name = 'f64'
         case ('complex'); mir_type_spec_name = 'c32'
+        case ('character'); mir_type_spec_name = 'character'
         case default; mir_type_spec_name = ''
         end select
     end function mir_type_spec_name

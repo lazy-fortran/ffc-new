@@ -32,6 +32,10 @@ value = 4
 name = "complex"
 value = 5
 
+[[value_kinds]]
+name = "character"
+value = 6
+
 [[type_specs]]
 name = "integer"
 kind = "integer"
@@ -56,6 +60,11 @@ type_name = "f64"
 name = "complex"
 kind = "complex"
 type_name = "c32"
+
+[[type_specs]]
+name = "character"
+kind = "character"
+type_name = "character"
 
 [[opcodes]]
 name = "add"
@@ -130,4 +139,11 @@ name = "frontend_ast_v1_complex_program"
 opcodes = ["add", "return"]
 result_kind = "complex"
 result_type = "c32"
+source_rule = "frontend-ast-v1/program"
+
+[[instruction_shapes]]
+name = "frontend_ast_v1_character_program"
+opcodes = ["add", "return"]
+result_kind = "character"
+result_type = "character"
 source_rule = "frontend-ast-v1/program"
