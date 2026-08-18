@@ -9,6 +9,8 @@ program test_frontend_ast_v2_execution_part
     character(len=:), allocatable :: message
     integer(int32) :: expected_opcodes(7)
     integer(int32) :: expected_ids(7)
+    integer(int32) :: expected_opcodes_5(19)
+    integer(int32) :: expected_ids_5(19)
     integer :: instruction_index
 
     expected_opcodes = [opcode_const, opcode_store, opcode_load, opcode_const, opcode_add, &
@@ -40,6 +42,33 @@ program test_frontend_ast_v2_execution_part
     call assert_no_storage(5)
     call assert_no_storage(7)
 
+    expected_opcodes_5 = [opcode_const, opcode_store, opcode_load, opcode_const, opcode_add, &
+        opcode_store, opcode_load, opcode_const, opcode_add, opcode_store, opcode_load, &
+        opcode_const, opcode_add, opcode_store, opcode_load, opcode_const, opcode_add, &
+        opcode_store, opcode_return]
+    expected_ids_5 = [0_int32, 1_int32, 2_int32, 3_int32, 4_int32, 4_int32, 6_int32, &
+        7_int32, 8_int32, 8_int32, 10_int32, 11_int32, 12_int32, 12_int32, 14_int32, &
+        15_int32, 16_int32, 16_int32, 16_int32]
+    if (.not. ffc_lower_frontend_ast_v2_from_sx(envelope_sx(5), body, message)) then
+        if (allocated(message)) write (*, '(a)') trim(message)
+        error stop 'exact five-assignment program-unit-v2 envelope was rejected'
+    end if
+    do instruction_index = 1, 19
+        call assert_true(body%instructions(instruction_index)%opcode == &
+            expected_opcodes_5(instruction_index), 'v2 count-5 opcode order changed')
+        call assert_true(body%instructions(instruction_index)%result%id == &
+            expected_ids_5(instruction_index), 'v2 count-5 SSA result ID changed')
+        call assert_equal(body%instructions(instruction_index)%source_rule, &
+            'frontend-ast-v2/execution-part-5', 'v2 count-5 source rule changed')
+    end do
+    call assert_true(body%instructions(1)%literal_value == 7 .and. &
+        body%instructions(4)%literal_value == 1 .and. &
+        body%instructions(8)%literal_value == 1 .and. &
+        body%instructions(12)%literal_value == 1 .and. &
+        body%instructions(16)%literal_value == 1, 'v2 count-5 literals changed')
+    call assert_storage_indices([2, 3, 6, 7, 10, 11, 14, 15, 18])
+    call assert_no_storage_indices([1, 4, 5, 8, 9, 12, 13, 16, 17, 19])
+
     call assert_rejected(replace_text(envelope_sx(), 'program-unit-v2', 'program-unit'), &
         'wrong envelope was accepted')
     call assert_rejected(replace_text(envelope_sx(), '(type-spec integer)', &
@@ -50,9 +79,16 @@ program test_frontend_ast_v2_execution_part
 
 contains
 
-    function envelope_sx() result(value)
+    function envelope_sx(count) result(value)
+        integer, intent(in), optional :: count
         character(len=8192) :: value
 
+        if (present(count)) then
+            if (count == 5) then
+                value = envelope_sx_five()
+                return
+            end if
+        end if
         value = '(program-unit-v2 (root (program-root (name main) (span (source-span '// &
             '(file main.f90) (start-byte 0) (end-byte 64) (source-hash v2-test))))) '// &
             '(declaration-count 1) (declaration (program-declaration '// &
@@ -71,6 +107,58 @@ contains
             '(span (source-span (file main.f90) (start-byte 36) (end-byte 46) '// &
             '(source-hash l3-raw-program-two-assignment-v1))))))))'
     end function envelope_sx
+
+    function envelope_sx_five() result(value)
+        character(len=8192) :: value
+
+        value = '(program-unit-v2 (root (program-root (name main) (span (source-span '// &
+            '(file main.f90) (start-byte 0) (end-byte 100) (source-hash v2-test))))) '// &
+            '(declaration-count 1) (declaration (program-declaration '// &
+            '(declaration-kind program) (name main) (span (source-span (file main.f90) '// &
+            '(start-byte 0) (end-byte 12) (source-hash v2-test))))) '// &
+            '(variable-count 1) (variable (variable-declaration (type-spec integer) (name x) '// &
+            '(span (source-span (file main.f90) (start-byte 13) (end-byte 27) '// &
+            '(source-hash v2-test))))) '// &
+            '(execution-part (assignment-sequence (assignment-count 5) '// &
+            '(assignment (assignment-stmt (variable x) (expression (assignment-expression '// &
+            '(kind integer-literal) (operator ) (left-operand 7) (right-operand ))) '// &
+            '(span (source-span (file main.f90) (start-byte 28) (end-byte 34) '// &
+            '(source-hash l3-raw-program-five-assignment-v1))))) '// &
+            '(assignment (assignment-stmt (variable x) (expression (assignment-expression '// &
+            '(kind binary-expression) (operator +) (left-operand x) (right-operand 1))) '// &
+            '(span (source-span (file main.f90) (start-byte 36) (end-byte 46) '// &
+            '(source-hash l3-raw-program-five-assignment-v1))))) '// &
+            '(assignment (assignment-stmt (variable x) (expression (assignment-expression '// &
+            '(kind binary-expression) (operator +) (left-operand x) (right-operand 1))) '// &
+            '(span (source-span (file main.f90) (start-byte 48) (end-byte 58) '// &
+            '(source-hash l3-raw-program-five-assignment-v1))))) '// &
+            '(assignment (assignment-stmt (variable x) (expression (assignment-expression '// &
+            '(kind binary-expression) (operator +) (left-operand x) (right-operand 1))) '// &
+            '(span (source-span (file main.f90) (start-byte 60) (end-byte 70) '// &
+            '(source-hash l3-raw-program-five-assignment-v1))))) '// &
+            '(assignment (assignment-stmt (variable x) (expression (assignment-expression '// &
+            '(kind binary-expression) (operator +) (left-operand x) (right-operand 1))) '// &
+            '(span (source-span (file main.f90) (start-byte 72) (end-byte 82) '// &
+            '(source-hash l3-raw-program-five-assignment-v1))))))))'
+    end function envelope_sx_five
+
+    subroutine assert_storage_indices(indices)
+        integer, intent(in) :: indices(:)
+        integer :: index
+
+        do index = 1, size(indices)
+            call assert_storage(indices(index))
+        end do
+    end subroutine assert_storage_indices
+
+    subroutine assert_no_storage_indices(indices)
+        integer, intent(in) :: indices(:)
+        integer :: index
+
+        do index = 1, size(indices)
+            call assert_no_storage(indices(index))
+        end do
+    end subroutine assert_no_storage_indices
 
     subroutine assert_storage(index)
         integer, intent(in) :: index

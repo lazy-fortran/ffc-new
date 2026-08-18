@@ -40,6 +40,10 @@ value = "frontend-ast-v1/storage-sequence-5"
 name = "frontend_ast_v2_execution_part"
 value = "frontend-ast-v2/execution-part"
 
+[[source_rules]]
+name = "frontend_ast_v2_execution_part_5"
+value = "frontend-ast-v2/execution-part-5"
+
 [[value_kinds]]
 name = "integer"
 value = 1
@@ -230,6 +234,13 @@ result_type = "i32"
 source_rule = "frontend-ast-v2/execution-part"
 
 [[instruction_shapes]]
+name = "frontend_ast_v2_int_exec_5"
+opcodes = ["const", "store", "load", "const", "add", "store", "load", "const", "add", "store", "load", "const", "add", "store", "load", "const", "add", "store", "return"]
+result_kind = "integer"
+result_type = "i32"
+source_rule = "frontend-ast-v2/execution-part-5"
+
+[[instruction_shapes]]
 name = "frontend_ast_v1_logical_program"
 opcodes = ["add", "return"]
 result_kind = "logical"
@@ -339,3 +350,11 @@ shape = "frontend_ast_v2_int_exec"
 literal_values = [7, 1]
 result_ids = [0, 1, 2, 3, 4, 4, 4]
 storage_keys = ["", "x", "x", "", "", "x", ""]
+
+[[integer_expression_routes]]
+name = "program_unit_v2_execution_part_5"
+expression = "(execution-part (assignment-sequence (assignment-count 5) (assignment x ( integer-literal 7 )) (assignment x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (assignment x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (assignment x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))) (assignment x (assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1)))) )"
+shape = "frontend_ast_v2_int_exec_5"
+literal_values = [7, 1, 1, 1, 1]
+result_ids = [0, 1, 2, 3, 4, 4, 6, 7, 8, 8, 10, 11, 12, 12, 14, 15, 16, 16, 16]
+storage_keys = ["", "x", "x", "", "", "x", "x", "", "", "x", "x", "", "", "x", "x", "", "", "x", ""]
