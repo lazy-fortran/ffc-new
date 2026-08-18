@@ -26,6 +26,7 @@ module ffc_mir_metadata
     character(len=19), parameter, public :: source_rule_frontend_v0_program = 'frontend-v0/program'
     character(len=23), parameter, public :: source_rule_frontend_ast_v1_program = 'frontend-ast-v1/program'
     character(len=26), parameter, public :: source_rule_frontend_ast_v1_assignment = 'frontend-ast-v1/assignment'
+    character(len=26), parameter, public :: source_rule_frontend_ast_v1_expression = 'frontend-ast-v1/expression'
 
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_integer_program_count = 2_int32
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_integer_program_opcode_0 = opcode_add
@@ -40,6 +41,14 @@ module ffc_mir_metadata
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_int_assign_result_kind = value_kind_integer
     character(len=3), parameter, public :: instruction_shape_frontend_ast_v1_int_assign_result_type = 'i32'
     character(len=26), parameter, public :: instruction_shape_frontend_ast_v1_int_assign_source_rule = 'frontend-ast-v1/assignment'
+
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_int_expr_assign_count = 3_int32
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_int_expr_assign_opcode_0 = opcode_add
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_int_expr_assign_opcode_1 = opcode_store
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_int_expr_assign_opcode_2 = opcode_return
+    integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_int_expr_assign_result_kind = value_kind_integer
+    character(len=3), parameter, public :: instruction_shape_frontend_ast_v1_int_expr_assign_result_type = 'i32'
+    character(len=26), parameter, public :: instruction_shape_frontend_ast_v1_int_expr_assign_source_rule = 'frontend-ast-v1/expression'
 
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_logical_program_count = 2_int32
     integer(int32), parameter, public :: instruction_shape_frontend_ast_v1_logical_program_opcode_0 = opcode_add
@@ -186,6 +195,7 @@ contains
         case (source_rule_frontend_v0_program); mir_source_rule_name = 'frontend_v0_program'
         case (source_rule_frontend_ast_v1_program); mir_source_rule_name = 'frontend_ast_v1_program'
         case (source_rule_frontend_ast_v1_assignment); mir_source_rule_name = 'frontend_ast_v1_assignment'
+        case (source_rule_frontend_ast_v1_expression); mir_source_rule_name = 'frontend_ast_v1_expression'
         case default; mir_source_rule_name = ''
         end select
     end function mir_source_rule_name
@@ -198,6 +208,7 @@ contains
         case ('frontend_v0_program'); mir_source_rule_value = source_rule_frontend_v0_program
         case ('frontend_ast_v1_program'); mir_source_rule_value = source_rule_frontend_ast_v1_program
         case ('frontend_ast_v1_assignment'); mir_source_rule_value = source_rule_frontend_ast_v1_assignment
+        case ('frontend_ast_v1_expression'); mir_source_rule_value = source_rule_frontend_ast_v1_expression
         case default; mir_source_rule_value = ''
         end select
     end function mir_source_rule_value

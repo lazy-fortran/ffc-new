@@ -16,6 +16,10 @@ value = "frontend-ast-v1/program"
 name = "frontend_ast_v1_assignment"
 value = "frontend-ast-v1/assignment"
 
+[[source_rules]]
+name = "frontend_ast_v1_expression"
+value = "frontend-ast-v1/expression"
+
 [[value_kinds]]
 name = "integer"
 value = 1
@@ -123,6 +127,13 @@ opcodes = ["store", "return"]
 result_kind = "integer"
 result_type = "i32"
 source_rule = "frontend-ast-v1/assignment"
+
+[[instruction_shapes]]
+name = "frontend_ast_v1_int_expr_assign"
+opcodes = ["add", "store", "return"]
+result_kind = "integer"
+result_type = "i32"
+source_rule = "frontend-ast-v1/expression"
 
 [[instruction_shapes]]
 name = "frontend_ast_v1_logical_program"
