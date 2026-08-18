@@ -1638,14 +1638,23 @@ contains
         canonical = trim(expression)
         route = 0_int32
         if (index(canonical, '( print-stmt ') /= 1) return
-        if (index(canonical, '( format * )') == 0) return
-        if (index(canonical, '( output-item-list ( output-item') == 0) return
-        if (index(canonical, '( integer-literal 7 )') == 0) return
-        if (index(canonical, 'R1212') == 0 .or. index(canonical, 'R1215') == 0 .or. &
-            index(canonical, 'R1217') == 0) return
+        if (index(canonical, '( format-kind default-char-expr )') == 0 .or. &
+            index(canonical, '( format-value * )') == 0 .or. &
+            index(canonical, '( output-kind integer-literal )') == 0 .or. &
+            index(canonical, '( output-value 7 )') == 0) return
+        if (index(canonical, '( statement-rule R1212 )') == 0 .or. &
+            index(canonical, '( format-rule R1215 )') == 0 .or. &
+            index(canonical, '( output-rule R1217 )') == 0) return
+        if (index(canonical, '( source-document J3-24-007 )') == 0 .or. &
+            index(canonical, '( statement-clause 12.6.1 )') == 0 .or. &
+            index(canonical, '( format-clause 12.6.2.2 )') == 0 .or. &
+            index(canonical, '( output-clause 12.6.3 )') == 0 .or. &
+            index(canonical, '( statement-page 242 )') == 0 .or. &
+            index(canonical, '( format-page 244 )') == 0 .or. &
+            index(canonical, '( output-page 248 )') == 0 .or. &
+            index(canonical, '( source-hash ') == 0) return
         if (index(canonical, 'write-stmt') /= 0 .or. index(canonical, 'control-list') /= 0 .or. &
-            index(canonical, 'io-implied-do') /= 0 .or. index(canonical, '( integer-literal 8 )') /= 0) return
-        if (count_substring(canonical, '( output-item ') /= 1) return
+            index(canonical, 'io-implied-do') /= 0 .or. index(canonical, '( output-value 8 )') /= 0) return
         route = 19_int32
     end function frontend_ast_v2_print_route
 

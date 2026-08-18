@@ -19,14 +19,14 @@ program test_frontend_ast_v2_print
     call assert_equal(body%instructions(3)%opcode, opcode_return, 'PRINT return opcode changed')
     call assert_equal(body%instructions(1)%literal_value, 7, 'PRINT literal changed')
     call assert_true(.not. ffc_lower_frontend_ast_v2_from_sx(&
-        replace_text(envelope_sx(), '(integer-literal 7)', '(integer-literal 8)'), body, message), &
+        replace_text(envelope_sx(), '(output-value 7)', '(output-value 8)'), body, message), &
         'PRINT 8 mutation was accepted')
     call assert_true(.not. ffc_lower_frontend_ast_v2_from_sx(&
         replace_text(envelope_sx(), '(print-stmt ', '(write-stmt '), body, message), &
         'WRITE mutation was accepted')
     call assert_true(.not. ffc_lower_frontend_ast_v2_from_sx(&
-        replace_text(envelope_sx(), '(output-item-list (output-item (expr (integer-literal 7)))', &
-        '(output-item-list)'), body, message), 'missing PRINT item was accepted')
+        replace_text(envelope_sx(), '(output-value 7)', '(output-value)'), body, message), &
+        'missing PRINT item was accepted')
 
     write (*, '(a)') 'frontend AST v2 PRINT star 7 checks: ok'
 
@@ -38,11 +38,13 @@ contains
         value = '(program-unit-v2 (root (program-root (name p) (span (source-span '// &
             '(file main.f90) (start-byte 0) (end-byte 40) (source-hash print-test))))) '// &
             '(declaration-count 0) (declaration) (variable-count 0) (variable) '// &
-            '(execution-part (print-stmt (format *) (output-item-list '// &
-            '(output-item (expr (integer-literal 7))) '// &
-            '(span (source-span (file main.f90) (start-byte 28) (end-byte 38) '// &
-            '(source-hash print-test))) (source-rule R1212) (format-rule R1215) '// &
-            '(item-rule R1217)))))'
+            '(execution-part (print-stmt (format-kind default-char-expr) (format-value *) '// &
+            '(output-kind integer-literal) (output-value 7) '// &
+            '(statement-rule R1212) (format-rule R1215) (output-rule R1217) '// &
+            '(source-document J3-24-007) (statement-clause 12.6.1) '// &
+            '(format-clause 12.6.2.2) (output-clause 12.6.3) '// &
+            '(statement-page 242) (format-page 244) (output-page 248) '// &
+            '(source-hash print-test))))'
     end function envelope_sx
 
     function replace_text(value, old, new) result(replaced)
