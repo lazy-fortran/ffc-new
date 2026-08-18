@@ -4,6 +4,7 @@ module ffc_frontend_ast
         ffc_program_root_from_sx, ffc_program_root_t, ffc_validate_program_root
     use ffc_mir, only: mir_function_body_t, mir_make_function_witness, &
         mir_type_spec_name, mir_type_spec_value_kind
+    use ffc_mir_metadata, only: source_rule_frontend_ast_v1_program
     implicit none
     private
 
@@ -150,8 +151,8 @@ contains
         body%instructions(1)%result%kind = kind
         body%instructions(1)%result%type_name = trim(type_name)
         body%instructions(2)%result = body%instructions(1)%result
-        body%instructions(1)%source_rule = 'frontend-ast-v1/program'
-        body%instructions(2)%source_rule = 'frontend-ast-v1/program'
+        body%instructions(1)%source_rule = source_rule_frontend_ast_v1_program
+        body%instructions(2)%source_rule = source_rule_frontend_ast_v1_program
     end function ffc_lower_frontend_ast_v1
 
     logical function ffc_lower_frontend_ast_v1_from_sx(serialized, body, message) result(lowered)

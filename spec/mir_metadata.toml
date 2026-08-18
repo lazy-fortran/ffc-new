@@ -1,5 +1,17 @@
 # Source of truth for the numeric mir-v0 metadata.
 
+[[source_rules]]
+name = "program_root"
+value = "program-root"
+
+[[source_rules]]
+name = "frontend_v0_program"
+value = "frontend-v0/program"
+
+[[source_rules]]
+name = "frontend_ast_v1_program"
+value = "frontend-ast-v1/program"
+
 [[value_kinds]]
 name = "integer"
 value = 1

@@ -2,6 +2,7 @@ module ffc_lowering
     use, intrinsic :: iso_fortran_env, only: int64
     use ffc_mir, only: mir_function_body_t, mir_make_function_witness, &
         mir_validate_function_body, opcode_add, opcode_return
+    use ffc_mir_metadata, only: source_rule_frontend_v0_program, source_rule_program_root
     implicit none
     private
 
@@ -60,8 +61,8 @@ contains
 
         call mir_make_function_witness(body)
         body%function%name = trim(root%name)
-        body%instructions(1)%source_rule = 'program-root'
-        body%instructions(2)%source_rule = 'program-root'
+        body%instructions(1)%source_rule = source_rule_program_root
+        body%instructions(2)%source_rule = source_rule_program_root
     end function ffc_lower_program_root
 
     logical function ffc_validate_program_root(root, message) result(valid)
@@ -548,8 +549,8 @@ contains
         end if
 
         call mir_make_function_witness(body)
-        body%instructions(1)%source_rule = 'frontend-v0/program'
-        body%instructions(2)%source_rule = 'frontend-v0/program'
+        body%instructions(1)%source_rule = source_rule_frontend_v0_program
+        body%instructions(2)%source_rule = source_rule_frontend_v0_program
         lowered = .true.
     end function ffc_lower_frontend_v0
 

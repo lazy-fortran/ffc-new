@@ -21,12 +21,17 @@ module ffc_mir_metadata
     integer(int32), parameter, public :: opcode_call = 9_int32
     integer(int32), parameter, public :: opcode_return = 10_int32
 
+    character(len=12), parameter, public :: source_rule_program_root = 'program-root'
+    character(len=19), parameter, public :: source_rule_frontend_v0_program = 'frontend-v0/program'
+    character(len=23), parameter, public :: source_rule_frontend_ast_v1_program = 'frontend-ast-v1/program'
+
     integer(int32), parameter, public :: mir_opcode_histogram_size = &
         opcode_return - opcode_add + 1_int32
 
     public :: mir_opcode_name, mir_opcode_value
     public :: mir_value_kind_name, mir_value_kind_value
     public :: mir_type_spec_value_kind, mir_type_spec_name
+    public :: mir_source_rule_name, mir_source_rule_value
 
 contains
 
@@ -115,5 +120,27 @@ contains
         case default; mir_type_spec_name = ''
         end select
     end function mir_type_spec_name
+
+    character(len=64) function mir_source_rule_name(source_rule)
+        character(len=*), intent(in) :: source_rule
+
+        select case (trim(source_rule))
+        case (source_rule_program_root); mir_source_rule_name = 'program_root'
+        case (source_rule_frontend_v0_program); mir_source_rule_name = 'frontend_v0_program'
+        case (source_rule_frontend_ast_v1_program); mir_source_rule_name = 'frontend_ast_v1_program'
+        case default; mir_source_rule_name = ''
+        end select
+    end function mir_source_rule_name
+
+    character(len=64) function mir_source_rule_value(name)
+        character(len=*), intent(in) :: name
+
+        select case (trim(name))
+        case ('program_root'); mir_source_rule_value = source_rule_program_root
+        case ('frontend_v0_program'); mir_source_rule_value = source_rule_frontend_v0_program
+        case ('frontend_ast_v1_program'); mir_source_rule_value = source_rule_frontend_ast_v1_program
+        case default; mir_source_rule_value = ''
+        end select
+    end function mir_source_rule_value
 
 end module ffc_mir_metadata

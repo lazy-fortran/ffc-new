@@ -18,11 +18,23 @@ def read_entries(data: dict, key: str) -> list[dict[str, int | str]]:
     return entries
 
 
+def read_source_rules(data: dict) -> list[dict[str, str]]:
+    entries = data.get("source_rules", [])
+    names = [entry["name"] for entry in entries]
+    values = [entry["value"] for entry in entries]
+    if len(set(names)) != len(names):
+        raise ValueError("source_rules names must be unique")
+    if len(set(values)) != len(values):
+        raise ValueError("source_rules values must be unique")
+    return entries
+
+
 def generate(spec_path: pathlib.Path) -> str:
     with spec_path.open("rb") as stream:
         data = tomllib.load(stream)
     kinds = read_entries(data, "value_kinds")
     opcodes = read_entries(data, "opcodes")
+    source_rules = read_source_rules(data)
     type_specs = data.get("type_specs", [])
     kind_names = {entry["name"] for entry in kinds}
     type_spec_names = {entry["name"] for entry in type_specs}
@@ -46,6 +58,12 @@ def generate(spec_path: pathlib.Path) -> str:
                 f"{entry['value']}_int32"
             )
         lines.append("")
+    for entry in source_rules:
+        lines.append(
+            f"    character(len={len(entry['value'])}), parameter, public :: "
+            f"source_rule_{entry['name']} = '{entry['value']}'"
+        )
+    lines.append("")
     lines += [
         "    integer(int32), parameter, public :: mir_opcode_histogram_size = &",
         "        opcode_return - opcode_add + 1_int32",
@@ -53,6 +71,7 @@ def generate(spec_path: pathlib.Path) -> str:
         "    public :: mir_opcode_name, mir_opcode_value",
         "    public :: mir_value_kind_name, mir_value_kind_value",
         "    public :: mir_type_spec_value_kind, mir_type_spec_name",
+        "    public :: mir_source_rule_name, mir_source_rule_value",
         "",
         "contains",
         "",
@@ -140,6 +159,36 @@ def generate(spec_path: pathlib.Path) -> str:
         "        case default; mir_type_spec_name = ''",
         "        end select",
         "    end function mir_type_spec_name",
+        "",
+        "    character(len=64) function mir_source_rule_name(source_rule)",
+        "        character(len=*), intent(in) :: source_rule",
+        "",
+        "        select case (trim(source_rule))",
+    ]
+    for entry in source_rules:
+        lines.append(
+            f"        case (source_rule_{entry['name']}); "
+            f"mir_source_rule_name = '{entry['name']}'"
+        )
+    lines += [
+        "        case default; mir_source_rule_name = ''",
+        "        end select",
+        "    end function mir_source_rule_name",
+        "",
+        "    character(len=64) function mir_source_rule_value(name)",
+        "        character(len=*), intent(in) :: name",
+        "",
+        "        select case (trim(name))",
+    ]
+    for entry in source_rules:
+        lines.append(
+            f"        case ('{entry['name']}'); mir_source_rule_value = "
+            f"source_rule_{entry['name']}"
+        )
+    lines += [
+        "        case default; mir_source_rule_value = ''",
+        "        end select",
+        "    end function mir_source_rule_value",
         "",
         "end module ffc_mir_metadata",
         "",
