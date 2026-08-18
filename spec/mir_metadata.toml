@@ -143,6 +143,13 @@ result_type = "i32"
 source_rule = "frontend-ast-v1/expression"
 
 [[instruction_shapes]]
+name = "frontend_ast_v1_int_div_assign"
+opcodes = ["div", "store", "return"]
+result_kind = "integer"
+result_type = "i32"
+source_rule = "frontend-ast-v1/expression"
+
+[[instruction_shapes]]
 name = "frontend_ast_v1_logical_program"
 opcodes = ["add", "return"]
 result_kind = "logical"
