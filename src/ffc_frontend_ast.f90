@@ -152,6 +152,7 @@ module ffc_frontend_ast
     public :: ffc_frontend_ast_v1_from_sx
     public :: ffc_lower_frontend_ast_v1
     public :: ffc_lower_frontend_ast_v1_from_sx
+    public :: ffc_lower_frontend_ast_v1_assignment_sequence_from_sx
     public :: ffc_validate_frontend_ast_v1
     public :: ffc_validate_frontend_ast_v1_integer_program_shape
     public :: ffc_validate_frontend_ast_v1_integer_assignment_program_shape
@@ -250,6 +251,61 @@ contains
         end if
         parsed = ffc_validate_frontend_ast_v1(ast, message)
     end function ffc_frontend_ast_v1_from_sx
+
+    logical function ffc_lower_frontend_ast_v1_assignment_sequence_from_sx(serialized, body, &
+            message) result(lowered)
+        character(len=*), intent(in) :: serialized
+        type(mir_function_body_t), intent(out) :: body
+        character(len=:), allocatable, intent(out), optional :: message
+
+        character(len=frontend_ast_token_length) :: token(frontend_ast_token_capacity)
+        character(len=frontend_ast_expression_length) :: first_text, second_text
+        character(len=64) :: count_text
+        type(ffc_frontend_assignment_v1_t) :: first, second
+        character(len=frontend_ast_expression_length) :: route_key
+        integer :: token_count, position
+        integer(int32) :: route
+
+        call clear_message(message)
+        lowered = .false.
+        if (.not. tokenize_frontend_ast_sx(serialized, token, token_count, message)) return
+        position = 1
+        if (.not. expect_token(token, token_count, position, '(', message)) return
+        if (.not. expect_token(token, token_count, position, 'assignment-sequence', message)) return
+        if (.not. read_named_atom(token, token_count, position, 'assignment-count', count_text, &
+            message)) return
+        if (trim(count_text) /= '2') then
+            call set_message(message, 'unsupported-two-assignment-sequence')
+            return
+        end if
+        if (.not. read_named_expression(token, token_count, position, 'assignment', first_text, &
+            message)) return
+        if (.not. read_named_expression(token, token_count, position, 'assignment', second_text, &
+            message)) return
+        if (.not. expect_token(token, token_count, position, ')', message)) return
+        if (position <= token_count) then
+            call set_message(message, 'malformed-assignment-sequence')
+            return
+        end if
+        if (.not. parse_assignment_v1(trim(first_text), first, message)) return
+        if (.not. parse_assignment_v1(trim(second_text), second, message)) return
+        if (trim(first%value) /= '( integer-literal 7 )' .or. trim(first%target) /= 'x' .or. &
+            trim(second%target) /= 'x' .or. trim(second%value) /= &
+            '(assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))') then
+            call set_message(message, 'unsupported-two-assignment-sequence')
+            return
+        end if
+        route_key = '(assignment-sequence (assignment-count 2) (first x '//trim(first%value)// &
+            ') (second x '//trim(second%value)//'))'
+        route = mir_frontend_ast_v1_integer_expression_route(trim(route_key))
+        if (route == 0_int32) then
+            call set_message(message, 'unsupported-two-assignment-sequence')
+            return
+        end if
+        call mir_make_function_witness(body)
+        call emit_frontend_ast_v1_integer_expression(body, route)
+        lowered = mir_validate_function_body(body, message)
+    end function ffc_lower_frontend_ast_v1_assignment_sequence_from_sx
 
     logical function ffc_validate_frontend_ast_v1(ast, message) result(valid)
         type(ffc_frontend_ast_v1_t), intent(in) :: ast
@@ -1204,10 +1260,30 @@ contains
         type(ffc_frontend_ast_v1_t) :: ast
 
         call clear_message(message)
+        if (starts_assignment_sequence_sx(serialized)) then
+            lowered = ffc_lower_frontend_ast_v1_assignment_sequence_from_sx(serialized, body, message)
+            return
+        end if
         lowered = ffc_frontend_ast_v1_from_sx(serialized, ast, message)
         if (.not. lowered) return
         lowered = ffc_lower_frontend_ast_v1(ast, body, message)
     end function ffc_lower_frontend_ast_v1_from_sx
+
+    logical function starts_assignment_sequence_sx(serialized) result(starts)
+        character(len=*), intent(in) :: serialized
+
+        character(len=frontend_ast_token_length) :: token(frontend_ast_token_capacity)
+        character(len=:), allocatable :: message
+        integer :: token_count
+
+        starts = .false.
+        if (.not. tokenize_frontend_ast_sx(serialized, token, token_count, message)) return
+        if (token_count >= 2) then
+            if (trim(token(1)) == '(') then
+                starts = trim(token(2)) == 'assignment-sequence'
+            end if
+        end if
+    end function starts_assignment_sequence_sx
 
     logical function ffc_frontend_ast_v0_from_sx(serialized, ast, message) result(parsed)
         character(len=*), intent(in) :: serialized
