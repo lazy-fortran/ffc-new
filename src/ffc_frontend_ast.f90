@@ -3,7 +3,8 @@ module ffc_frontend_ast
     use ffc_lowering, only: ffc_lower_program_root, ffc_program_declaration_from_sx, &
         ffc_program_root_from_sx, ffc_program_root_t, ffc_validate_program_root
     use ffc_mir, only: mir_function_body_t, mir_make_function_witness, opcode_const, &
-        mir_type_spec_name, mir_type_spec_value_kind, mir_validate_function_body
+        opcode_load, opcode_output, opcode_return, opcode_store, mir_type_spec_name, &
+        mir_type_spec_value_kind, mir_validate_function_body
     use ffc_mir_metadata, only: instruction_shape_frontend_ast_v1_integer_program_count, &
         instruction_shape_frontend_ast_v1_integer_program_opcode_0, &
         instruction_shape_frontend_ast_v1_integer_program_opcode_1, &
@@ -481,6 +482,7 @@ contains
         type(ffc_frontend_variable_declaration_v1_t) :: variable
         type(ffc_frontend_assignment_v1_t) :: assignments(6)
         character(len=frontend_ast_expression_length) :: route_key
+        character(len=frontend_ast_expression_length) :: print_statement
         integer :: assignment_count, assignment_index, token_count, position
         integer(int64) :: declaration_count, variable_count
         integer(int32) :: route
@@ -585,8 +587,10 @@ contains
         if (.not. read_named_expression(token, token_count, position, 'variable', expression, &
             message)) return
         if (.not. parse_variable_declaration_v1(trim(expression), variable, message)) return
-        if (.not. read_named_expression(token, token_count, position, 'execution-part', expression, &
-            message)) return
+        if (.not. read_v2_execution_part(token, token_count, position, expression, &
+            print_statement, message)) then
+            return
+        end if
         route = mir_frontend_ast_v1_integer_expression_route(&
             '(execution-part '//trim(expression)//')')
         if (route /= 18_int32) then
@@ -619,6 +623,28 @@ contains
         if (trim(root%name) /= 'main' .or. trim(declaration%name) /= 'main' .or. &
             trim(variable%type_spec) /= 'integer' .or. trim(variable%name) /= 'x') then
             call set_message(message, 'unsupported-frontend-ast-v2-execution-part')
+            return
+        end if
+        if (len_trim(print_statement) > 0) then
+            if (assignment_count /= 1 .or. trim(assignments(1)%target) /= 'x' .or. &
+                trim(assignments(1)%value) /= '( integer-literal 17 )' .or. &
+                .not. frontend_ast_v2_print_variable_match(print_statement)) then
+                call set_message(message, 'unsupported-frontend-ast-v2-execution-part')
+                return
+            end if
+            if (trim(root%source_file) /= trim(declaration%source_file) .or. &
+                trim(root%source_hash) /= trim(declaration%source_hash) .or. &
+                trim(root%source_file) /= trim(variable%source_file) .or. &
+                trim(root%source_hash) /= trim(variable%source_hash) .or. &
+                trim(root%source_file) /= trim(assignments(1)%source_file) .or. &
+                trim(root%source_hash) /= trim(assignments(1)%source_hash)) then
+                call set_message(message, 'frontend-ast-v2-invalid-provenance')
+                return
+            end if
+            call mir_make_function_witness(body)
+            body%function%name = trim(root%name)
+            call emit_frontend_ast_v2_print_variable(body)
+            lowered = mir_validate_function_body(body, message)
             return
         end if
         if (trim(assignments(1)%target) /= 'x' .or. &
@@ -687,6 +713,44 @@ contains
         lowered = mir_validate_function_body(body, message)
     end function ffc_lower_frontend_ast_v2_from_sx
 
+    logical function read_v2_execution_part(token, token_count, position, expression, &
+            print_statement, message) result(ok)
+        character(len=*), intent(in) :: token(:)
+        integer, intent(in) :: token_count
+        integer, intent(inout) :: position
+        character(len=*), intent(out) :: expression, print_statement
+        character(len=:), allocatable, intent(out), optional :: message
+
+        expression = ''
+        print_statement = ''
+        call clear_message(message)
+        ok = expect_token(token, token_count, position, '(', message)
+        if (.not. ok) return
+        ok = expect_token(token, token_count, position, 'execution-part', message)
+        if (.not. ok) return
+        ok = read_expression(token, token_count, position, expression, message)
+        if (.not. ok) return
+        if (position <= token_count) then
+            if (trim(token(position)) /= '(') then
+                ok = expect_token(token, token_count, position, ')', message)
+                return
+            end if
+            if (position + 1 > token_count) then
+                call set_message(message, 'unsupported-frontend-ast-v2-execution-part')
+                ok = .false.
+                return
+            end if
+            if (trim(token(position + 1)) /= 'print-stmt') then
+                call set_message(message, 'unsupported-frontend-ast-v2-execution-part')
+                ok = .false.
+                return
+            end if
+            ok = read_expression(token, token_count, position, print_statement, message)
+            if (.not. ok) return
+        end if
+        ok = expect_token(token, token_count, position, ')', message)
+    end function read_v2_execution_part
+
     logical function parse_v2_assignment_sequence(serialized, assignments, assignment_count, message) &
             result(parsed)
         character(len=*), intent(in) :: serialized
@@ -711,7 +775,8 @@ contains
         if (.not. read_named_atom(token, token_count, position, 'assignment-count', count_text, &
             message)) return
         if (.not. parse_count(count_text, count, message)) return
-        if (count /= 2_int64 .and. count /= 5_int64 .and. count /= 6_int64) then
+        if (count /= 1_int64 .and. count /= 2_int64 .and. count /= 5_int64 .and. &
+            count /= 6_int64) then
             call set_message(message, 'invalid-frontend-ast-v2-assignment-count')
             parsed = .false.
             return
@@ -729,6 +794,64 @@ contains
             parsed = .false.
         end if
     end function parse_v2_assignment_sequence
+
+    logical function frontend_ast_v2_print_variable_match(expression) result(matches)
+        character(len=*), intent(in) :: expression
+        character(len=:), allocatable :: canonical
+
+        canonical = trim(expression)
+        matches = index(canonical, '( print-stmt ') == 1 .and. &
+            index(canonical, '( format-kind default-char-expr )') /= 0 .and. &
+            index(canonical, '( format-value * )') /= 0 .and. &
+            index(canonical, '( output-kind variable )') /= 0 .and. &
+            index(canonical, '( output-name x )') /= 0 .and. &
+            index(canonical, '( statement-rule R1212 )') /= 0 .and. &
+            index(canonical, '( format-rule R1215 )') /= 0 .and. &
+            index(canonical, '( output-rule R901 )') /= 0 .and. &
+            index(canonical, '( source-document J3-24-007 )') /= 0 .and. &
+            index(canonical, '( statement-clause 12.6.1 )') /= 0 .and. &
+            index(canonical, '( format-clause 12.6.2.2 )') /= 0 .and. &
+            index(canonical, '( output-clause 12.6.3 )') /= 0 .and. &
+            index(canonical, '( statement-page 242 )') /= 0 .and. &
+            index(canonical, '( format-page 244 )') /= 0 .and. &
+            index(canonical, '( output-page 248 )') /= 0 .and. &
+            index(canonical, '( source-hash ') /= 0 .and. &
+            index(canonical, 'write-stmt') == 0 .and. &
+            index(canonical, 'control-list') == 0 .and. &
+            index(canonical, 'io-implied-do') == 0
+    end function frontend_ast_v2_print_variable_match
+
+    subroutine emit_frontend_ast_v2_print_variable(body)
+        type(mir_function_body_t), intent(inout) :: body
+        integer :: index
+
+        deallocate (body%instructions)
+        allocate (body%instructions(5))
+        body%function%instruction_count = 5
+        do index = 1, 5
+            body%instructions(index)%id = index - 1
+            body%instructions(index)%result%kind = 1
+            body%instructions(index)%result%type_name = 'i32'
+        end do
+        body%instructions(1)%opcode = opcode_const
+        body%instructions(1)%literal_value = 17
+        body%instructions(1)%result%id = 0
+        body%instructions(1)%source_rule = 'frontend-ast-v2/execution-part'
+        body%instructions(2)%opcode = opcode_store
+        body%instructions(2)%result%id = 1
+        body%instructions(2)%storage_key = 'x'
+        body%instructions(2)%source_rule = 'frontend-ast-v2/execution-part'
+        body%instructions(3)%opcode = opcode_load
+        body%instructions(3)%result%id = 2
+        body%instructions(3)%storage_key = 'x'
+        body%instructions(3)%source_rule = 'frontend-ast-v2/print-stmt'
+        body%instructions(4)%opcode = opcode_output
+        body%instructions(4)%result%id = 2
+        body%instructions(4)%source_rule = 'frontend-ast-v2/print-stmt'
+        body%instructions(5)%opcode = opcode_return
+        body%instructions(5)%result%id = 2
+        body%instructions(5)%source_rule = 'frontend-ast-v2/print-stmt'
+    end subroutine emit_frontend_ast_v2_print_variable
 
     character(len=16) function sequence_position_name(position)
         integer, intent(in) :: position
