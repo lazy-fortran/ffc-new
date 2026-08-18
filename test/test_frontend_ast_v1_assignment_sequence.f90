@@ -1,6 +1,7 @@
 program test_frontend_ast_v1_assignment_sequence
     use, intrinsic :: iso_fortran_env, only: int32
-    use ffc_frontend_ast, only: ffc_lower_frontend_ast_v1_from_sx
+    use ffc_frontend_ast, only: ffc_lower_frontend_ast_v1_from_sx, &
+        ffc_lower_frontend_ast_v1_assignment_sequence_from_sx
     use ffc_mir, only: mir_function_body_t, opcode_add, opcode_const, opcode_load, &
         opcode_return, opcode_store, mir_validate_function_body
     implicit none
@@ -50,6 +51,7 @@ program test_frontend_ast_v1_assignment_sequence
     call assert_rejected(wrong_order_sx(), 'wrong-order sequence was accepted')
     call assert_rejected(missing_third_sx(), 'missing-third sequence was accepted')
     call assert_rejected(wrong_operator_sx(), 'wrong-operator sequence was accepted')
+    call assert_count4()
     write (*, '(a)') 'frontend AST v1 assignment sequence behavioral checks: ok'
 
 contains
@@ -122,6 +124,71 @@ contains
         value = replace_text(sequence_sx(), '(operator +) (left-operand x)', &
             '(operator *) (left-operand x)')
     end function wrong_operator_sx
+
+    subroutine assert_count4()
+        integer(int32) :: opcodes(15)
+        integer(int32) :: literals(15)
+        integer(int32) :: result_ids(15)
+        integer :: index
+
+        opcodes = [opcode_const, opcode_store, opcode_load, opcode_const, opcode_add, opcode_store, &
+            opcode_load, opcode_const, opcode_add, opcode_store, opcode_load, opcode_const, &
+            opcode_add, opcode_store, opcode_return]
+        literals = [7_int32, 0_int32, 0_int32, 1_int32, 0_int32, 0_int32, 0_int32, 1_int32, &
+            0_int32, 0_int32, 0_int32, 1_int32, 0_int32, 0_int32, 0_int32]
+        result_ids = [0_int32, 1_int32, 2_int32, 3_int32, 4_int32, 4_int32, 6_int32, 7_int32, &
+            8_int32, 8_int32, 10_int32, 11_int32, 12_int32, 12_int32, 12_int32]
+        if (.not. ffc_lower_frontend_ast_v1_assignment_sequence_from_sx(sequence4_sx(), body, message)) then
+            error stop 'four-assignment sequence was rejected'
+        end if
+        call assert_true(body%function%instruction_count == 15, 'four-assignment instruction count changed')
+        do index = 1, 15
+            call assert_true(body%instructions(index)%opcode == opcodes(index), &
+                'four-assignment opcode order changed')
+            call assert_true(body%instructions(index)%literal_value == literals(index), &
+                'four-assignment literal shape changed')
+            call assert_true(body%instructions(index)%result%id == result_ids(index), &
+                'four-assignment result IDs changed')
+            call assert_equal(body%instructions(index)%source_rule, 'frontend-ast-v1/storage-sequence-4', &
+                'four-assignment source rule changed')
+        end do
+        call assert_storage4(2)
+        call assert_storage4(3)
+        call assert_storage4(6)
+        call assert_storage4(7)
+        call assert_storage4(10)
+        call assert_storage4(11)
+        call assert_storage4(14)
+    end subroutine assert_count4
+
+    subroutine assert_storage4(index)
+        integer, intent(in) :: index
+
+        call assert_true(allocated(body%instructions(index)%storage_key), 'four-assignment storage key missing')
+        call assert_equal(body%instructions(index)%storage_key, 'x', 'four-assignment storage key changed')
+    end subroutine assert_storage4
+
+    function sequence4_sx() result(value)
+        character(len=4096) :: value
+
+        value = '(assignment-sequence (assignment-count 4) '// &
+            '(assignment (assignment-stmt (variable x) (expression '// &
+            '(assignment-expression (kind integer-literal) (operator ) (left-operand 7) '// &
+            '(right-operand ))) (span (source-span (file sequence.f90) (start-byte 41) '// &
+            '(end-byte 47) (source-hash l3-raw-program-four-assignment-v1))))) '// &
+            '(assignment (assignment-stmt (variable x) (expression '// &
+            '(assignment-expression (kind binary-expression) (operator +) (left-operand x) '// &
+            '(right-operand 1))) (span (source-span (file sequence.f90) (start-byte 48) '// &
+            '(end-byte 58) (source-hash l3-raw-program-four-assignment-v1))))) '// &
+            '(assignment (assignment-stmt (variable x) (expression '// &
+            '(assignment-expression (kind binary-expression) (operator +) (left-operand x) '// &
+            '(right-operand 1))) (span (source-span (file sequence.f90) (start-byte 59) '// &
+            '(end-byte 69) (source-hash l3-raw-program-four-assignment-v1))))) '// &
+            '(assignment (assignment-stmt (variable x) (expression '// &
+            '(assignment-expression (kind binary-expression) (operator +) (left-operand x) '// &
+            '(right-operand 1))) (span (source-span (file sequence.f90) (start-byte 70) '// &
+            '(end-byte 80) (source-hash l3-raw-program-four-assignment-v1))))))'
+    end function sequence4_sx
 
     function replace_text(input, old, new) result(output)
         character(len=*), intent(in) :: input, old, new
