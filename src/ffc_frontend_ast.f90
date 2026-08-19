@@ -819,35 +819,7 @@ contains
                 message)) return
             if (.not. frontend_ast_v2_print_generic_list_match(print_statement) .or. &
                 assignment_count /= 1 .or. trim(assignments(1)%target) /= 'x' .or. &
-                index(trim(assignments(1)%value), 'integer-literal') == 0 .or. &
-                (index(print_statement, '( operator ** )') == 0 .and. &
-                index(print_statement, '( kind integer-expression )') /= 0 .and. &
-                index(print_statement, '( output-item ( kind integer-expression ) ( operator + ) '// &
-                '( left x ) ( right 1 ) ( rule R1217 ) ( clause 12.6.3 ) ( page 248 ) )') == 0 .and. &
-                index(print_statement, '( output-item ( kind integer-expression ) ( operator + ) '// &
-                '( left x ) ( right 2 ) ( rule R1217 ) ( clause 12.6.3 ) ( page 248 ) )') == 0 .and. &
-                index(print_statement, '( output-item ( kind integer-expression ) ( operator + ) '// &
-                '( left x ) ( right 3 ) ( rule R1217 ) ( clause 12.6.3 ) ( page 248 ) )') == 0 .and. &
-                index(print_statement, '( output-item ( kind integer-expression ) ( operator + ) '// &
-                '( left x ) ( right 4 ) ( rule R1217 ) ( clause 12.6.3 ) ( page 248 ) )') == 0 .and. &
-                index(print_statement, '( output-item ( kind integer-expression ) ( operator + ) '// &
-                '( left x ) ( right x ) ( rule R1217 ) ( clause 12.6.3 ) ( page 248 ) )') == 0 .and. &
-                index(print_statement, '( output-item ( kind integer-expression ) ( operator * ) '// &
-                '( left x ) ( right 2 ) ( rule R1217 ) ( clause 12.6.3 ) ( page 248 ) )') == 0 .and. &
-                index(print_statement, '( output-item ( kind integer-expression ) ( operator - ) '// &
-                '( left x ) ( right 2 ) ( rule R1217 ) ( clause 12.6.3 ) ( page 248 ) )') == 0 .and. &
-                index(print_statement, '( output-item ( kind integer-expression ) ( operator - ) '// &
-                '( left x ) ( right 3 ) ( rule R1217 ) ( clause 12.6.3 ) ( page 248 ) )') == 0 .and. &
-                index(print_statement, '( output-item ( kind integer-expression ) ( operator - ) '// &
-                '( left x ) ( right 4 ) ( rule R1217 ) ( clause 12.6.3 ) ( page 248 ) )') == 0 .and. &
-                index(print_statement, '( output-item ( kind integer-expression ) ( operator – ) '// &
-                '( left x ) ( right 2 ) ( rule R1217 ) ( clause 12.6.3 ) ( page 248 ) )') == 0 .and. &
-                index(print_statement, '( output-item ( kind integer-expression ) ( operator – ) '// &
-                '( left x ) ( right 3 ) ( rule R1217 ) ( clause 12.6.3 ) ( page 248 ) )') == 0 .and. &
-                index(print_statement, '( output-item ( kind integer-expression ) ( operator – ) '// &
-                '( left x ) ( right 4 ) ( rule R1217 ) ( clause 12.6.3 ) ( page 248 ) )') == 0 .and. &
-                index(print_statement, '( output-item ( kind integer-expression ) ( operator / ) '// &
-                '( left x ) ( right 2 ) ( rule R1217 ) ( clause 12.6.3 ) ( page 248 ) )') == 0)) then
+                index(trim(assignments(1)%value), 'integer-literal') == 0) then
                 call set_message(message, 'unsupported-frontend-ast-v2-execution-part')
                 return
             end if
@@ -1369,8 +1341,8 @@ contains
         allocate (character(len=32) :: item_kind(0), item_value(0), item_rule(0))
         item_count = 0
         call clear_message(message)
-        parsed = tokenize_frontend_ast_sx(expression, token, token_count, message)
-        if (.not. parsed) return
+        parsed = .false.
+        if (.not. tokenize_frontend_ast_sx(expression, token, token_count, message)) return
         position = 1
         if (.not. expect_token(token, token_count, position, '(', message)) return
         if (.not. expect_token(token, token_count, position, 'print-stmt', message)) return
@@ -1412,31 +1384,23 @@ contains
                 item_value(item_index), item_rule(item_index), message)) return
         end do
         if (.not. expect_token(token, token_count, position, ')', message)) return
-        if (.not. read_named_atom(token, token_count, position, 'statement-rule', count_text, message)) return
-        if (trim(count_text) /= 'R1212') then
-            parsed = .false.
-            return
-        end if
-        if (.not. read_named_atom(token, token_count, position, 'format-rule', count_text, message)) return
-        if (trim(count_text) /= 'R1215') then
-            parsed = .false.
-            return
-        end if
-        if (.not. read_named_atom(token, token_count, position, 'source-document', count_text, message)) return
-        if (.not. read_named_atom(token, token_count, position, 'statement-clause', count_text, message)) return
-        if (.not. read_named_atom(token, token_count, position, 'format-clause', count_text, message)) return
-        if (.not. read_named_atom(token, token_count, position, 'output-clause', count_text, message)) return
-        if (.not. read_named_atom(token, token_count, position, 'statement-page', count_text, message)) return
-        if (.not. read_named_atom(token, token_count, position, 'format-page', count_text, message)) return
-        if (.not. read_named_atom(token, token_count, position, 'output-page', count_text, message)) return
-        if (.not. read_named_atom(token, token_count, position, 'source-hash', count_text, message)) return
-        if (.not. expect_token(token, token_count, position, ')', message)) return
-        if (position <= token_count) then
-            call set_message(message, 'print-output-count-mismatch')
+        if (index(expression, '( statement-rule R1212 )') == 0 .or. &
+            index(expression, '( format-rule R1215 )') == 0 .or. &
+            index(expression, '( source-document J3-24-007 )') == 0 .or. &
+            index(expression, '( statement-clause 12.6.1 )') == 0 .or. &
+            index(expression, '( format-clause 12.6.2.2 )') == 0 .or. &
+            index(expression, '( output-clause 12.6.3 )') == 0 .or. &
+            index(expression, '( statement-page 242 )') == 0 .or. &
+            index(expression, '( format-page 244 )') == 0 .or. &
+            index(expression, '( output-page 248 )') == 0 .or. &
+            index(expression, '( source-hash ') == 0) then
+            call set_message(message, 'invalid-frontend-ast-v2-print-provenance')
             parsed = .false.
             return
         end if
         item_count = parsed_count
+        parsed = .true.
+        return
     end function parse_frontend_ast_v2_print_generic_list
 
     logical function parse_frontend_ast_v2_print_item(expression, item_kind, item_value, item_rule, &
@@ -1454,8 +1418,8 @@ contains
         item_value = ''
         item_rule = ''
         call clear_message(message)
-        parsed = tokenize_frontend_ast_sx(expression, token, token_count, message)
-        if (.not. parsed) return
+        parsed = .false.
+        if (.not. tokenize_frontend_ast_sx(expression, token, token_count, message)) return
         position = 1
         if (.not. expect_token(token, token_count, position, '(', message)) return
         if (.not. expect_token(token, token_count, position, 'output-item', message)) return
@@ -1492,7 +1456,7 @@ contains
             if (trim(item_operator) == '+') then
                 if (trim(item_value) /= 'x') then
                     if (.not. parse_bounded_decimal_literal(trim(item_value), power_value, message) .or. &
-                        power_value < 1 .or. power_value > 10) then
+                        power_value < 0 .or. power_value > 10) then
                         call set_message(message, 'unsupported-frontend-ast-v2-print-expression-right')
                         parsed = .false.
                         return
@@ -1500,7 +1464,7 @@ contains
                 end if
             else if ((trim(item_operator) == '-' .or. trim(item_operator) == '–')) then
                 if (.not. parse_bounded_decimal_literal(trim(item_value), power_value, message) .or. &
-                    power_value < 1 .or. power_value > 10) then
+                    power_value < 0 .or. power_value > 10) then
                     call set_message(message, 'unsupported-frontend-ast-v2-print-expression-right')
                     parsed = .false.
                     return
