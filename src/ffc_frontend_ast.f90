@@ -472,7 +472,8 @@ module ffc_frontend_ast
         bounded_integer_variable_count, bounded_integer_initializer_minimum, &
         bounded_integer_initializer_maximum, bounded_integer_addend_minimum, &
         bounded_integer_addend_maximum, bounded_integer_subtrahend_minimum, &
-        bounded_integer_subtrahend_maximum
+        bounded_integer_subtrahend_maximum, bounded_integer_multiplier_minimum, &
+        bounded_integer_multiplier_maximum
     implicit none
     private
 
@@ -706,8 +707,8 @@ contains
         character(len=frontend_ast_expression_length) :: print_statement
         integer :: assignment_count, assignment_index, token_count, position
         integer(int64) :: declaration_count, variable_count
-        integer(int32) :: initializer_value, addend_value, subtrahend_value, route
-        logical :: initialized_xplus_addend, initialized_xminus_subtrahend
+        integer(int32) :: initializer_value, addend_value, subtrahend_value, multiplier_value, route
+        logical :: initialized_xplus_addend, initialized_xminus_subtrahend, initialized_xmultiply_multiplier
 
         call clear_message(message)
         lowered = .false.
@@ -880,12 +881,15 @@ contains
         end if
         initialized_xplus_addend = .false.
         initialized_xminus_subtrahend = .false.
+        initialized_xmultiply_multiplier = .false.
         if (assignment_count == 2 .and. trim(assignments(1)%target) == 'x' .and. &
             trim(assignments(2)%target) == 'x') then
             initialized_xplus_addend = parse_bounded_addend_expression(trim(assignments(2)%value), &
                 addend_value)
             initialized_xminus_subtrahend = parse_bounded_subtrahend_expression(&
                 trim(assignments(2)%value), subtrahend_value)
+            initialized_xmultiply_multiplier = parse_bounded_multiplier_expression(&
+                trim(assignments(2)%value), multiplier_value)
         end if
         if (len_trim(print_statement) > 0) then
             if (index(print_statement, '( output-count 7 )') == 0 .and. &
@@ -894,6 +898,7 @@ contains
                 index(print_statement, '( output-count 10 )') == 0 .and. &
                 .not. initialized_xplus_addend .and. &
                 .not. initialized_xminus_subtrahend .and. &
+                .not. initialized_xmultiply_multiplier .and. &
                 ((assignment_count /= 1 .and. assignment_count /= 2) .or. &
                 trim(assignments(1)%target) /= 'x' .or. &
                 (assignment_count == 1 .and. .not. starts_integer_literal_expression(&
@@ -985,6 +990,17 @@ contains
                 call emit_frontend_ast_v1_integer_expression(body, 29_int32)
                 body%instructions(1)%literal_value = initializer_value
                 body%instructions(4)%literal_value = subtrahend_value
+                lowered = mir_validate_function_body(body, message)
+                return
+            end if
+            if (route == 0_int32 .and. initialized_xmultiply_multiplier) then
+                if (.not. parse_bounded_multiplier_expression(trim(assignments(2)%value), &
+                    multiplier_value, message)) return
+                if (.not. parse_bounded_signed_initializer_literal(trim(assignments(1)%value), &
+                    initializer_value, message)) return
+                call emit_frontend_ast_v1_integer_expression(body, 28_int32)
+                body%instructions(1)%literal_value = initializer_value
+                body%instructions(4)%literal_value = multiplier_value
                 lowered = mir_validate_function_body(body, message)
                 return
             end if
@@ -4679,12 +4695,13 @@ contains
         type(ffc_frontend_assignment_v1_t), intent(in) :: assignment
         character(len=:), allocatable, intent(out), optional :: message
         integer(int32) :: literal_value
-        logical :: bounded_addend, bounded_subtrahend
+        logical :: bounded_addend, bounded_subtrahend, bounded_multiplier
 
         call clear_message(message)
         bounded_addend = parse_bounded_addend_expression(trim(assignment%value), literal_value)
         bounded_subtrahend = parse_bounded_subtrahend_expression(&
             trim(assignment%value), literal_value)
+        bounded_multiplier = parse_bounded_multiplier_expression(trim(assignment%value), literal_value)
         valid = .false.
         if (trim(assignment%target) /= 'x') then
             call set_message(message, 'unsupported-frontend-ast-v1-assignment')
@@ -4707,7 +4724,7 @@ contains
             '(assignment-expression (kind binary-expression) (operator /) (left-operand x) (right-operand 2))' &
             .and. trim(assignment%value) /= &
             '(assignment-expression (kind binary-expression) (operator **) (left-operand x) (right-operand 3))' &
-            .and. .not. bounded_addend .and. .not. bounded_subtrahend) then
+            .and. .not. bounded_addend .and. .not. bounded_subtrahend .and. .not. bounded_multiplier) then
             call set_message(message, 'unsupported-frontend-ast-v1-assignment')
             return
         end if
@@ -4731,8 +4748,8 @@ contains
         character(len=:), allocatable, intent(out), optional :: message
         character(len=128) :: kind, operator, left_operand, right_operand
         integer(int32) :: literal_value
-        integer(int32) :: addend_value, subtrahend_value
-        logical :: plus_supported, subtrahend_supported
+        integer(int32) :: addend_value, subtrahend_value, multiplier_value
+        logical :: plus_supported, subtrahend_supported, multiplier_supported
 
         call clear_message(message)
         value = ''
@@ -4811,6 +4828,7 @@ contains
                         if (.not. ok) return
                         plus_supported = .false.
                         subtrahend_supported = .false.
+                        multiplier_supported = .false.
                         if (trim(operator) == '+' .and. trim(left_operand) == '1' .and. &
                             trim(right_operand) == '2') then
                             plus_supported = .true.
@@ -4831,6 +4849,11 @@ contains
                                     bounded_integer_subtrahend_minimum .and. &
                                     subtrahend_value <= bounded_integer_subtrahend_maximum
                             end if
+                        else if (trim(operator) == '*' .and. trim(left_operand) == 'x') then
+                            if (parse_bounded_decimal_literal(trim(right_operand), multiplier_value, message)) then
+                                multiplier_supported = multiplier_value >= bounded_integer_multiplier_minimum .and. &
+                                    multiplier_value <= bounded_integer_multiplier_maximum
+                            end if
                         end if
                         if (trim(kind) /= 'binary-expression' .or. &
                             (trim(operator) /= '+' .and. trim(operator) /= '*' .and. &
@@ -4839,7 +4862,7 @@ contains
                             (trim(operator) == '+' .and. .not. plus_supported) .or. &
                             (trim(operator) == '*' .and. &
                             ((trim(left_operand) /= '2' .or. trim(right_operand) /= '3') .and. &
-                            (trim(left_operand) /= 'x' .or. trim(right_operand) /= '2'))) .or. &
+                            .not. multiplier_supported)) .or. &
                             (trim(operator) == '/' .and. &
                             ((trim(left_operand) /= '6' .or. trim(right_operand) /= '2') .and. &
                             (trim(left_operand) /= 'x' .or. trim(right_operand) /= '2'))) .or. &
@@ -4864,6 +4887,9 @@ contains
                                 trim(right_operand) == '2') then
                             value = '(assignment-expression (kind binary-expression) '// &
                                 '(operator *) (left-operand x) (right-operand 2))'
+                        else if (trim(operator) == '*' .and. trim(left_operand) == 'x') then
+                            value = '(assignment-expression (kind binary-expression) '// &
+                                '(operator *) (left-operand x) (right-operand '//trim(right_operand)//'))'
                         else if (trim(operator) == '/' .and. trim(left_operand) == 'x' .and. &
                                 trim(right_operand) == '2') then
                             value = '(assignment-expression (kind binary-expression) '// &
@@ -5119,6 +5145,72 @@ contains
             ok = .false.
         end if
     end function parse_bounded_subtrahend_expression
+
+    logical function parse_bounded_multiplier_expression(serialized, value, message) result(ok)
+        character(len=*), intent(in) :: serialized
+        integer(int32), intent(out) :: value
+        character(len=:), allocatable, intent(out), optional :: message
+
+        character(len=frontend_ast_token_length) :: token(frontend_ast_token_capacity)
+        character(len=128) :: literal_text
+        integer :: token_count, position
+
+        value = 0_int32
+        call clear_message(message)
+        ok = tokenize_frontend_ast_sx(serialized, token, token_count, message)
+        if (.not. ok) return
+        position = 1
+        ok = expect_token(token, token_count, position, '(', message)
+        if (.not. ok) return
+        ok = expect_token(token, token_count, position, 'assignment-expression', message)
+        if (.not. ok) return
+        ok = expect_token(token, token_count, position, '(', message)
+        if (.not. ok) return
+        ok = expect_token(token, token_count, position, 'kind', message)
+        if (.not. ok) return
+        ok = expect_token(token, token_count, position, 'binary-expression', message)
+        if (.not. ok) return
+        ok = expect_token(token, token_count, position, ')', message)
+        if (.not. ok) return
+        ok = expect_token(token, token_count, position, '(', message)
+        if (.not. ok) return
+        ok = expect_token(token, token_count, position, 'operator', message)
+        if (.not. ok) return
+        ok = expect_token(token, token_count, position, '*', message)
+        if (.not. ok) return
+        ok = expect_token(token, token_count, position, ')', message)
+        if (.not. ok) return
+        ok = expect_token(token, token_count, position, '(', message)
+        if (.not. ok) return
+        ok = expect_token(token, token_count, position, 'left-operand', message)
+        if (.not. ok) return
+        ok = expect_token(token, token_count, position, 'x', message)
+        if (.not. ok) return
+        ok = expect_token(token, token_count, position, ')', message)
+        if (.not. ok) return
+        ok = expect_token(token, token_count, position, '(', message)
+        if (.not. ok) return
+        ok = expect_token(token, token_count, position, 'right-operand', message)
+        if (.not. ok) return
+        ok = read_atom(token, token_count, position, literal_text, message)
+        if (.not. ok) return
+        ok = parse_bounded_decimal_literal(literal_text, value, message)
+        if (.not. ok) return
+        if (value < bounded_integer_multiplier_minimum .or. &
+            value > bounded_integer_multiplier_maximum) then
+            call set_message(message, 'unsupported-frontend-ast-v2-integer-multiplier')
+            ok = .false.
+            return
+        end if
+        ok = expect_token(token, token_count, position, ')', message)
+        if (.not. ok) return
+        ok = expect_token(token, token_count, position, ')', message)
+        if (.not. ok) return
+        if (position <= token_count) then
+            call set_message(message, 'malformed-frontend-ast-v2-integer-multiplier')
+            ok = .false.
+        end if
+    end function parse_bounded_multiplier_expression
 
     logical function parse_bounded_decimal_literal(text, value, message) result(ok)
         character(len=*), intent(in) :: text
