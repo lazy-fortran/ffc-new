@@ -556,6 +556,7 @@ module ffc_frontend_ast
     public :: ffc_validate_frontend_ast_v2_print_generic_shape
     public :: ffc_validate_frontend_ast_v2_initialized_variable_mul_shape
     public :: ffc_validate_frontend_ast_v2_initialized_variable_div_shape
+    public :: ffc_validate_frontend_ast_v2_initialized_variable_sub_shape
     public :: ffc_validate_frontend_ast_v2_initialized_power_shape
     public :: ffc_validate_frontend_ast_v2_initialized_variable_power_shape
 
@@ -719,7 +720,7 @@ contains
         logical :: initialized_xplus_addend, initialized_xminus_subtrahend, &
             initialized_xmultiply_multiplier, initialized_xdivide_divisor, initialized_xpower, &
             initialized_xvariable_power, initialized_xvariable_add, initialized_xvariable_mul, &
-            initialized_xvariable_div
+            initialized_xvariable_div, initialized_xvariable_sub
 
         call clear_message(message)
         lowered = .false.
@@ -899,6 +900,7 @@ contains
         initialized_xvariable_add = .false.
         initialized_xvariable_mul = .false.
         initialized_xvariable_div = .false.
+        initialized_xvariable_sub = .false.
         if (assignment_count == 2 .and. trim(assignments(1)%target) == 'x' .and. &
             trim(assignments(2)%target) == 'x') then
             initialized_xplus_addend = parse_bounded_addend_expression(trim(assignments(2)%value), &
@@ -914,6 +916,7 @@ contains
             initialized_xvariable_add = is_variable_add_expression(trim(assignments(2)%value))
             initialized_xvariable_mul = is_variable_mul_expression(trim(assignments(2)%value))
             initialized_xvariable_div = is_variable_div_expression(trim(assignments(2)%value))
+            initialized_xvariable_sub = is_variable_sub_expression(trim(assignments(2)%value))
         end if
         if (len_trim(print_statement) > 0) then
             if (index(print_statement, '( output-count 7 )') == 0 .and. &
@@ -929,6 +932,7 @@ contains
                 .not. initialized_xvariable_add .and. &
                 .not. initialized_xvariable_mul .and. &
                 .not. initialized_xvariable_div .and. &
+                .not. initialized_xvariable_sub .and. &
                 ((assignment_count /= 1 .and. assignment_count /= 2) .or. &
                 trim(assignments(1)%target) /= 'x' .or. &
                 (assignment_count == 1 .and. .not. starts_integer_literal_expression(&
@@ -1027,6 +1031,13 @@ contains
                     initializer_value, message)) return
                 call emit_frontend_ast_v2_initialized_variable_div(body, initializer_value)
                 lowered = ffc_validate_frontend_ast_v2_initialized_variable_div_shape(body, initializer_value, message)
+                return
+            end if
+            if (route == 0_int32 .and. initialized_xvariable_sub) then
+                if (.not. parse_bounded_signed_initializer_literal(trim(assignments(1)%value), &
+                    initializer_value, message)) return
+                call emit_frontend_ast_v2_initialized_variable_sub(body, initializer_value)
+                lowered = ffc_validate_frontend_ast_v2_initialized_variable_sub_shape(body, initializer_value, message)
                 return
             end if
             if (route == 0_int32 .and. initialized_xminus_subtrahend) then
@@ -2346,6 +2357,13 @@ contains
             '(assignment-expression (kind binary-expression) (operator /) (left-operand x) (right-operand x))'
     end function is_variable_div_expression
 
+    logical function is_variable_sub_expression(serialized) result(matches)
+        character(len=*), intent(in) :: serialized
+
+        matches = trim(serialized) == &
+            '(assignment-expression (kind binary-expression) (operator –) (left-operand x) (right-operand x))'
+    end function is_variable_sub_expression
+
     subroutine emit_frontend_ast_v2_initialized_variable_add(body, initializer_value)
         type(mir_function_body_t), intent(inout) :: body
 
@@ -2529,6 +2547,101 @@ contains
         end do
         valid = .true.
     end function ffc_validate_frontend_ast_v2_initialized_variable_mul_shape
+
+    subroutine emit_frontend_ast_v2_initialized_variable_sub(body, initializer_value)
+        type(mir_function_body_t), intent(inout) :: body
+        integer(int32), intent(in) :: initializer_value
+        integer(int32) :: expected_opcodes(9), expected_results(9)
+        integer :: index
+
+        deallocate (body%instructions)
+        allocate (body%instructions(9))
+        body%function%instruction_count = 9_int32
+        expected_opcodes = [opcode_const, opcode_store, opcode_load, opcode_load, opcode_sub, &
+            opcode_store, opcode_load, opcode_output, opcode_return]
+        expected_results = [0_int32, 1_int32, 2_int32, 3_int32, 4_int32, 4_int32, 6_int32, 6_int32, 6_int32]
+        do index = 1, 9
+            body%instructions(index)%id = int(index - 1, int32)
+            body%instructions(index)%opcode = expected_opcodes(index)
+            body%instructions(index)%result%id = expected_results(index)
+            body%instructions(index)%result%kind = value_kind_integer
+            body%instructions(index)%result%type_name = 'i32'
+            if (index <= 6) then
+                body%instructions(index)%source_rule = 'frontend-ast-v2/execution-part'
+            else
+                body%instructions(index)%source_rule = 'frontend-ast-v2/print-stmt'
+            end if
+        end do
+        body%instructions(1)%literal_value = initializer_value
+        body%instructions(2)%storage_key = 'x'
+        body%instructions(3)%storage_key = 'x'
+        body%instructions(4)%storage_key = 'x'
+        body%instructions(6)%storage_key = 'x'
+        body%instructions(7)%storage_key = 'x'
+    end subroutine emit_frontend_ast_v2_initialized_variable_sub
+
+    logical function ffc_validate_frontend_ast_v2_initialized_variable_sub_shape(body, &
+            initializer_value, message) result(valid)
+        type(mir_function_body_t), intent(in) :: body
+        integer(int32), intent(in) :: initializer_value
+        character(len=:), allocatable, intent(out), optional :: message
+        integer(int32) :: expected_opcodes(9), expected_results(9)
+        integer :: index
+
+        call clear_message(message)
+        valid = .false.
+        if (.not. mir_validate_function_body(body, message)) return
+        if (body%function%instruction_count /= 9_int32) then
+            call set_message(message, 'frontend-ast-v2 initialized variable subtraction instruction count changed')
+            return
+        end if
+        expected_opcodes = [opcode_const, opcode_store, opcode_load, opcode_load, opcode_sub, &
+            opcode_store, opcode_load, opcode_output, opcode_return]
+        expected_results = [0_int32, 1_int32, 2_int32, 3_int32, 4_int32, 4_int32, 6_int32, 6_int32, 6_int32]
+        do index = 1, 9
+            if (body%instructions(index)%opcode /= expected_opcodes(index) .or. &
+                body%instructions(index)%result%id /= expected_results(index) .or. &
+                body%instructions(index)%result%kind /= value_kind_integer .or. &
+                trim(body%instructions(index)%result%type_name) /= 'i32') then
+                call set_message(message, 'frontend-ast-v2 initialized variable subtraction MIR shape changed')
+                return
+            end if
+            if (index <= 6) then
+                if (trim(body%instructions(index)%source_rule) /= 'frontend-ast-v2/execution-part') then
+                    call set_message(message, &
+                        'frontend-ast-v2 initialized variable subtraction execution provenance changed')
+                    return
+                end if
+            else if (trim(body%instructions(index)%source_rule) /= 'frontend-ast-v2/print-stmt') then
+                call set_message(message, &
+                    'frontend-ast-v2 initialized variable subtraction print provenance changed')
+                return
+            end if
+        end do
+        if (body%instructions(1)%literal_value /= initializer_value) then
+            call set_message(message, 'frontend-ast-v2 initialized variable subtraction initializer shape changed')
+            return
+        end if
+        do index = 1, 9
+            if (index == 2 .or. index == 3 .or. index == 4 .or. index == 6 .or. index == 7) then
+                if (.not. allocated(body%instructions(index)%storage_key)) then
+                    call set_message(message, &
+                        'frontend-ast-v2 initialized variable subtraction storage shape changed')
+                    return
+                end if
+                if (trim(body%instructions(index)%storage_key) /= 'x') then
+                    call set_message(message, &
+                        'frontend-ast-v2 initialized variable subtraction storage shape changed')
+                    return
+                end if
+            else if (allocated(body%instructions(index)%storage_key)) then
+                call set_message(message, &
+                    'frontend-ast-v2 initialized variable subtraction storage shape changed')
+                return
+            end if
+        end do
+        valid = .true.
+    end function ffc_validate_frontend_ast_v2_initialized_variable_sub_shape
 
     subroutine emit_frontend_ast_v2_initialized_variable_div(body, initializer_value)
         type(mir_function_body_t), intent(inout) :: body
@@ -5227,7 +5340,7 @@ contains
         character(len=:), allocatable, intent(out), optional :: message
         integer(int32) :: literal_value
         logical :: bounded_addend, bounded_subtrahend, bounded_multiplier, bounded_divisor, bounded_power, &
-            variable_power, variable_add, variable_mul, variable_div
+            variable_power, variable_add, variable_mul, variable_div, variable_sub
 
         call clear_message(message)
         bounded_addend = parse_bounded_addend_expression(trim(assignment%value), literal_value)
@@ -5240,6 +5353,7 @@ contains
         variable_add = is_variable_add_expression(trim(assignment%value))
         variable_mul = is_variable_mul_expression(trim(assignment%value))
         variable_div = is_variable_div_expression(trim(assignment%value))
+        variable_sub = is_variable_sub_expression(trim(assignment%value))
         valid = .false.
         if (trim(assignment%target) /= 'x') then
             call set_message(message, 'unsupported-frontend-ast-v1-assignment')
@@ -5262,7 +5376,7 @@ contains
             '(assignment-expression (kind binary-expression) (operator /) (left-operand x) (right-operand 2))' &
             .and. .not. bounded_addend .and. .not. bounded_subtrahend .and. .not. bounded_multiplier .and. &
             .not. bounded_divisor .and. .not. bounded_power .and. .not. variable_power .and. &
-            .not. variable_add .and. .not. variable_mul .and. .not. variable_div) then
+            .not. variable_add .and. .not. variable_mul .and. .not. variable_div .and. .not. variable_sub) then
             call set_message(message, 'unsupported-frontend-ast-v1-assignment')
             return
         end if
@@ -5288,7 +5402,8 @@ contains
         integer(int32) :: literal_value
         integer(int32) :: addend_value, subtrahend_value, multiplier_value, divisor_value, power_value
         logical :: plus_supported, subtrahend_supported, multiplier_supported, divisor_supported, power_supported, &
-            variable_power_supported, variable_add_supported, variable_mul_supported, variable_div_supported
+            variable_power_supported, variable_add_supported, variable_mul_supported, variable_div_supported, &
+            variable_sub_supported
 
         call clear_message(message)
         value = ''
@@ -5374,6 +5489,7 @@ contains
                         variable_add_supported = .false.
                         variable_mul_supported = .false.
                         variable_div_supported = .false.
+                        variable_sub_supported = .false.
                         if (trim(operator) == '+' .and. trim(left_operand) == '1' .and. &
                             trim(right_operand) == '2') then
                             plus_supported = .true.
@@ -5386,6 +5502,9 @@ contains
                         else if (trim(operator) == '/' .and. trim(left_operand) == 'x' .and. &
                                 trim(right_operand) == 'x') then
                             variable_div_supported = .true.
+                        else if ((trim(operator) == '–' .or. trim(operator) == '-') .and. &
+                                trim(left_operand) == 'x' .and. trim(right_operand) == 'x') then
+                            variable_sub_supported = .true.
                         else if (trim(operator) == '+' .and. trim(left_operand) == 'x') then
                             if (parse_bounded_decimal_literal(trim(right_operand), addend_value, message)) then
                                 plus_supported = addend_value >= bounded_integer_addend_minimum .and. &
@@ -5436,7 +5555,7 @@ contains
                             (trim(left_operand) /= 'x' .or. &
                             (.not. divisor_supported .and. .not. variable_div_supported)))) .or. &
                             ((trim(operator) == '–' .or. trim(operator) == '-') .and. &
-                            .not. subtrahend_supported) .or. &
+                            .not. subtrahend_supported .and. .not. variable_sub_supported) .or. &
                             (trim(operator) == '**' .and. .not. power_supported .and. &
                             .not. variable_power_supported)) then
                             call set_message(message, &
@@ -5482,6 +5601,10 @@ contains
                                 trim(right_operand) == '2') then
                             value = '(assignment-expression (kind binary-expression) '// &
                                 '(operator –) (left-operand x) (right-operand 2))'
+                        else if ((trim(operator) == '–' .or. trim(operator) == '-') .and. &
+                                trim(left_operand) == 'x' .and. trim(right_operand) == 'x') then
+                            value = '(assignment-expression (kind binary-expression) '// &
+                                '(operator –) (left-operand x) (right-operand x))'
                         else if ((trim(operator) == '–' .or. trim(operator) == '-') .and. &
                                 trim(left_operand) == 'x') then
                             value = '(assignment-expression (kind binary-expression) '// &
