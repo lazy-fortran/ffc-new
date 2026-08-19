@@ -481,6 +481,8 @@ module ffc_frontend_ast
     integer, parameter :: frontend_ast_token_capacity = 2048
     integer, parameter :: frontend_ast_token_length = 256
     integer, parameter :: frontend_ast_expression_length = 16384
+    integer(int32), parameter :: bounded_integer_power_minimum = 2_int32
+    integer(int32), parameter :: bounded_integer_power_maximum = 10_int32
 
     type, public :: ffc_frontend_ast_v0_t
         type(ffc_program_root_t) :: root
@@ -923,13 +925,7 @@ contains
                 trim(assignments(2)%value) /= &
                 '(assignment-expression (kind binary-expression) (operator –) (left-operand x) (right-operand 2))' .and. &
                 trim(assignments(2)%value) /= &
-                '(assignment-expression (kind binary-expression) (operator /) (left-operand x) (right-operand 2))' .and. &
-                trim(assignments(2)%value) /= &
-                '(assignment-expression (kind binary-expression) (operator **) (left-operand x) (right-operand 3))' .and. &
-                trim(assignments(2)%value) /= &
-                '(assignment-expression (kind binary-expression) (operator **) (left-operand x) (right-operand 4))' .and. &
-                trim(assignments(2)%value) /= &
-                '(assignment-expression (kind binary-expression) (operator **) (left-operand x) (right-operand 2))')) .or. &
+                '(assignment-expression (kind binary-expression) (operator /) (left-operand x) (right-operand 2))')) .or. &
                 .not. frontend_ast_v2_print_variable_match(print_statement))) then
                 call set_message(message, 'unsupported-frontend-ast-v2-execution-part')
                 return
@@ -2314,8 +2310,8 @@ contains
             end if
         end do
         if (body%instructions(1)%literal_value /= initializer_value .or. &
-            body%instructions(4)%literal_value /= power_value .or. power_value < 2_int32 .or. &
-            power_value > 4_int32) then
+            body%instructions(4)%literal_value /= power_value .or. &
+            .not. is_bounded_integer_power(power_value)) then
             call set_message(message, 'frontend-ast-v2 initialized power literal shape changed')
             return
         end if
@@ -4817,8 +4813,6 @@ contains
             '(assignment-expression (kind binary-expression) (operator –) (left-operand x) (right-operand 2))' &
             .and. trim(assignment%value) /= &
             '(assignment-expression (kind binary-expression) (operator /) (left-operand x) (right-operand 2))' &
-            .and. trim(assignment%value) /= &
-            '(assignment-expression (kind binary-expression) (operator **) (left-operand x) (right-operand 3))' &
             .and. .not. bounded_addend .and. .not. bounded_subtrahend .and. .not. bounded_multiplier .and. &
             .not. bounded_divisor .and. .not. bounded_power) then
             call set_message(message, 'unsupported-frontend-ast-v1-assignment')
@@ -4959,7 +4953,7 @@ contains
                             end if
                         else if (trim(operator) == '**' .and. trim(left_operand) == 'x') then
                             if (parse_bounded_decimal_literal(trim(right_operand), power_value, message)) then
-                                power_supported = power_value >= 2_int32 .and. power_value <= 4_int32
+                                power_supported = is_bounded_integer_power(power_value)
                             end if
                         end if
                         if (trim(kind) /= 'binary-expression' .or. &
@@ -5431,7 +5425,7 @@ contains
         if (.not. ok) return
         ok = parse_bounded_decimal_literal(literal_text, value, message)
         if (.not. ok) return
-        if (value < 2_int32 .or. value > 4_int32) then
+        if (.not. is_bounded_integer_power(value)) then
             call set_message(message, 'unsupported-frontend-ast-v2-integer-power')
             ok = .false.
             return
@@ -5445,6 +5439,12 @@ contains
             ok = .false.
         end if
     end function parse_bounded_power_expression
+
+    logical function is_bounded_integer_power(value) result(supported)
+        integer(int32), intent(in) :: value
+
+        supported = value >= bounded_integer_power_minimum .and. value <= bounded_integer_power_maximum
+    end function is_bounded_integer_power
 
     logical function parse_bounded_decimal_literal(text, value, message) result(ok)
         character(len=*), intent(in) :: text
