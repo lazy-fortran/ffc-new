@@ -703,7 +703,7 @@ contains
         character(len=frontend_ast_expression_length) :: print_statement
         integer :: assignment_count, assignment_index, token_count, position
         integer(int64) :: declaration_count, variable_count
-        integer(int32) :: route
+        integer(int32) :: initializer_value, route
 
         call clear_message(message)
         lowered = .false.
@@ -844,7 +844,9 @@ contains
             end if
             call mir_make_function_witness(body)
             body%function%name = trim(root%name)
-            call emit_frontend_ast_v2_print_generic_list(body, print_statement)
+            if (.not. parse_integer_literal_expression(trim(assignments(1)%value), initializer_value, &
+                message)) return
+            call emit_frontend_ast_v2_print_generic_list(body, print_statement, initializer_value)
             lowered = mir_validate_function_body(body, message)
             return
         end if
@@ -1519,9 +1521,10 @@ contains
         end if
     end function parse_frontend_ast_v2_print_item
 
-    subroutine emit_frontend_ast_v2_print_generic_list(body, expression)
+    subroutine emit_frontend_ast_v2_print_generic_list(body, expression, initializer_value)
         type(mir_function_body_t), intent(inout) :: body
         character(len=*), intent(in) :: expression
+        integer(int32), intent(in) :: initializer_value
         character(len=:), allocatable :: item_kind(:), item_value(:), item_rule(:), message
         integer :: item_count, item_index, instruction_index, instruction_count, value, io_status
 
@@ -1560,7 +1563,7 @@ contains
             body%instructions(instruction_index)%source_rule = 'frontend-ast-v2/execution-part'
         end do
         body%instructions(1)%opcode = opcode_const
-        body%instructions(1)%literal_value = 3
+        body%instructions(1)%literal_value = initializer_value
         body%instructions(2)%opcode = opcode_store
         body%instructions(2)%storage_key = 'x'
         instruction_index = 2

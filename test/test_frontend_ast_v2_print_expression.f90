@@ -10,6 +10,7 @@ program test_frontend_ast_v2_print_expression
 
     call check_shape(positive_sx(.true.), [opcode_const, opcode_store, opcode_load, opcode_const, opcode_add, &
         opcode_output, opcode_load, opcode_output, opcode_return])
+    call assert_true(body%instructions(1)%literal_value == 3, 'x=3 initializer changed')
     call check_shape(positive_sx(.false.), [opcode_const, opcode_store, opcode_load, opcode_output, opcode_load, &
         opcode_const, opcode_add, opcode_output, opcode_return])
     call check_shape(replace_text(positive_sx(.true.), '(right 1)', '(right x)'), &
@@ -36,6 +37,7 @@ program test_frontend_ast_v2_print_expression
         [opcode_const, opcode_store, opcode_load, opcode_load, opcode_pow, &
         opcode_output, opcode_const, opcode_output, opcode_return])
     call assert_load_storage([3, 4])
+    call assert_true(body%instructions(1)%literal_value == 4, 'x=4 initializer changed')
     call check_shape(power_four_sx(.true.), [opcode_const, opcode_store, opcode_load, opcode_const, opcode_pow, &
         opcode_output, opcode_const, opcode_output, opcode_return])
     call assert_true(body%instructions(4)%literal_value == 4, 'power-four exponent literal changed')
