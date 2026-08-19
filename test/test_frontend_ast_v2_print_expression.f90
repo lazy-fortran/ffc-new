@@ -25,10 +25,9 @@ program test_frontend_ast_v2_print_expression
     call check_shape(replace_text(replace_text(positive_sx(.true.), '(operator +)', '(operator **)'), &
         '(right 1)', '(right 2)'), [opcode_const, opcode_store, opcode_load, opcode_const, opcode_pow, &
         opcode_output, opcode_load, opcode_output, opcode_return])
-    call check_shape(replace_text(replace_text(positive_sx(.true.), '(operator +)', '(operator **)'), &
-        '(right 1)', '(right 3)'), [opcode_const, opcode_store, opcode_load, opcode_const, opcode_pow, &
-        opcode_output, opcode_load, opcode_output, opcode_return])
-    call assert_true(body%instructions(4)%literal_value == 3, 'power exponent literal changed')
+    call check_power_shape(5)
+    call check_power_shape(7)
+    call check_power_shape(10)
     call check_shape(power_four_sx(.true.), [opcode_const, opcode_store, opcode_load, opcode_const, opcode_pow, &
         opcode_output, opcode_const, opcode_output, opcode_return])
     call assert_true(body%instructions(4)%literal_value == 4, 'power-four exponent literal changed')
@@ -47,9 +46,6 @@ program test_frontend_ast_v2_print_expression
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(replace_text(positive_sx(.true.), &
         '(operator +)', '(operator /)'), '(right 1)', '(right 3)'), body, message), &
         'unsupported division operand was accepted')
-    call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(replace_text(positive_sx(.true.), &
-        '(operator +)', '(operator **)'), '(right 1)', '(right 5)'), body, message), &
-        'unsupported power-five operand was accepted')
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_sx(.true.), '(rule R1217)', &
         '(rule R901)'), body, message), 'wrong expression provenance was accepted')
     write (*, '(a)') 'frontend AST v2 generic expression checks: ok'
@@ -76,6 +72,20 @@ contains
             end if
         end do
     end subroutine check_shape
+
+    subroutine check_power_shape(exponent)
+        integer, intent(in) :: exponent
+        character(len=32) :: exponent_text
+        character(len=12288) :: serialized
+
+        write (exponent_text, '(i0)') exponent
+        serialized = replace_text(replace_text(positive_sx(.true.), '(operator +)', '(operator **)'), &
+            '(right 1)', '(right '//trim(exponent_text)//')')
+        call check_shape(serialized, [opcode_const, opcode_store, opcode_load, opcode_const, opcode_pow, &
+            opcode_output, opcode_load, opcode_output, opcode_return])
+        call assert_true(body%instructions(4)%literal_value == exponent, &
+            'power exponent literal changed')
+    end subroutine check_power_shape
 
     subroutine assert_load_storage(indices)
         integer, intent(in) :: indices(:)

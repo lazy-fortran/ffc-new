@@ -821,7 +821,8 @@ contains
                 assignment_count /= 1 .or. trim(assignments(1)%target) /= 'x' .or. &
                 index(trim(assignments(1)%value), 'integer-literal') == 0 .or. &
                 index(trim(assignments(1)%value), ' 3 ') == 0 .or. &
-                (index(print_statement, '( kind integer-expression )') /= 0 .and. &
+                (index(print_statement, '( operator ** )') == 0 .and. &
+                index(print_statement, '( kind integer-expression )') /= 0 .and. &
                 index(print_statement, '( output-item ( kind integer-expression ) ( operator + ) '// &
                 '( left x ) ( right 1 ) ( rule R1217 ) ( clause 12.6.3 ) ( page 248 ) )') == 0 .and. &
                 index(print_statement, '( output-item ( kind integer-expression ) ( operator + ) '// &
@@ -829,13 +830,7 @@ contains
                 index(print_statement, '( output-item ( kind integer-expression ) ( operator * ) '// &
                 '( left x ) ( right 2 ) ( rule R1217 ) ( clause 12.6.3 ) ( page 248 ) )') == 0 .and. &
                 index(print_statement, '( output-item ( kind integer-expression ) ( operator / ) '// &
-                '( left x ) ( right 2 ) ( rule R1217 ) ( clause 12.6.3 ) ( page 248 ) )') == 0 .and. &
-                index(print_statement, '( output-item ( kind integer-expression ) ( operator ** ) '// &
-                '( left x ) ( right 2 ) ( rule R1217 ) ( clause 12.6.3 ) ( page 248 ) )') == 0 .and. &
-                index(print_statement, '( output-item ( kind integer-expression ) ( operator ** ) '// &
-                '( left x ) ( right 3 ) ( rule R1217 ) ( clause 12.6.3 ) ( page 248 ) )') == 0 .and. &
-                index(print_statement, '( output-item ( kind integer-expression ) ( operator ** ) '// &
-                '( left x ) ( right 4 ) ( rule R1217 ) ( clause 12.6.3 ) ( page 248 ) )') == 0)) then
+                '( left x ) ( right 2 ) ( rule R1217 ) ( clause 12.6.3 ) ( page 248 ) )') == 0)) then
                 call set_message(message, 'unsupported-frontend-ast-v2-execution-part')
                 return
             end if
@@ -1434,6 +1429,7 @@ contains
         character(len=32) :: item_clause, item_operator, item_page
         integer :: token_count, position
         integer(int64) :: numeric_value
+        integer(int32) :: power_value
 
         item_kind = ''
         item_value = ''
@@ -1472,12 +1468,17 @@ contains
             if (.not. read_named_atom(token, token_count, position, 'right', item_value, message)) return
             if ((trim(item_operator) == '+' .and. trim(item_value) /= '1' .and. trim(item_value) /= 'x') .or. &
                 (trim(item_operator) == '*' .and. trim(item_value) /= '2') .or. &
-                (trim(item_operator) == '/' .and. trim(item_value) /= '2') .or. &
-                (trim(item_operator) == '**' .and. trim(item_value) /= '2' .and. trim(item_value) /= '3' .and. &
-                trim(item_value) /= '4')) then
+                (trim(item_operator) == '/' .and. trim(item_value) /= '2')) then
                 call set_message(message, 'unsupported-frontend-ast-v2-print-expression-right')
                 parsed = .false.
                 return
+            end if
+            if (trim(item_operator) == '**') then
+                if (.not. parse_bounded_decimal_literal(trim(item_value), power_value, message)) then
+                    call set_message(message, 'unsupported-frontend-ast-v2-print-expression-right')
+                    parsed = .false.
+                    return
+                end if
             end if
         else if (trim(item_kind) == 'integer-literal') then
             if (.not. read_named_atom(token, token_count, position, 'value', item_value, message)) return
