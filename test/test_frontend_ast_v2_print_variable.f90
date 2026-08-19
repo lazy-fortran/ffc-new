@@ -71,7 +71,7 @@ contains
     function unsupported_literal_sx() result(value)
         character(len=8192) :: value
 
-        value = replace_text(positive_sx(), 'left-operand 17', 'left-operand 24')
+        value = replace_text(positive_sx(), 'left-operand 17', 'left-operand 2048')
     end function unsupported_literal_sx
 
     function wrong_name_sx() result(value)

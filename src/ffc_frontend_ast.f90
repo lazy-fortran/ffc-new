@@ -881,10 +881,8 @@ contains
                 index(print_statement, '( output-count 10 )') == 0 .and. &
                 ((assignment_count /= 1 .and. assignment_count /= 2) .or. &
                 trim(assignments(1)%target) /= 'x' .or. &
-                (assignment_count == 1 .and. trim(assignments(1)%value) /= &
-                '( integer-literal 17 )' .and. trim(assignments(1)%value) /= &
-                '( integer-literal 23 )' .and. trim(assignments(1)%value) /= &
-                '( integer-literal 2 )') .or. &
+                (assignment_count == 1 .and. .not. starts_integer_literal_expression(&
+                trim(assignments(1)%value))) .or. &
                 (assignment_count == 2 .and. &
                 ((trim(assignments(1)%value) /= '( integer-literal 23 )' .and. &
                 trim(assignments(1)%value) /= '( integer-literal 24 )' .and. &
@@ -917,6 +915,16 @@ contains
                 trim(root%source_file) /= trim(assignments(1)%source_file) .or. &
                 trim(root%source_hash) /= trim(assignments(1)%source_hash)) then
                 call set_message(message, 'frontend-ast-v2-invalid-provenance')
+                return
+            end if
+            if (assignment_count == 1) then
+                if (.not. parse_bounded_signed_initializer_literal(trim(assignments(1)%value), &
+                    initializer_value, message)) return
+                call mir_make_function_witness(body)
+                body%function%name = trim(root%name)
+                call emit_frontend_ast_v1_integer_expression(body, 19_int32)
+                body%instructions(1)%literal_value = initializer_value
+                lowered = mir_validate_function_body(body, message)
                 return
             end if
             if (assignment_count == 2) then
@@ -4718,8 +4726,15 @@ contains
                             if (.not. ok) return
                             ok = expect_token(token, token_count, position, ')', message)
                             if (.not. ok) return
-                            ok = parse_bounded_decimal_literal(trim(left_operand), literal_value, &
-                                message)
+                            if (len_trim(left_operand) > 0 .and. left_operand(1:1) == '-') then
+                                ok = len_trim(left_operand) > 1 .and. &
+                                    parse_bounded_decimal_literal(trim(left_operand(2:)), literal_value, &
+                                    message)
+                                if (ok) literal_value = -literal_value
+                            else
+                                ok = parse_bounded_decimal_literal(trim(left_operand), literal_value, &
+                                    message)
+                            end if
                             if (.not. ok) then
                                 call set_message(message, &
                                     'unsupported-frontend-ast-v1-assignment-expression')
@@ -4839,6 +4854,52 @@ contains
             ok = .false.
         end if
     end function parse_integer_literal_expression
+
+    logical function parse_bounded_signed_initializer_literal(serialized, value, message) result(ok)
+        character(len=*), intent(in) :: serialized
+        integer(int32), intent(out) :: value
+        character(len=:), allocatable, intent(out), optional :: message
+
+        character(len=frontend_ast_token_length) :: token(frontend_ast_token_capacity)
+        character(len=128) :: literal_text
+        integer :: token_count, position
+        integer(int32) :: magnitude
+
+        value = 0_int32
+        call clear_message(message)
+        ok = tokenize_frontend_ast_sx(serialized, token, token_count, message)
+        if (.not. ok) return
+        position = 1
+        ok = expect_token(token, token_count, position, '(', message)
+        if (.not. ok) return
+        ok = expect_token(token, token_count, position, 'integer-literal', message)
+        if (.not. ok) return
+        ok = read_atom(token, token_count, position, literal_text, message)
+        if (.not. ok) return
+        if (len_trim(literal_text) > 0 .and. literal_text(1:1) == '-') then
+            if (len_trim(literal_text) == 1 .or. &
+                .not. parse_bounded_decimal_literal(trim(literal_text(2:)), magnitude, message) .or. &
+                magnitude < 1_int32 .or. magnitude > 100_int32) then
+                call set_message(message, 'unsupported-frontend-ast-v2-negative-initializer')
+                ok = .false.
+                return
+            end if
+            value = -magnitude
+        else
+            if (.not. parse_bounded_decimal_literal(trim(literal_text), value, message) .or. &
+                value > 2047_int32) then
+                call set_message(message, 'unsupported-frontend-ast-v2-integer-initializer')
+                ok = .false.
+                return
+            end if
+        end if
+        ok = expect_token(token, token_count, position, ')', message)
+        if (.not. ok) return
+        if (position <= token_count) then
+            call set_message(message, 'malformed-frontend-ast-v2-integer-initializer')
+            ok = .false.
+        end if
+    end function parse_bounded_signed_initializer_literal
 
     logical function starts_integer_literal_expression(serialized) result(is_literal)
         character(len=*), intent(in) :: serialized
