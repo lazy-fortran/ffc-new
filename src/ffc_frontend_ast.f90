@@ -825,6 +825,8 @@ contains
                 index(print_statement, '( output-item ( kind integer-expression ) ( operator + ) '// &
                 '( left x ) ( right 1 ) ( rule R1217 ) ( clause 12.6.3 ) ( page 248 ) )') == 0 .and. &
                 index(print_statement, '( output-item ( kind integer-expression ) ( operator + ) '// &
+                '( left x ) ( right 2 ) ( rule R1217 ) ( clause 12.6.3 ) ( page 248 ) )') == 0 .and. &
+                index(print_statement, '( output-item ( kind integer-expression ) ( operator + ) '// &
                 '( left x ) ( right x ) ( rule R1217 ) ( clause 12.6.3 ) ( page 248 ) )') == 0 .and. &
                 index(print_statement, '( output-item ( kind integer-expression ) ( operator * ) '// &
                 '( left x ) ( right 2 ) ( rule R1217 ) ( clause 12.6.3 ) ( page 248 ) )') == 0 .and. &
@@ -1470,7 +1472,8 @@ contains
                 return
             end if
             if (.not. read_named_atom(token, token_count, position, 'right', item_value, message)) return
-            if ((trim(item_operator) == '+' .and. trim(item_value) /= '1' .and. trim(item_value) /= 'x') .or. &
+            if ((trim(item_operator) == '+' .and. trim(item_value) /= '1' .and. trim(item_value) /= '2' .and. &
+                trim(item_value) /= 'x') .or. &
                 (trim(item_operator) == '*' .and. trim(item_value) /= '2') .or. &
                 (trim(item_operator) == '/' .and. trim(item_value) /= '2') .or. &
                 (trim(item_operator) == '–' .and. trim(item_value) /= '2')) then
@@ -1655,7 +1658,7 @@ contains
                 instruction_index = instruction_index + 1
                 body%instructions(instruction_index)%opcode = opcode_load
                 body%instructions(instruction_index)%storage_key = 'x'
-                if (trim(item_value(item_index)) == '1') then
+                if (trim(item_value(item_index)) == '1' .or. trim(item_value(item_index)) == '2') then
                     body%instructions(instruction_index + 1)%opcode = opcode_const
                     read (item_value(item_index), *, iostat=io_status) value
                     if (io_status /= 0) value = 0
