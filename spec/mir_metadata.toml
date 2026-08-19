@@ -900,3 +900,21 @@ literal_values = [24, 2]
 result_ids = [0, 1, 2, 3, 4, 4, 6, 6, 6]
 storage_keys = ["", "x", "x", "", "", "x", "x", "", ""]
 source_rules = ["frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt"]
+
+[[integer_expression_routes]]
+name = "program_unit_v2_print_variable_0"
+expression = "(execution-part (assignment-sequence (assignment-count 1) (assignment x ( integer-literal 0 ))) )"
+shape = "frontend_ast_v2_print_variable"
+literal_values = [0]
+result_ids = [0, 1, 2, 2, 2]
+storage_keys = ["", "x", "x", "", ""]
+source_rules = ["frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt"]
+
+[[integer_expression_routes]]
+name = "program_unit_v2_print_variable_2047"
+expression = "(execution-part (assignment-sequence (assignment-count 1) (assignment x ( integer-literal 2047 ))) )"
+shape = "frontend_ast_v2_print_variable"
+literal_values = [2047]
+result_ids = [0, 1, 2, 2, 2]
+storage_keys = ["", "x", "x", "", ""]
+source_rules = ["frontend-ast-v2/execution-part", "frontend-ast-v2/execution-part", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt", "frontend-ast-v2/print-stmt"]

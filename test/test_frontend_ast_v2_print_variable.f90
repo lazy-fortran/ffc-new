@@ -24,6 +24,8 @@ program test_frontend_ast_v2_print_variable
         trim(body%instructions(3)%storage_key) == 'x', 'PRINT load storage changed')
     call assert_true(body%instructions(4)%opcode == opcode_output .and. &
         body%instructions(5)%opcode == opcode_return, 'PRINT output/return changed')
+    call check_positive_initializer(0_int32)
+    call check_positive_initializer(2047_int32)
     call assert_true(ffc_lower_frontend_ast_v2_from_sx(positive_23_sx(), body, message), &
         'stored-variable PRINT literal 23 was rejected')
     call assert_true(body%instructions(1)%literal_value == 23, &
@@ -44,6 +46,38 @@ program test_frontend_ast_v2_print_variable
     write (*, '(a)') 'frontend AST v2 PRINT stored-variable checks: ok'
 
 contains
+
+    subroutine check_positive_initializer(expected)
+        integer(int32), intent(in) :: expected
+        character(len=32) :: literal
+
+        write (literal, '(i0)') expected
+        if (.not. ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_sx(), &
+            'left-operand 17', 'left-operand '//trim(literal)), body, message)) then
+            if (allocated(message)) write (*, '(a)') trim(message)
+            error stop 'positive stored-variable initializer was rejected'
+        end if
+        call assert_true(mir_validate_function_body(body, message), &
+            'positive initializer MIR is invalid')
+        call assert_true(body%function%instruction_count == 5_int32, &
+            'positive initializer MIR count changed')
+        call assert_true(body%instructions(1)%opcode == opcode_const .and. &
+            body%instructions(1)%literal_value == expected, &
+            'positive initializer constant changed')
+        call assert_true(body%instructions(2)%opcode == opcode_store .and. &
+            allocated(body%instructions(2)%storage_key) .and. &
+            trim(body%instructions(2)%storage_key) == 'x', &
+            'positive initializer store changed')
+        call assert_true(body%instructions(3)%opcode == opcode_load .and. &
+            allocated(body%instructions(3)%storage_key) .and. &
+            trim(body%instructions(3)%storage_key) == 'x', 'positive initializer load changed')
+        call assert_true(body%instructions(4)%opcode == opcode_output .and. &
+            body%instructions(5)%opcode == opcode_return, 'positive initializer tail changed')
+        call assert_true(trim(body%instructions(1)%source_rule) == &
+            'frontend-ast-v2/execution-part', 'positive initializer source provenance changed')
+        call assert_true(trim(body%instructions(3)%source_rule) == 'frontend-ast-v2/print-stmt', &
+            'positive initializer PRINT provenance changed')
+    end subroutine check_positive_initializer
 
     function positive_sx() result(value)
         character(len=8192) :: value
