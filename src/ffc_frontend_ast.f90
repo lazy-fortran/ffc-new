@@ -555,6 +555,7 @@ module ffc_frontend_ast
     public :: ffc_validate_frontend_ast_v2_print_ten_shape
     public :: ffc_validate_frontend_ast_v2_print_generic_shape
     public :: ffc_validate_frontend_ast_v2_initialized_power_shape
+    public :: ffc_validate_frontend_ast_v2_initialized_variable_power_shape
 
 contains
 
@@ -714,7 +715,8 @@ contains
         integer(int32) :: initializer_value, addend_value, subtrahend_value, multiplier_value, &
             divisor_value, power_value, route
         logical :: initialized_xplus_addend, initialized_xminus_subtrahend, &
-            initialized_xmultiply_multiplier, initialized_xdivide_divisor, initialized_xpower
+            initialized_xmultiply_multiplier, initialized_xdivide_divisor, initialized_xpower, &
+            initialized_xvariable_power
 
         call clear_message(message)
         lowered = .false.
@@ -890,6 +892,7 @@ contains
         initialized_xmultiply_multiplier = .false.
         initialized_xdivide_divisor = .false.
         initialized_xpower = .false.
+        initialized_xvariable_power = .false.
         if (assignment_count == 2 .and. trim(assignments(1)%target) == 'x' .and. &
             trim(assignments(2)%target) == 'x') then
             initialized_xplus_addend = parse_bounded_addend_expression(trim(assignments(2)%value), &
@@ -901,6 +904,7 @@ contains
             initialized_xdivide_divisor = parse_bounded_divisor_expression(&
                 trim(assignments(2)%value), divisor_value)
             initialized_xpower = parse_bounded_power_expression(trim(assignments(2)%value), power_value)
+            initialized_xvariable_power = is_variable_power_expression(trim(assignments(2)%value))
         end if
         if (len_trim(print_statement) > 0) then
             if (index(print_statement, '( output-count 7 )') == 0 .and. &
@@ -912,6 +916,7 @@ contains
                 .not. initialized_xmultiply_multiplier .and. &
                 .not. initialized_xdivide_divisor .and. &
                 .not. initialized_xpower .and. &
+                .not. initialized_xvariable_power .and. &
                 ((assignment_count /= 1 .and. assignment_count /= 2) .or. &
                 trim(assignments(1)%target) /= 'x' .or. &
                 (assignment_count == 1 .and. .not. starts_integer_literal_expression(&
@@ -1031,6 +1036,18 @@ contains
                 body%instructions(4)%literal_value = power_value
                 lowered = ffc_validate_frontend_ast_v2_initialized_power_shape(body, initializer_value, &
                     power_value, message)
+                return
+            end if
+            if (route == 0_int32 .and. initialized_xvariable_power) then
+                if (.not. frontend_ast_v2_print_variable_match(print_statement)) then
+                    call set_message(message, 'unsupported-frontend-ast-v2-execution-part')
+                    return
+                end if
+                if (.not. parse_bounded_signed_initializer_literal(trim(assignments(1)%value), &
+                    initializer_value, message)) return
+                call emit_frontend_ast_v2_initialized_variable_power(body, initializer_value)
+                lowered = ffc_validate_frontend_ast_v2_initialized_variable_power_shape(body, &
+                    initializer_value, message)
                 return
             end if
             if (route == 0_int32) then
@@ -2273,6 +2290,38 @@ contains
         valid = .true.
     end function ffc_validate_frontend_ast_v2_print_variable_items_shape
 
+    subroutine emit_frontend_ast_v2_initialized_variable_power(body, initializer_value)
+        type(mir_function_body_t), intent(inout) :: body
+        integer(int32), intent(in) :: initializer_value
+
+        integer(int32) :: expected_opcodes(9), expected_results(9)
+        integer :: index
+
+        deallocate (body%instructions)
+        allocate (body%instructions(9))
+        body%function%instruction_count = 9_int32
+        expected_opcodes = [opcode_const, opcode_store, opcode_load, opcode_load, opcode_pow, &
+            opcode_store, opcode_load, opcode_output, opcode_return]
+        expected_results = [0_int32, 1_int32, 2_int32, 3_int32, 4_int32, 4_int32, 6_int32, 6_int32, 6_int32]
+        do index = 1, 9
+            body%instructions(index)%id = int(index - 1, int32)
+            body%instructions(index)%opcode = expected_opcodes(index)
+            body%instructions(index)%result%id = expected_results(index)
+            body%instructions(index)%result%kind = value_kind_integer
+            body%instructions(index)%result%type_name = 'i32'
+            if (index <= 6) then
+                body%instructions(index)%source_rule = 'frontend-ast-v2/execution-part'
+            else
+                body%instructions(index)%source_rule = 'frontend-ast-v2/print-stmt'
+            end if
+        end do
+        body%instructions(1)%literal_value = initializer_value
+        body%instructions(2)%storage_key = 'x'
+        body%instructions(3)%storage_key = 'x'
+        body%instructions(6)%storage_key = 'x'
+        body%instructions(7)%storage_key = 'x'
+    end subroutine emit_frontend_ast_v2_initialized_variable_power
+
     logical function ffc_validate_frontend_ast_v2_initialized_power_shape(body, initializer_value, &
             power_value, message) result(valid)
         type(mir_function_body_t), intent(in) :: body
@@ -2332,6 +2381,68 @@ contains
         end do
         valid = .true.
     end function ffc_validate_frontend_ast_v2_initialized_power_shape
+
+    logical function ffc_validate_frontend_ast_v2_initialized_variable_power_shape(body, &
+            initializer_value, message) result(valid)
+        type(mir_function_body_t), intent(in) :: body
+        integer(int32), intent(in) :: initializer_value
+        character(len=:), allocatable, intent(out), optional :: message
+        integer(int32) :: expected_opcodes(9), expected_results(9)
+        integer :: index
+
+        call clear_message(message)
+        valid = .false.
+        if (.not. mir_validate_function_body(body, message)) return
+        if (body%function%instruction_count /= 9_int32) then
+            call set_message(message, 'frontend-ast-v2 initialized variable power instruction count changed')
+            return
+        end if
+        expected_opcodes = [opcode_const, opcode_store, opcode_load, opcode_load, opcode_pow, &
+            opcode_store, opcode_load, opcode_output, opcode_return]
+        expected_results = [0_int32, 1_int32, 2_int32, 3_int32, 4_int32, 4_int32, 6_int32, 6_int32, 6_int32]
+        do index = 1, 9
+            if (body%instructions(index)%opcode /= expected_opcodes(index) .or. &
+                body%instructions(index)%result%id /= expected_results(index) .or. &
+                body%instructions(index)%result%kind /= value_kind_integer .or. &
+                trim(body%instructions(index)%result%type_name) /= 'i32') then
+                call set_message(message, 'frontend-ast-v2 initialized variable power MIR shape changed')
+                return
+            end if
+            if (index <= 6) then
+                if (trim(body%instructions(index)%source_rule) /= 'frontend-ast-v2/execution-part') then
+                    call set_message(message, &
+                        'frontend-ast-v2 initialized variable power execution provenance changed')
+                    return
+                end if
+            else if (trim(body%instructions(index)%source_rule) /= 'frontend-ast-v2/print-stmt') then
+                call set_message(message, &
+                    'frontend-ast-v2 initialized variable power print provenance changed')
+                return
+            end if
+        end do
+        if (body%instructions(1)%literal_value /= initializer_value .or. &
+            initializer_value < bounded_integer_power_minimum .or. &
+            initializer_value > bounded_integer_power_maximum) then
+            call set_message(message, 'frontend-ast-v2 initialized variable power initializer shape changed')
+            return
+        end if
+        do index = 1, 9
+            if (index == 2 .or. index == 3 .or. index == 6 .or. index == 7) then
+                if (.not. allocated(body%instructions(index)%storage_key)) then
+                    call set_message(message, 'frontend-ast-v2 initialized variable power storage shape changed')
+                    return
+                end if
+                if (trim(body%instructions(index)%storage_key) /= 'x') then
+                    call set_message(message, 'frontend-ast-v2 initialized variable power storage shape changed')
+                    return
+                end if
+            else if (allocated(body%instructions(index)%storage_key)) then
+                call set_message(message, 'frontend-ast-v2 initialized variable power storage shape changed')
+                return
+            end if
+        end do
+        valid = .true.
+    end function ffc_validate_frontend_ast_v2_initialized_variable_power_shape
 
     logical function ffc_validate_frontend_ast_v2_print_variable_two_items_shape(body, message) &
             result(valid)
@@ -4784,7 +4895,8 @@ contains
         type(ffc_frontend_assignment_v1_t), intent(in) :: assignment
         character(len=:), allocatable, intent(out), optional :: message
         integer(int32) :: literal_value
-        logical :: bounded_addend, bounded_subtrahend, bounded_multiplier, bounded_divisor, bounded_power
+        logical :: bounded_addend, bounded_subtrahend, bounded_multiplier, bounded_divisor, bounded_power, &
+            variable_power
 
         call clear_message(message)
         bounded_addend = parse_bounded_addend_expression(trim(assignment%value), literal_value)
@@ -4793,6 +4905,7 @@ contains
         bounded_multiplier = parse_bounded_multiplier_expression(trim(assignment%value), literal_value)
         bounded_divisor = parse_bounded_divisor_expression(trim(assignment%value), literal_value)
         bounded_power = parse_bounded_power_expression(trim(assignment%value), literal_value)
+        variable_power = is_variable_power_expression(trim(assignment%value))
         valid = .false.
         if (trim(assignment%target) /= 'x') then
             call set_message(message, 'unsupported-frontend-ast-v1-assignment')
@@ -4814,7 +4927,7 @@ contains
             .and. trim(assignment%value) /= &
             '(assignment-expression (kind binary-expression) (operator /) (left-operand x) (right-operand 2))' &
             .and. .not. bounded_addend .and. .not. bounded_subtrahend .and. .not. bounded_multiplier .and. &
-            .not. bounded_divisor .and. .not. bounded_power) then
+            .not. bounded_divisor .and. .not. bounded_power .and. .not. variable_power) then
             call set_message(message, 'unsupported-frontend-ast-v1-assignment')
             return
         end if
@@ -4839,7 +4952,8 @@ contains
         character(len=128) :: kind, operator, left_operand, right_operand
         integer(int32) :: literal_value
         integer(int32) :: addend_value, subtrahend_value, multiplier_value, divisor_value, power_value
-        logical :: plus_supported, subtrahend_supported, multiplier_supported, divisor_supported, power_supported
+        logical :: plus_supported, subtrahend_supported, multiplier_supported, divisor_supported, power_supported, &
+            variable_power_supported
 
         call clear_message(message)
         value = ''
@@ -4921,6 +5035,7 @@ contains
                         multiplier_supported = .false.
                         divisor_supported = .false.
                         power_supported = .false.
+                        variable_power_supported = .false.
                         if (trim(operator) == '+' .and. trim(left_operand) == '1' .and. &
                             trim(right_operand) == '2') then
                             plus_supported = .true.
@@ -4952,7 +5067,9 @@ contains
                                     divisor_value <= bounded_integer_divisor_maximum
                             end if
                         else if (trim(operator) == '**' .and. trim(left_operand) == 'x') then
-                            if (parse_bounded_decimal_literal(trim(right_operand), power_value, message)) then
+                            if (trim(right_operand) == 'x') then
+                                variable_power_supported = .true.
+                            else if (parse_bounded_decimal_literal(trim(right_operand), power_value, message)) then
                                 power_supported = is_bounded_integer_power(power_value)
                             end if
                         end if
@@ -4969,7 +5086,8 @@ contains
                             (trim(left_operand) /= 'x' .or. .not. divisor_supported))) .or. &
                             ((trim(operator) == '–' .or. trim(operator) == '-') .and. &
                             .not. subtrahend_supported) .or. &
-                            (trim(operator) == '**' .and. .not. power_supported)) then
+                            (trim(operator) == '**' .and. .not. power_supported .and. &
+                            .not. variable_power_supported)) then
                             call set_message(message, &
                                 'unsupported-frontend-ast-v1-assignment-expression')
                             ok = .false.
@@ -5375,16 +5493,16 @@ contains
         end if
     end function parse_bounded_divisor_expression
 
-    logical function parse_bounded_power_expression(serialized, value, message) result(ok)
+    logical function parse_power_expression(serialized, right_operand, message) result(ok)
         character(len=*), intent(in) :: serialized
-        integer(int32), intent(out) :: value
+        character(len=*), intent(out) :: right_operand
         character(len=:), allocatable, intent(out), optional :: message
 
         character(len=frontend_ast_token_length) :: token(frontend_ast_token_capacity)
-        character(len=128) :: literal_text
+        character(len=128) :: left_operand
         integer :: token_count, position
 
-        value = 0_int32
+        right_operand = ''
         call clear_message(message)
         ok = tokenize_frontend_ast_sx(serialized, token, token_count, message)
         if (.not. ok) return
@@ -5413,23 +5531,21 @@ contains
         if (.not. ok) return
         ok = expect_token(token, token_count, position, 'left-operand', message)
         if (.not. ok) return
-        ok = expect_token(token, token_count, position, 'x', message)
+        ok = read_atom(token, token_count, position, left_operand, message)
         if (.not. ok) return
+        if (trim(left_operand) /= 'x') then
+            call set_message(message, 'unsupported-frontend-ast-v2-integer-power')
+            ok = .false.
+            return
+        end if
         ok = expect_token(token, token_count, position, ')', message)
         if (.not. ok) return
         ok = expect_token(token, token_count, position, '(', message)
         if (.not. ok) return
         ok = expect_token(token, token_count, position, 'right-operand', message)
         if (.not. ok) return
-        ok = read_atom(token, token_count, position, literal_text, message)
+        ok = read_atom(token, token_count, position, right_operand, message)
         if (.not. ok) return
-        ok = parse_bounded_decimal_literal(literal_text, value, message)
-        if (.not. ok) return
-        if (.not. is_bounded_integer_power(value)) then
-            call set_message(message, 'unsupported-frontend-ast-v2-integer-power')
-            ok = .false.
-            return
-        end if
         ok = expect_token(token, token_count, position, ')', message)
         if (.not. ok) return
         ok = expect_token(token, token_count, position, ')', message)
@@ -5438,7 +5554,36 @@ contains
             call set_message(message, 'malformed-frontend-ast-v2-integer-power')
             ok = .false.
         end if
+    end function parse_power_expression
+
+    logical function parse_bounded_power_expression(serialized, value, message) result(ok)
+        character(len=*), intent(in) :: serialized
+        integer(int32), intent(out) :: value
+        character(len=:), allocatable, intent(out), optional :: message
+
+        character(len=128) :: right_operand
+
+        value = 0_int32
+        call clear_message(message)
+        ok = parse_power_expression(serialized, right_operand, message)
+        if (.not. ok) return
+        ok = parse_bounded_decimal_literal(trim(right_operand), value, message)
+        if (.not. ok) return
+        if (.not. is_bounded_integer_power(value)) then
+            call set_message(message, 'unsupported-frontend-ast-v2-integer-power')
+            ok = .false.
+        end if
     end function parse_bounded_power_expression
+
+    logical function is_variable_power_expression(serialized) result(is_variable)
+        character(len=*), intent(in) :: serialized
+
+        character(len=128) :: right_operand
+
+        is_variable = parse_power_expression(serialized, right_operand)
+        if (.not. is_variable) return
+        is_variable = trim(right_operand) == 'x'
+    end function is_variable_power_expression
 
     logical function is_bounded_integer_power(value) result(supported)
         integer(int32), intent(in) :: value
