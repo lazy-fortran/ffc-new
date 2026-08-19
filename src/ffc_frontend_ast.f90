@@ -3,7 +3,7 @@ module ffc_frontend_ast
     use ffc_lowering, only: ffc_lower_program_root, ffc_program_declaration_from_sx, &
         ffc_program_root_from_sx, ffc_program_root_t, ffc_validate_program_root
     use ffc_mir, only: mir_function_body_t, mir_make_function_witness, opcode_add, opcode_const, &
-        opcode_div, opcode_load, opcode_mul, opcode_output, opcode_pow, opcode_return, opcode_store, &
+        opcode_div, opcode_load, opcode_mul, opcode_output, opcode_pow, opcode_return, opcode_store, opcode_sub, &
         mir_type_spec_name, &
         mir_type_spec_value_kind, mir_validate_function_body, value_kind_integer
     use ffc_mir_metadata, only: instruction_shape_frontend_ast_v1_integer_program_count, &
@@ -828,6 +828,8 @@ contains
                 '( left x ) ( right x ) ( rule R1217 ) ( clause 12.6.3 ) ( page 248 ) )') == 0 .and. &
                 index(print_statement, '( output-item ( kind integer-expression ) ( operator * ) '// &
                 '( left x ) ( right 2 ) ( rule R1217 ) ( clause 12.6.3 ) ( page 248 ) )') == 0 .and. &
+                index(print_statement, '( output-item ( kind integer-expression ) ( operator – ) '// &
+                '( left x ) ( right 2 ) ( rule R1217 ) ( clause 12.6.3 ) ( page 248 ) )') == 0 .and. &
                 index(print_statement, '( output-item ( kind integer-expression ) ( operator / ) '// &
                 '( left x ) ( right 2 ) ( rule R1217 ) ( clause 12.6.3 ) ( page 248 ) )') == 0)) then
                 call set_message(message, 'unsupported-frontend-ast-v2-execution-part')
@@ -1452,13 +1454,14 @@ contains
         else if (trim(item_kind) == 'integer-expression') then
             if (.not. read_named_atom(token, token_count, position, 'operator', item_operator, message)) return
             if (trim(item_operator) /= '+' .and. trim(item_operator) /= '*' .and. &
-                trim(item_operator) /= '/' .and. trim(item_operator) /= '**') then
+                trim(item_operator) /= '/' .and. trim(item_operator) /= '–' .and. trim(item_operator) /= '**') then
                 call set_message(message, 'unsupported-frontend-ast-v2-print-expression-operator')
                 parsed = .false.
                 return
             end if
             if (trim(item_operator) == '*') item_kind = 'integer-expression-multiply'
             if (trim(item_operator) == '/') item_kind = 'integer-expression-divide'
+            if (trim(item_operator) == '–') item_kind = 'integer-expression-subtract'
             if (trim(item_operator) == '**') item_kind = 'integer-expression-power'
             if (.not. read_named_atom(token, token_count, position, 'left', item_clause, message)) return
             if (trim(item_clause) /= 'x') then
@@ -1469,7 +1472,8 @@ contains
             if (.not. read_named_atom(token, token_count, position, 'right', item_value, message)) return
             if ((trim(item_operator) == '+' .and. trim(item_value) /= '1' .and. trim(item_value) /= 'x') .or. &
                 (trim(item_operator) == '*' .and. trim(item_value) /= '2') .or. &
-                (trim(item_operator) == '/' .and. trim(item_value) /= '2')) then
+                (trim(item_operator) == '/' .and. trim(item_value) /= '2') .or. &
+                (trim(item_operator) == '–' .and. trim(item_value) /= '2')) then
                 call set_message(message, 'unsupported-frontend-ast-v2-print-expression-right')
                 parsed = .false.
                 return
@@ -1496,7 +1500,7 @@ contains
         if ((trim(item_kind) == 'variable' .and. trim(item_rule) /= 'R901') .or. &
             ((trim(item_kind) == 'integer-literal' .or. trim(item_kind) == 'integer-expression' .or. &
             trim(item_kind) == 'integer-expression-multiply' .or. trim(item_kind) == 'integer-expression-divide' .or. &
-            trim(item_kind) == 'integer-expression-power') .and. &
+            trim(item_kind) == 'integer-expression-subtract' .or. trim(item_kind) == 'integer-expression-power') .and. &
             trim(item_rule) /= 'R1217')) then
             call set_message(message, 'invalid-frontend-ast-v2-print-item-rule')
             parsed = .false.
@@ -1546,6 +1550,8 @@ contains
                 instruction_count = instruction_count + 4
             else if (trim(item_kind(item_index)) == 'integer-expression-divide') then
                 instruction_count = instruction_count + 4
+            else if (trim(item_kind(item_index)) == 'integer-expression-subtract') then
+                instruction_count = instruction_count + 4
             else if (trim(item_kind(item_index)) == 'integer-expression-power') then
                 instruction_count = instruction_count + 4
             else
@@ -1593,6 +1599,19 @@ contains
                 body%instructions(instruction_index + 1)%opcode = opcode_const
                 body%instructions(instruction_index + 1)%literal_value = 2
                 body%instructions(instruction_index + 2)%opcode = opcode_mul
+                body%instructions(instruction_index + 3)%opcode = opcode_output
+                body%instructions(instruction_index)%source_rule = 'frontend-ast-v2/print-stmt'
+                body%instructions(instruction_index + 1)%source_rule = 'frontend-ast-v2/print-stmt'
+                body%instructions(instruction_index + 2)%source_rule = 'frontend-ast-v2/print-stmt'
+                body%instructions(instruction_index + 3)%source_rule = 'frontend-ast-v2/print-stmt'
+                instruction_index = instruction_index + 3
+            else if (trim(item_kind(item_index)) == 'integer-expression-subtract') then
+                instruction_index = instruction_index + 1
+                body%instructions(instruction_index)%opcode = opcode_load
+                body%instructions(instruction_index)%storage_key = 'x'
+                body%instructions(instruction_index + 1)%opcode = opcode_const
+                body%instructions(instruction_index + 1)%literal_value = 2
+                body%instructions(instruction_index + 2)%opcode = opcode_sub
                 body%instructions(instruction_index + 3)%opcode = opcode_output
                 body%instructions(instruction_index)%source_rule = 'frontend-ast-v2/print-stmt'
                 body%instructions(instruction_index + 1)%source_rule = 'frontend-ast-v2/print-stmt'
