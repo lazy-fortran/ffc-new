@@ -25,8 +25,16 @@ program test_frontend_ast_v2_print_generic_list
     call assert_true(body%instructions(10)%opcode == opcode_output, 'fourth output is missing')
     call assert_true(body%instructions(11)%opcode == opcode_return, 'return is missing')
     call assert_true(all_source_rules_are_print_stmt(body), 'print source identity was lost')
+    call assert_literal_list(literal_sx_count(1), [7], 'one-item literal list')
+    call assert_literal_list(literal_sx_count(4), [7, 8, 9, 10], 'four-item literal list')
+    call assert_literal_list(literal_sx_count(10), [7, 8, 9, 10, 11, 12, 13, 14, 15, 16], &
+        'ten-item literal list')
     call assert_literal_list(literal_sx_20_22(), [20, 21, 22], '20,21,22')
     call assert_literal_list(literal_sx_100_500(), [100, 200, 300, 400, 500], '100,200,300,400,500')
+    call assert_false(ffc_lower_frontend_ast_v2_from_sx(literal_sx_count(11), body, message), &
+        'eleven-item literal list was accepted')
+    call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(literal_sx_count(4), '(page 248)', ''), &
+        body, message), 'malformed literal list was accepted')
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_sx(), &
         '(print-stmt ', '(write-stmt '), body, message), 'WRITE was accepted')
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_sx(), &
@@ -91,6 +99,28 @@ contains
         value = replace_text(value, ' (output-item (kind integer-literal) (value 8) (rule R1217) '// &
             '(clause 12.6.3) (page 248))', '')
     end function literal_sx_20_22
+
+    function literal_sx_count(item_count) result(value)
+        integer, intent(in) :: item_count
+        character(len=8192) :: value
+        character(len=32) :: item_text
+        character(len=8192) :: items
+        integer :: item_index, start, finish
+
+        value = positive_sx()
+        start = index(value, '(output-items')
+        finish = index(value(start:), ') (statement-rule R1212)')
+        call assert_true(start > 0 .and. finish > 0, 'literal-list template is malformed')
+        items = '(output-items'
+        do item_index = 1, item_count
+            write (item_text, '(i0)') item_index + 6
+            items = trim(items)//' (output-item (kind integer-literal) (value '//trim(item_text)//') '// &
+                '(rule R1217) (clause 12.6.3) (page 248))'
+        end do
+        value = value(:start - 1)//trim(items)//value(start + finish - 1:)
+        write (item_text, '(i0)') item_count
+        value = replace_text(value, '(output-count 4)', '(output-count '//trim(item_text)//')')
+    end function literal_sx_count
 
     function literal_sx_100_500() result(value)
         character(len=8192) :: value

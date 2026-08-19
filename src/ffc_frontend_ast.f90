@@ -1358,8 +1358,8 @@ contains
         end if
         if (.not. read_named_atom(token, token_count, position, 'output-count', count_text, message)) return
         if (.not. parse_count(count_text, parsed_count, message)) return
-        if (parsed_count <= 0) then
-            call set_message(message, 'empty-frontend-ast-v2-print-output-list')
+        if (parsed_count <= 0 .or. parsed_count > 10) then
+            call set_message(message, 'unsupported-frontend-ast-v2-print-output-count')
             parsed = .false.
             return
         end if
