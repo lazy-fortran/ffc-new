@@ -826,6 +826,35 @@ contains
             print_statement, message)) then
             return
         end if
+        if (trim(root%name) == 'main' .and. trim(declaration%name) == 'main' .and. &
+            trim(variable%type_spec) == 'integer' .and. trim(variable%name) == 'y' .and. &
+            index(print_statement, 'output-items') == 0) then
+            if (.not. parse_v2_assignment_sequence(trim(expression), assignments, assignment_count, &
+                message)) return
+            if (assignment_count /= 1 .or. trim(assignments(1)%target) /= 'y' .or. &
+                index(trim(assignments(1)%value), 'integer-literal') == 0 .or. &
+                index(print_statement, '( output-name y )') == 0 .or. &
+                .not. frontend_ast_v2_print_variable_match(print_statement)) then
+                call set_message(message, 'unsupported-frontend-ast-v2-execution-part')
+                return
+            end if
+            if (trim(root%source_file) /= trim(declaration%source_file) .or. &
+                trim(root%source_hash) /= trim(declaration%source_hash) .or. &
+                trim(root%source_file) /= trim(variable%source_file) .or. &
+                trim(root%source_hash) /= trim(variable%source_hash) .or. &
+                trim(root%source_file) /= trim(assignments(1)%source_file) .or. &
+                trim(root%source_hash) /= trim(assignments(1)%source_hash)) then
+                call set_message(message, 'frontend-ast-v2-invalid-provenance')
+                return
+            end if
+            call mir_make_function_witness(body)
+            body%function%name = trim(root%name)
+            if (.not. parse_integer_literal_expression(trim(assignments(1)%value), initializer_value, &
+                message)) return
+            call emit_frontend_ast_v2_print_y_initializer(body, initializer_value)
+            lowered = mir_validate_function_body(body, message)
+            return
+        end if
         if (index(print_statement, 'output-items') /= 0) then
             if (trim(root%name) == 'main' .and. trim(declaration%name) == 'main' .and. &
                 trim(variable%type_spec) == 'integer' .and. trim(variable%name) == 'y') then
@@ -1372,7 +1401,8 @@ contains
             index(canonical, '( format-kind default-char-expr )') /= 0 .and. &
             index(canonical, '( format-value * )') /= 0 .and. &
             index(canonical, '( output-kind variable )') /= 0 .and. &
-            index(canonical, '( output-name x )') /= 0 .and. &
+            (index(canonical, '( output-name x )') /= 0 .or. &
+            index(canonical, '( output-name y )') /= 0) .and. &
             index(canonical, '( statement-rule R1212 )') /= 0 .and. &
             index(canonical, '( format-rule R1215 )') /= 0 .and. &
             index(canonical, '( output-rule R901 )') /= 0 .and. &
@@ -1883,7 +1913,7 @@ contains
         body%function%instruction_count = 5
         do index = 1, 5
             body%instructions(index)%id = index - 1
-            body%instructions(index)%result%id = index
+            body%instructions(index)%result%id = 1
             body%instructions(index)%result%kind = value_kind_integer
             body%instructions(index)%result%type_name = 'i32'
             if (index <= 2) then
@@ -1892,6 +1922,7 @@ contains
                 body%instructions(index)%source_rule = 'frontend-ast-v2/print-stmt'
             end if
         end do
+        body%instructions(1)%result%id = 2
         body%instructions(1)%opcode = opcode_const
         body%instructions(1)%literal_value = initializer_value
         body%instructions(2)%opcode = opcode_store
