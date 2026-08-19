@@ -1474,10 +1474,13 @@ contains
                 return
             end if
             if (trim(item_operator) == '**') then
-                if (.not. parse_bounded_decimal_literal(trim(item_value), power_value, message)) then
-                    call set_message(message, 'unsupported-frontend-ast-v2-print-expression-right')
-                    parsed = .false.
-                    return
+                if (trim(item_value) /= 'x') then
+                    if (index('0123456789', item_value(1:1)) == 0 .or. &
+                        .not. parse_bounded_decimal_literal(trim(item_value), power_value, message)) then
+                        call set_message(message, 'unsupported-frontend-ast-v2-print-expression-right')
+                        parsed = .false.
+                        return
+                    end if
                 end if
             end if
         else if (trim(item_kind) == 'integer-literal') then
@@ -1611,10 +1614,15 @@ contains
                 instruction_index = instruction_index + 1
                 body%instructions(instruction_index)%opcode = opcode_load
                 body%instructions(instruction_index)%storage_key = 'x'
-                body%instructions(instruction_index + 1)%opcode = opcode_const
-                read (item_value(item_index), *, iostat=io_status) value
-                if (io_status /= 0) value = 0
-                body%instructions(instruction_index + 1)%literal_value = value
+                if (trim(item_value(item_index)) == 'x') then
+                    body%instructions(instruction_index + 1)%opcode = opcode_load
+                    body%instructions(instruction_index + 1)%storage_key = 'x'
+                else
+                    body%instructions(instruction_index + 1)%opcode = opcode_const
+                    read (item_value(item_index), *, iostat=io_status) value
+                    if (io_status /= 0) value = 0
+                    body%instructions(instruction_index + 1)%literal_value = value
+                end if
                 body%instructions(instruction_index + 2)%opcode = opcode_pow
                 body%instructions(instruction_index + 3)%opcode = opcode_output
                 body%instructions(instruction_index)%source_rule = 'frontend-ast-v2/print-stmt'

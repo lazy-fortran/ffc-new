@@ -28,6 +28,10 @@ program test_frontend_ast_v2_print_expression
     call check_power_shape(5)
     call check_power_shape(7)
     call check_power_shape(10)
+    call check_shape(replace_text(power_four_sx(.true.), '(right 4)', '(right x)'), &
+        [opcode_const, opcode_store, opcode_load, opcode_load, opcode_pow, &
+        opcode_output, opcode_const, opcode_output, opcode_return])
+    call assert_load_storage([3, 4])
     call check_shape(power_four_sx(.true.), [opcode_const, opcode_store, opcode_load, opcode_const, opcode_pow, &
         opcode_output, opcode_const, opcode_output, opcode_return])
     call assert_true(body%instructions(4)%literal_value == 4, 'power-four exponent literal changed')
