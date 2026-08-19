@@ -11,7 +11,15 @@ program test_frontend_ast_v2_init_xpow_range
 
     call check_case(3_int32, 2_int32)
     call check_case(-3_int32, 3_int32)
+    call check_case(3_int32, 5_int32)
+    call check_case(-3_int32, 10_int32)
 
+    call assert_rejected(witness('3', '0', '**'), &
+        'zero exponent was accepted')
+    call assert_rejected(witness('3', '1', '**'), &
+        'unit exponent was accepted')
+    call assert_rejected(witness('3', '11', '**'), &
+        'out-of-range exponent was accepted')
     call assert_rejected(witness('3', '-1', '**'), &
         'negative exponent was accepted')
     call assert_rejected(replace_text(witness('3', '2', '**'), &
