@@ -55,7 +55,7 @@ program test_frontend_ast_v2_initialized_variable_add
         '(source-hash initialized-variable-add)', '(source-hash mutated)'), body, message), &
         'mutated source provenance was accepted')
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_sx(), &
-        '(right-operand x)', '(right-operand 1)'), body, message), &
+        '(right-operand x)', '(right-operand y)'), body, message), &
         'mutated variable-add operand was accepted')
 
     write (*, '(a)') 'frontend AST v2 initialized variable-add MIR checks: ok'
