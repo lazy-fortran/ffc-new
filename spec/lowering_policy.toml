@@ -13,3 +13,5 @@ initializer_minimum = -100
 initializer_maximum = 2047
 addend_minimum = 1
 addend_maximum = 10
+subtrahend_minimum = 1
+subtrahend_maximum = 10
