@@ -879,10 +879,9 @@ contains
         end if
         initialized_xplus_addend = .false.
         if (assignment_count == 2 .and. trim(assignments(1)%target) == 'x' .and. &
-            trim(assignments(2)%target) == 'x' .and. &
-            starts_integer_literal_expression(trim(assignments(1)%value))) then
+            trim(assignments(2)%target) == 'x') then
             initialized_xplus_addend = parse_bounded_addend_expression(trim(assignments(2)%value), &
-                addend_value, message)
+                addend_value)
         end if
         if (len_trim(print_statement) > 0) then
             if (index(print_statement, '( output-count 7 )') == 0 .and. &
@@ -963,8 +962,7 @@ contains
                 return
             end if
             if (route == 0_int32 .and. assignment_count == 2 .and. &
-                trim(assignments(1)%target) == 'x' .and. trim(assignments(2)%target) == 'x' .and. &
-                starts_integer_literal_expression(trim(assignments(1)%value))) then
+                trim(assignments(1)%target) == 'x' .and. trim(assignments(2)%target) == 'x') then
                 if (.not. parse_bounded_addend_expression(trim(assignments(2)%value), addend_value, &
                     message)) return
                 if (.not. parse_bounded_signed_initializer_literal(trim(assignments(1)%value), &
@@ -4666,8 +4664,10 @@ contains
         type(ffc_frontend_assignment_v1_t), intent(in) :: assignment
         character(len=:), allocatable, intent(out), optional :: message
         integer(int32) :: literal_value
+        logical :: bounded_addend
 
         call clear_message(message)
+        bounded_addend = parse_bounded_addend_expression(trim(assignment%value), literal_value)
         valid = .false.
         if (trim(assignment%target) /= 'x') then
             call set_message(message, 'unsupported-frontend-ast-v1-assignment')
@@ -4689,7 +4689,8 @@ contains
             .and. trim(assignment%value) /= &
             '(assignment-expression (kind binary-expression) (operator /) (left-operand x) (right-operand 2))' &
             .and. trim(assignment%value) /= &
-            '(assignment-expression (kind binary-expression) (operator **) (left-operand x) (right-operand 3))') then
+            '(assignment-expression (kind binary-expression) (operator **) (left-operand x) (right-operand 3))' &
+            .and. .not. bounded_addend) then
             call set_message(message, 'unsupported-frontend-ast-v1-assignment')
             return
         end if
@@ -4713,6 +4714,8 @@ contains
         character(len=:), allocatable, intent(out), optional :: message
         character(len=128) :: kind, operator, left_operand, right_operand
         integer(int32) :: literal_value
+        integer(int32) :: addend_value
+        logical :: plus_supported
 
         call clear_message(message)
         value = ''
@@ -4789,12 +4792,20 @@ contains
                         if (.not. ok) return
                         ok = expect_token(token, token_count, position, ')', message)
                         if (.not. ok) return
+                        plus_supported = .false.
+                        if (trim(operator) == '+' .and. trim(left_operand) == '1' .and. &
+                            trim(right_operand) == '2') then
+                            plus_supported = .true.
+                        else if (trim(operator) == '+' .and. trim(left_operand) == 'x') then
+                            if (parse_bounded_decimal_literal(trim(right_operand), addend_value, message)) then
+                                plus_supported = addend_value >= bounded_integer_addend_minimum .and. &
+                                    addend_value <= bounded_integer_addend_maximum
+                            end if
+                        end if
                         if (trim(kind) /= 'binary-expression' .or. &
                             (trim(operator) /= '+' .and. trim(operator) /= '*' .and. &
                             trim(operator) /= '/' .and. trim(operator) /= '–' .and. trim(operator) /= '**') .or. &
-                            (trim(operator) == '+' .and. &
-                            ((trim(left_operand) /= '1' .or. trim(right_operand) /= '2') .and. &
-                            (trim(left_operand) /= 'x' .or. trim(right_operand) /= '1'))) .or. &
+                            (trim(operator) == '+' .and. .not. plus_supported) .or. &
                             (trim(operator) == '*' .and. &
                             ((trim(left_operand) /= '2' .or. trim(right_operand) /= '3') .and. &
                             (trim(left_operand) /= 'x' .or. trim(right_operand) /= '2'))) .or. &
@@ -4816,6 +4827,9 @@ contains
                             trim(right_operand) == '1') then
                             value = '(assignment-expression (kind binary-expression) '// &
                                 '(operator +) (left-operand x) (right-operand 1))'
+                        else if (trim(operator) == '+' .and. trim(left_operand) == 'x') then
+                            value = '(assignment-expression (kind binary-expression) '// &
+                                '(operator +) (left-operand x) (right-operand '//trim(right_operand)//'))'
                         else if (trim(operator) == '*' .and. trim(left_operand) == 'x' .and. &
                                 trim(right_operand) == '2') then
                             value = '(assignment-expression (kind binary-expression) '// &
@@ -4962,6 +4976,8 @@ contains
         ok = expect_token(token, token_count, position, 'kind', message)
         if (.not. ok) return
         ok = expect_token(token, token_count, position, 'binary-expression', message)
+        if (.not. ok) return
+        ok = expect_token(token, token_count, position, ')', message)
         if (.not. ok) return
         ok = expect_token(token, token_count, position, '(', message)
         if (.not. ok) return

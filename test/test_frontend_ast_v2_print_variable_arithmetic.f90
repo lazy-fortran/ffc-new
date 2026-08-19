@@ -10,9 +10,10 @@ program test_frontend_ast_v2_print_variable_arithmetic
 
     call check_witness('(operator –)', '23', opcode_sub, 'subtraction')
     call check_witness('(operator /)', '24', opcode_div, 'division')
-    call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_all( &
+    call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_all(replace_all( &
         witness('(operator –)', '23', 'print-variable-subtraction-expression'), &
-        '(operator –)', '(operator +)'), body, message), 'wrong subtraction operator was accepted')
+        '(operator –)', '(operator +)'), '(right-operand 2)', '(right-operand 11)'), body, message), &
+        'wrong subtraction operator was accepted')
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_all( &
         witness('(operator /)', '24', 'print-variable-division-expression'), &
         '(right-operand 2)', '(right-operand 3)'), body, message), 'wrong division operand was accepted')

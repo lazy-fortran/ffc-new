@@ -36,8 +36,9 @@ program test_frontend_ast_v2_print_mul
 
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_sx(), &
         'right-operand 2', 'right-operand 3'), body, message), 'wrong multiplier was accepted')
-    call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_sx(), &
-        '(operator *)', '(operator +)'), body, message), 'wrong operator was accepted')
+    call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(replace_text(positive_sx(), &
+        '(operator *)', '(operator +)'), 'right-operand 2', 'right-operand 11'), body, message), &
+        'wrong operator was accepted')
     write (*, '(a)') 'frontend AST v2 variable multiplication PRINT checks: ok'
 
 contains
