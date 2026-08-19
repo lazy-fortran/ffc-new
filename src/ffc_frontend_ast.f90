@@ -820,7 +820,6 @@ contains
             if (.not. frontend_ast_v2_print_generic_list_match(print_statement) .or. &
                 assignment_count /= 1 .or. trim(assignments(1)%target) /= 'x' .or. &
                 index(trim(assignments(1)%value), 'integer-literal') == 0 .or. &
-                index(trim(assignments(1)%value), ' 3 ') == 0 .or. &
                 (index(print_statement, '( operator ** )') == 0 .and. &
                 index(print_statement, '( kind integer-expression )') /= 0 .and. &
                 index(print_statement, '( output-item ( kind integer-expression ) ( operator + ) '// &
