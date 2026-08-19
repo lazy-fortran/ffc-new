@@ -833,7 +833,9 @@ contains
                 index(print_statement, '( output-item ( kind integer-expression ) ( operator ** ) '// &
                 '( left x ) ( right 2 ) ( rule R1217 ) ( clause 12.6.3 ) ( page 248 ) )') == 0 .and. &
                 index(print_statement, '( output-item ( kind integer-expression ) ( operator ** ) '// &
-                '( left x ) ( right 3 ) ( rule R1217 ) ( clause 12.6.3 ) ( page 248 ) )') == 0)) then
+                '( left x ) ( right 3 ) ( rule R1217 ) ( clause 12.6.3 ) ( page 248 ) )') == 0 .and. &
+                index(print_statement, '( output-item ( kind integer-expression ) ( operator ** ) '// &
+                '( left x ) ( right 4 ) ( rule R1217 ) ( clause 12.6.3 ) ( page 248 ) )') == 0)) then
                 call set_message(message, 'unsupported-frontend-ast-v2-execution-part')
                 return
             end if
@@ -1471,7 +1473,8 @@ contains
             if ((trim(item_operator) == '+' .and. trim(item_value) /= '1' .and. trim(item_value) /= 'x') .or. &
                 (trim(item_operator) == '*' .and. trim(item_value) /= '2') .or. &
                 (trim(item_operator) == '/' .and. trim(item_value) /= '2') .or. &
-                (trim(item_operator) == '**' .and. trim(item_value) /= '2' .and. trim(item_value) /= '3')) then
+                (trim(item_operator) == '**' .and. trim(item_value) /= '2' .and. trim(item_value) /= '3' .and. &
+                trim(item_value) /= '4')) then
                 call set_message(message, 'unsupported-frontend-ast-v2-print-expression-right')
                 parsed = .false.
                 return

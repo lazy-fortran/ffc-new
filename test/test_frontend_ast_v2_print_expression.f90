@@ -29,6 +29,12 @@ program test_frontend_ast_v2_print_expression
         '(right 1)', '(right 3)'), [opcode_const, opcode_store, opcode_load, opcode_const, opcode_pow, &
         opcode_output, opcode_load, opcode_output, opcode_return])
     call assert_true(body%instructions(4)%literal_value == 3, 'power exponent literal changed')
+    call check_shape(power_four_sx(.true.), [opcode_const, opcode_store, opcode_load, opcode_const, opcode_pow, &
+        opcode_output, opcode_const, opcode_output, opcode_return])
+    call assert_true(body%instructions(4)%literal_value == 4, 'power-four exponent literal changed')
+    call check_shape(power_four_sx(.false.), [opcode_const, opcode_store, opcode_const, opcode_output, opcode_load, &
+        opcode_const, opcode_pow, opcode_output, opcode_load, opcode_output, opcode_return])
+    call assert_true(body%instructions(6)%literal_value == 4, 'power-four exponent literal changed')
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_sx(.true.), '(operator +)', &
         '(operator *)'), body, message), 'wrong expression operator was accepted')
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_sx(.true.), '(right 1)', &
@@ -42,8 +48,8 @@ program test_frontend_ast_v2_print_expression
         '(operator +)', '(operator /)'), '(right 1)', '(right 3)'), body, message), &
         'unsupported division operand was accepted')
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(replace_text(positive_sx(.true.), &
-        '(operator +)', '(operator **)'), '(right 1)', '(right 4)'), body, message), &
-        'unsupported power operand was accepted')
+        '(operator +)', '(operator **)'), '(right 1)', '(right 5)'), body, message), &
+        'unsupported power-five operand was accepted')
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_sx(.true.), '(rule R1217)', &
         '(rule R901)'), body, message), 'wrong expression provenance was accepted')
     write (*, '(a)') 'frontend AST v2 generic expression checks: ok'
@@ -112,6 +118,27 @@ contains
             '(statement-page 242) (format-page 244) (output-page 248) (source-hash generic-expression))))'
         value = replace_text(value, 'ITEMS', trim(items))
     end function positive_sx
+
+    function power_four_sx(expression_first) result(value)
+        logical, intent(in) :: expression_first
+        character(len=12288) :: value
+        character(len=1024) :: literal_item
+
+        value = replace_text(replace_text(positive_sx(expression_first), '(operator +)', '(operator **)'), &
+            '(right 1)', '(right 4)')
+        literal_item = '(output-item (kind integer-literal) (value 7) (rule R1217) '// &
+            '(clause 12.6.3) (page 248))'
+        value = replace_text(value, '(output-item (kind variable) (name x) (rule R901) '// &
+            '(clause 12.6.3) (page 248))', literal_item)
+        if (.not. expression_first) then
+            value = replace_text(value, '(output-count 2)', '(output-count 3)')
+            value = replace_text(value, '(output-item (kind integer-expression) (operator **) (left x) '// &
+                '(right 4) (rule R1217) (clause 12.6.3) (page 248))', &
+                '(output-item (kind integer-expression) (operator **) (left x) (right 4) '// &
+                '(rule R1217) (clause 12.6.3) (page 248)) '// &
+                '(output-item (kind variable) (name x) (rule R901) (clause 12.6.3) (page 248))')
+        end if
+    end function power_four_sx
 
     function replace_text(value, old, new) result(replaced)
         character(len=*), intent(in) :: value, old, new
