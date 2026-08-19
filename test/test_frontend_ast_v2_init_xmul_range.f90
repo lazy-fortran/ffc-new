@@ -102,7 +102,7 @@ contains
             '(end-byte 70) (source-hash init-multiplication))))) '// &
             '(variable-count 1) (variable (variable-declaration '// &
             '(type-spec integer) (name x) (span (source-span (file main.f90) '// &
-            '(end-byte 20) (source-hash init-multiplication))))) '// &
+            '(start-byte 10) (end-byte 20) (source-hash init-multiplication))))) '// &
             '(execution-part (assignment-sequence (assignment-count 2) '// &
             '(assignment (assignment-stmt (variable x) (expression '// &
             '(assignment-expression (kind integer-literal) (operator ) '// &
