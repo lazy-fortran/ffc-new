@@ -2318,6 +2318,7 @@ contains
         body%instructions(1)%literal_value = initializer_value
         body%instructions(2)%storage_key = 'x'
         body%instructions(3)%storage_key = 'x'
+        body%instructions(4)%storage_key = 'x'
         body%instructions(6)%storage_key = 'x'
         body%instructions(7)%storage_key = 'x'
     end subroutine emit_frontend_ast_v2_initialized_variable_power
@@ -2427,7 +2428,7 @@ contains
             return
         end if
         do index = 1, 9
-            if (index == 2 .or. index == 3 .or. index == 6 .or. index == 7) then
+            if (index == 2 .or. index == 3 .or. index == 4 .or. index == 6 .or. index == 7) then
                 if (.not. allocated(body%instructions(index)%storage_key)) then
                     call set_message(message, 'frontend-ast-v2 initialized variable power storage shape changed')
                     return
