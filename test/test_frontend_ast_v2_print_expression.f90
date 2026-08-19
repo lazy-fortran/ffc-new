@@ -15,6 +15,10 @@ program test_frontend_ast_v2_print_expression
         [opcode_const, opcode_store, opcode_load, opcode_const, opcode_add, opcode_output, opcode_load, &
         opcode_output, opcode_return])
     call assert_true(body%instructions(4)%literal_value == 2, 'x+2 constant changed')
+    call check_decimal_shape('+', 3)
+    call check_decimal_shape('+', 4)
+    call check_decimal_shape('-', 3)
+    call check_decimal_shape('-', 4)
     call check_shape(positive_sx(.false.), [opcode_const, opcode_store, opcode_load, opcode_output, opcode_load, &
         opcode_const, opcode_add, opcode_output, opcode_return])
     call check_shape(replace_text(positive_sx(.true.), '(right 1)', '(right x)'), &
@@ -59,19 +63,13 @@ program test_frontend_ast_v2_print_expression
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_sx(.true.), '(right 1)', &
         '(right )'), body, message), 'missing expression operand was accepted')
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_sx(.true.), '(right 1)', &
-        '(right 3)'), body, message), 'x+3 expression operand was accepted')
+        '(right 11)'), body, message), 'x+11 expression operand was accepted')
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(replace_text(positive_sx(.true.), &
         '(operator +)', '(operator *)'), '(right 1)', '(right 3)'), body, message), &
         'unsupported multiplication operand was accepted')
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(replace_text(positive_sx(.true.), &
         '(operator +)', '(operator /)'), '(right 1)', '(right 3)'), body, message), &
         'unsupported division operand was accepted')
-    call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(replace_text(positive_sx(.true.), &
-        '(operator +)', '(operator –)'), '(right 1)', '(right 3)'), body, message), &
-        'unsupported subtraction operand was accepted')
-    call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(replace_text(positive_sx(.true.), &
-        '(operator +)', '(operator -)'), '(right 1)', '(right 3)'), body, message), &
-        'unsupported ASCII subtraction operand was accepted')
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_sx(.true.), '(rule R1217)', &
         '(rule R901)'), body, message), 'wrong expression provenance was accepted')
     write (*, '(a)') 'frontend AST v2 generic expression checks: ok'
@@ -112,6 +110,35 @@ contains
         call assert_true(body%instructions(4)%literal_value == exponent, &
             'power exponent literal changed')
     end subroutine check_power_shape
+
+    subroutine check_decimal_shape(operator, value)
+        character(len=*), intent(in) :: operator
+        integer, intent(in) :: value
+        character(len=32) :: value_text
+        character(len=12288) :: serialized
+        integer(int32) :: expression_opcode
+        integer(int32) :: expected(9)
+
+        write (value_text, '(i0)') value
+        if (operator == '+') then
+            expression_opcode = opcode_add
+        else
+            expression_opcode = opcode_sub
+        end if
+        serialized = replace_text(replace_text(positive_sx(.true.), '(operator +)', &
+            '(operator '//trim(operator)//')'), '(right 1)', '(right '//trim(value_text)//')')
+        expected(1) = opcode_const
+        expected(2) = opcode_store
+        expected(3) = opcode_load
+        expected(4) = opcode_const
+        expected(5) = expression_opcode
+        expected(6) = opcode_output
+        expected(7) = opcode_load
+        expected(8) = opcode_output
+        expected(9) = opcode_return
+        call check_shape(serialized, expected)
+        call assert_true(body%instructions(4)%literal_value == value, 'decimal expression constant changed')
+    end subroutine check_decimal_shape
 
     subroutine assert_load_storage(indices)
         integer, intent(in) :: indices(:)
