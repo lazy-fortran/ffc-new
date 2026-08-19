@@ -827,6 +827,33 @@ contains
             return
         end if
         if (index(print_statement, 'output-items') /= 0) then
+            if (trim(root%name) == 'main' .and. trim(declaration%name) == 'main' .and. &
+                trim(variable%type_spec) == 'integer' .and. trim(variable%name) == 'y') then
+                if (.not. parse_v2_assignment_sequence(trim(expression), assignments, assignment_count, &
+                    message)) return
+                if (.not. frontend_ast_v2_print_generic_list_match(print_statement) .or. &
+                    assignment_count /= 1 .or. trim(assignments(1)%target) /= 'y' .or. &
+                    index(trim(assignments(1)%value), 'integer-literal') == 0) then
+                    call set_message(message, 'unsupported-frontend-ast-v2-execution-part')
+                    return
+                end if
+                if (trim(root%source_file) /= trim(declaration%source_file) .or. &
+                    trim(root%source_hash) /= trim(declaration%source_hash) .or. &
+                    trim(root%source_file) /= trim(variable%source_file) .or. &
+                    trim(root%source_hash) /= trim(variable%source_hash) .or. &
+                    trim(root%source_file) /= trim(assignments(1)%source_file) .or. &
+                    trim(root%source_hash) /= trim(assignments(1)%source_hash)) then
+                    call set_message(message, 'frontend-ast-v2-invalid-provenance')
+                    return
+                end if
+                call mir_make_function_witness(body)
+                body%function%name = trim(root%name)
+                if (.not. parse_integer_literal_expression(trim(assignments(1)%value), initializer_value, &
+                    message)) return
+                call emit_frontend_ast_v2_print_y_initializer(body, initializer_value)
+                lowered = mir_validate_function_body(body, message)
+                return
+            end if
             if (trim(root%name) /= 'main' .or. trim(declaration%name) /= 'main' .or. &
                 trim(variable%type_spec) /= 'integer' .or. trim(variable%name) /= 'x') then
                 call set_message(message, 'unsupported-frontend-ast-v2-execution-part')
@@ -1584,7 +1611,7 @@ contains
         if (.not. read_named_atom(token, token_count, position, 'kind', item_kind, message)) return
         if (trim(item_kind) == 'variable') then
             if (.not. read_named_atom(token, token_count, position, 'name', item_value, message)) return
-            if (trim(item_value) /= 'x') then
+            if (trim(item_value) /= 'x' .and. trim(item_value) /= 'y') then
                 call set_message(message, 'unsupported-frontend-ast-v2-print-variable')
                 parsed = .false.
                 return
@@ -1845,6 +1872,35 @@ contains
         body%instructions(instruction_count)%opcode = opcode_return
         body%instructions(instruction_count)%source_rule = 'frontend-ast-v2/print-stmt'
     end subroutine emit_frontend_ast_v2_print_generic_list
+
+    subroutine emit_frontend_ast_v2_print_y_initializer(body, initializer_value)
+        type(mir_function_body_t), intent(inout) :: body
+        integer(int32), intent(in) :: initializer_value
+        integer :: index
+
+        if (allocated(body%instructions)) deallocate (body%instructions)
+        allocate (body%instructions(5))
+        body%function%instruction_count = 5
+        do index = 1, 5
+            body%instructions(index)%id = index - 1
+            body%instructions(index)%result%id = index
+            body%instructions(index)%result%kind = value_kind_integer
+            body%instructions(index)%result%type_name = 'i32'
+            if (index <= 2) then
+                body%instructions(index)%source_rule = 'frontend-ast-v2/execution-part'
+            else
+                body%instructions(index)%source_rule = 'frontend-ast-v2/print-stmt'
+            end if
+        end do
+        body%instructions(1)%opcode = opcode_const
+        body%instructions(1)%literal_value = initializer_value
+        body%instructions(2)%opcode = opcode_store
+        body%instructions(2)%storage_key = 'y'
+        body%instructions(3)%opcode = opcode_load
+        body%instructions(3)%storage_key = 'y'
+        body%instructions(4)%opcode = opcode_output
+        body%instructions(5)%opcode = opcode_return
+    end subroutine emit_frontend_ast_v2_print_y_initializer
 
     subroutine emit_frontend_ast_v2_print_variable_items_11_to_60(body, item_count)
         type(mir_function_body_t), intent(inout) :: body
