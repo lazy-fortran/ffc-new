@@ -9,3 +9,5 @@ last_opcode = "return"
 result_kind = "integer"
 result_type = "i32"
 source_rule = "frontend-ast-v1/program"
+initializer_minimum = -100
+initializer_maximum = 2047

@@ -178,6 +178,10 @@ name = "frontend_ast_v2_print_variable"
 source-dir = "test"
 
 [[test]]
+name = "frontend_ast_v2_print_variable_signed_initializer"
+source-dir = "test"
+
+[[test]]
 name = "ast_mul"
 source-dir = "test"
 

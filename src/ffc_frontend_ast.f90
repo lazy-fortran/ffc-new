@@ -469,7 +469,8 @@ module ffc_frontend_ast
         mir_frontend_ast_v1_integer_expression_result_id, &
         mir_frontend_ast_v1_integer_expression_storage_key
     use ffc_lowering_policy, only: bounded_integer_declaration_count, &
-        bounded_integer_variable_count
+        bounded_integer_variable_count, bounded_integer_initializer_minimum, &
+        bounded_integer_initializer_maximum
     implicit none
     private
 
@@ -4879,7 +4880,7 @@ contains
         if (len_trim(literal_text) > 0 .and. literal_text(1:1) == '-') then
             if (len_trim(literal_text) == 1 .or. &
                 .not. parse_bounded_decimal_literal(trim(literal_text(2:)), magnitude, message) .or. &
-                magnitude < 1_int32 .or. magnitude > 100_int32) then
+                magnitude < 1_int32 .or. -magnitude < bounded_integer_initializer_minimum) then
                 call set_message(message, 'unsupported-frontend-ast-v2-negative-initializer')
                 ok = .false.
                 return
@@ -4887,7 +4888,8 @@ contains
             value = -magnitude
         else
             if (.not. parse_bounded_decimal_literal(trim(literal_text), value, message) .or. &
-                value > 2047_int32) then
+                value > bounded_integer_initializer_maximum .or. &
+                value < bounded_integer_initializer_minimum) then
                 call set_message(message, 'unsupported-frontend-ast-v2-integer-initializer')
                 ok = .false.
                 return

@@ -18,6 +18,10 @@ module ffc_lowering_policy
         bounded_integer_result_type = 'i32'
     character(len=23), parameter, public :: &
         bounded_integer_source_rule = 'frontend-ast-v1/program'
+    integer(int32), parameter, public :: bounded_integer_initializer_minimum = &
+        -100_int32
+    integer(int32), parameter, public :: bounded_integer_initializer_maximum = &
+        2047_int32
 
     public :: bounded_integer_opcode_at
 

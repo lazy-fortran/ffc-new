@@ -10,6 +10,8 @@ program test_frontend_ast_v2_print_variable_signed_initializer
 
     call check_initializer(-5_int32)
     call check_initializer(-100_int32)
+    call check_initializer(-42_int32)
+    call check_initializer(42_int32)
     call check_initializer(0_int32)
     call check_initializer(2047_int32)
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(witness('-101'), body, message), &
@@ -21,6 +23,13 @@ program test_frontend_ast_v2_print_variable_signed_initializer
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(witness('-5'), &
         '(kind integer-literal)', '(kind real-literal)'), body, message), &
         'wrong-kind initializer was accepted')
+    call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(witness('42'), &
+        '(name x)', '(name y)'), body, message), 'mutated variable fact was accepted')
+    call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(witness('42'), &
+        '(output-name x)', '(output-name y)'), body, message), 'mutated PRINT fact was accepted')
+    call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(witness('42'), &
+        '(source-hash signed-init)', '(source-hash mutated)'), body, message), &
+        'mutated provenance fact was accepted')
     write (*, '(a)') 'frontend AST v2 signed variable initializer checks: ok'
 
 contains
