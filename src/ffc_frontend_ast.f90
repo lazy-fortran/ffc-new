@@ -1456,7 +1456,7 @@ contains
             if (trim(item_operator) == '+') then
                 if (trim(item_value) /= 'x') then
                     if (.not. parse_bounded_decimal_literal(trim(item_value), power_value, message) .or. &
-                        power_value < 0 .or. power_value > 10) then
+                        power_value < 0 .or. power_value > 100) then
                         call set_message(message, 'unsupported-frontend-ast-v2-print-expression-right')
                         parsed = .false.
                         return
@@ -1464,7 +1464,7 @@ contains
                 end if
             else if ((trim(item_operator) == '-' .or. trim(item_operator) == '–')) then
                 if (.not. parse_bounded_decimal_literal(trim(item_value), power_value, message) .or. &
-                    power_value < 0 .or. power_value > 10) then
+                    power_value < 0 .or. power_value > 100) then
                     call set_message(message, 'unsupported-frontend-ast-v2-print-expression-right')
                     parsed = .false.
                     return

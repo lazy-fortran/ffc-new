@@ -16,7 +16,7 @@ program test_frontend_ast_v2_print_expression
         [opcode_const, opcode_store, opcode_load, opcode_const, opcode_add, opcode_output, opcode_load, &
         opcode_output, opcode_return])
     call assert_true(body%instructions(4)%literal_value == 2, 'x+2 constant changed')
-    do value = 0, 10
+    do value = 0, 100
         call check_decimal_shape('+', value)
         call check_decimal_shape('-', value)
     end do
@@ -64,7 +64,7 @@ program test_frontend_ast_v2_print_expression
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_sx(.true.), '(right 1)', &
         '(right )'), body, message), 'missing expression operand was accepted')
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_sx(.true.), '(right 1)', &
-        '(right 11)'), body, message), 'x+11 expression operand was accepted')
+        '(right 101)'), body, message), 'x+101 expression operand was accepted')
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(replace_text(positive_sx(.true.), &
         '(operator +)', '(operator *)'), '(right 1)', '(right 3)'), body, message), &
         'unsupported multiplication operand was accepted')
