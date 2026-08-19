@@ -34,6 +34,10 @@ module ffc_lowering_policy
         1_int32
     integer(int32), parameter, public :: bounded_integer_multiplier_maximum = &
         10_int32
+    integer(int32), parameter, public :: bounded_integer_divisor_minimum = &
+        1_int32
+    integer(int32), parameter, public :: bounded_integer_divisor_maximum = &
+        10_int32
 
     public :: bounded_integer_opcode_at
 
