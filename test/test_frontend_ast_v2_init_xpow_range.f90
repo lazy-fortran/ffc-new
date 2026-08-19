@@ -13,6 +13,8 @@ program test_frontend_ast_v2_init_xpow_range
     call check_case(-3_int32, 3_int32)
     call check_case(3_int32, 5_int32)
     call check_case(-3_int32, 10_int32)
+    call check_variable_case(3_int32)
+    call check_variable_case(4_int32)
 
     call assert_rejected(witness('3', '0', '**'), &
         'zero exponent was accepted')
@@ -37,6 +39,11 @@ program test_frontend_ast_v2_init_xpow_range
     call assert_rejected(replace_nth_text(witness('3', '2', '**'), &
         '(source-hash init-power)', '(source-hash mutated)', 5), &
         'mutated power-assignment provenance was accepted')
+    call assert_rejected(witness('3', 'y', '**'), &
+        'wrong power right operand was accepted')
+    call assert_rejected(replace_text(witness('3', 'x', '**'), &
+        '(kind binary-expression)', '(kind integer-literal)'), &
+        'negative power expression shape was accepted')
 
     write (*, '(a)') 'frontend AST v2 initialized generic-power MIR checks: ok'
 
@@ -96,6 +103,63 @@ contains
             end if
         end do
     end subroutine check_case
+
+    subroutine check_variable_case(initializer)
+        integer(int32), intent(in) :: initializer
+        integer(int32) :: expected_literals(9), expected_opcodes(9), expected_results(9)
+        integer :: instruction_index
+        character(len=32) :: initializer_literal
+
+        write (initializer_literal, '(i0)') initializer
+        call assert_true(ffc_lower_frontend_ast_v2_from_sx(&
+            witness(trim(initializer_literal), 'x', '**'), body, message), &
+            'initialized variable-power sequence was rejected')
+        call assert_true(mir_validate_function_body(body, message), &
+            'generated variable-power MIR is invalid')
+
+        expected_literals = 0_int32
+        expected_literals(1) = initializer
+        expected_opcodes = [opcode_const, opcode_store, opcode_load, opcode_load, &
+            opcode_pow, opcode_store, opcode_load, opcode_output, opcode_return]
+        expected_results = [0_int32, 1_int32, 2_int32, 3_int32, 4_int32, 4_int32, &
+            6_int32, 6_int32, 6_int32]
+        call assert_true(body%function%instruction_count == 9_int32, &
+            'variable-power instruction count changed')
+        do instruction_index = 1, 9
+            call assert_true(body%instructions(instruction_index)%opcode == &
+                expected_opcodes(instruction_index), 'variable-power opcode changed')
+            call assert_true(body%instructions(instruction_index)%literal_value == &
+                expected_literals(instruction_index), 'variable-power literal changed')
+            call assert_true(body%instructions(instruction_index)%result%id == &
+                expected_results(instruction_index), 'variable-power result ID changed')
+            call assert_true(body%instructions(instruction_index)%result%kind == &
+                value_kind_integer, 'variable-power result kind changed')
+            call assert_equal(body%instructions(instruction_index)%result%type_name, &
+                'i32', 'variable-power result type changed')
+            if (instruction_index <= 6) then
+                call assert_equal(body%instructions(instruction_index)%source_rule, &
+                    'frontend-ast-v2/execution-part', &
+                    'variable-power execution provenance changed')
+            else
+                call assert_equal(body%instructions(instruction_index)%source_rule, &
+                    'frontend-ast-v2/print-stmt', &
+                    'variable-power PRINT provenance changed')
+            end if
+            if (allocated(body%instructions(instruction_index)%storage_key)) then
+                call assert_true(instruction_index == 2 .or. &
+                    instruction_index == 3 .or. instruction_index == 4 .or. &
+                    instruction_index == 6 .or. instruction_index == 7, &
+                    'unexpected variable-power storage key')
+                call assert_equal(body%instructions(instruction_index)%storage_key, &
+                    'x', 'variable-power storage key changed')
+            else
+                call assert_true(instruction_index /= 2 .and. &
+                    instruction_index /= 3 .and. instruction_index /= 4 .and. &
+                    instruction_index /= 6 .and. instruction_index /= 7, &
+                    'variable-power storage key missing')
+            end if
+        end do
+    end subroutine check_variable_case
 
     subroutine assert_rejected(serialized, description)
         character(len=*), intent(in) :: serialized, description
