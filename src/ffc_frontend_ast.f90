@@ -1412,7 +1412,7 @@ contains
         character(len=32) :: item_clause, item_operator, item_page
         integer :: token_count, position
         integer(int64) :: numeric_value
-        integer(int32) :: power_value
+        integer(int32) :: power_value, literal_value
 
         item_kind = ''
         item_value = ''
@@ -1488,7 +1488,18 @@ contains
             end if
         else if (trim(item_kind) == 'integer-literal') then
             if (.not. read_named_atom(token, token_count, position, 'value', item_value, message)) return
-            if (.not. parse_count(item_value, numeric_value, message)) return
+            if (len_trim(item_value) > 0 .and. item_value(1:1) == '-') then
+                if (len_trim(item_value) == 1 .or. &
+                    .not. parse_bounded_decimal_literal(trim(item_value(2:)), literal_value, message) .or. &
+                    literal_value < 1_int32 .or. literal_value > 100_int32) then
+                    call set_message(message, 'unsupported-frontend-ast-v2-print-negative-literal')
+                    parsed = .false.
+                    return
+                end if
+            else if (.not. parse_count(item_value, numeric_value, message)) then
+                parsed = .false.
+                return
+            end if
         else
             call set_message(message, 'unsupported-frontend-ast-v2-print-item')
             parsed = .false.

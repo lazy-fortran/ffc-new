@@ -31,6 +31,18 @@ program test_frontend_ast_v2_print_generic_list
         'ten-item literal list')
     call assert_literal_list(literal_sx_20_22(), [20, 21, 22], '20,21,22')
     call assert_literal_list(literal_sx_100_500(), [100, 200, 300, 400, 500], '100,200,300,400,500')
+    call assert_literal_list(negative_sx_one(), [-1], 'one-item negative literal list')
+    call assert_literal_list(negative_sx_three(), [-1, -20, -99], 'three-item negative literal list')
+    call assert_literal_list(negative_sx_boundary(), [-1, -50, -100], 'boundary negative literal list')
+    call assert_false(ffc_lower_frontend_ast_v2_from_sx(&
+        replace_text(negative_sx_boundary(), '(value -100)', '(value -101)'), body, message), &
+        'out-of-range negative literal was accepted')
+    call assert_false(ffc_lower_frontend_ast_v2_from_sx(&
+        replace_text(negative_sx_boundary(), '(value -100)', '(value -)'), body, message), &
+        'malformed negative literal was accepted')
+    call assert_false(ffc_lower_frontend_ast_v2_from_sx(&
+        replace_text(negative_sx_boundary(), '(kind integer-literal)', '(kind real-literal)'), body, message), &
+        'wrong-kind negative literal was accepted')
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(literal_sx_count(11), body, message), &
         'eleven-item literal list was accepted')
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(literal_sx_count(4), '(page 248)', ''), &
@@ -143,6 +155,30 @@ contains
             '(value 500) (rule R1217) (clause 12.6.3) (page 248)) ) (statement-rule R1212)')
     end function literal_sx_100_500
 
+    function negative_sx_one() result(value)
+        character(len=8192) :: value
+
+        value = replace_text(literal_sx_count(1), '(value 7)', '(value -1)')
+    end function negative_sx_one
+
+    function negative_sx_three() result(value)
+        character(len=8192) :: value
+
+        value = literal_sx_count(3)
+        value = replace_text(value, '(value 7)', '(value -1)')
+        value = replace_text(value, '(value 8)', '(value -20)')
+        value = replace_text(value, '(value 9)', '(value -99)')
+    end function negative_sx_three
+
+    function negative_sx_boundary() result(value)
+        character(len=8192) :: value
+
+        value = literal_sx_count(3)
+        value = replace_text(value, '(value 7)', '(value -1)')
+        value = replace_text(value, '(value 8)', '(value -50)')
+        value = replace_text(value, '(value 9)', '(value -100)')
+    end function negative_sx_boundary
+
     subroutine assert_literal_list(serialized, expected, description)
         character(len=*), intent(in) :: serialized, description
         integer, intent(in) :: expected(:)
@@ -163,6 +199,10 @@ contains
                 description//' literal value/order changed')
             call assert_true(candidate%instructions(instruction_index + 1)%opcode == opcode_output, &
                 description//' output is missing')
+        end do
+        do instruction_index = 3, candidate%function%instruction_count - 1
+            call assert_true(trim(candidate%instructions(instruction_index)%source_rule) == &
+                'frontend-ast-v2/print-stmt', description//' source provenance changed')
         end do
         call assert_true(candidate%instructions(candidate%function%instruction_count)%opcode == opcode_return, &
             description//' return is missing')
