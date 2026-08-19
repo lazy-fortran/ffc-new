@@ -30,6 +30,9 @@ program test_frontend_ast_v2_print_expression
     call check_shape(replace_text(replace_text(positive_sx(.true.), '(operator +)', '(operator –)'), &
         '(right 1)', '(right 2)'), [opcode_const, opcode_store, opcode_load, opcode_const, opcode_sub, &
         opcode_output, opcode_load, opcode_output, opcode_return])
+    call check_shape(replace_text(replace_text(positive_sx(.true.), '(operator +)', '(operator -)'), &
+        '(right 1)', '(right 2)'), [opcode_const, opcode_store, opcode_load, opcode_const, opcode_sub, &
+        opcode_output, opcode_load, opcode_output, opcode_return])
     call check_shape(replace_text(replace_text(positive_sx(.true.), '(operator +)', '(operator **)'), &
         '(right 1)', '(right 2)'), [opcode_const, opcode_store, opcode_load, opcode_const, opcode_pow, &
         opcode_output, opcode_load, opcode_output, opcode_return])
@@ -66,6 +69,9 @@ program test_frontend_ast_v2_print_expression
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(replace_text(positive_sx(.true.), &
         '(operator +)', '(operator –)'), '(right 1)', '(right 3)'), body, message), &
         'unsupported subtraction operand was accepted')
+    call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(replace_text(positive_sx(.true.), &
+        '(operator +)', '(operator -)'), '(right 1)', '(right 3)'), body, message), &
+        'unsupported ASCII subtraction operand was accepted')
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_sx(.true.), '(rule R1217)', &
         '(rule R901)'), body, message), 'wrong expression provenance was accepted')
     write (*, '(a)') 'frontend AST v2 generic expression checks: ok'

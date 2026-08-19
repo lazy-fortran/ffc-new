@@ -830,6 +830,8 @@ contains
                 '( left x ) ( right x ) ( rule R1217 ) ( clause 12.6.3 ) ( page 248 ) )') == 0 .and. &
                 index(print_statement, '( output-item ( kind integer-expression ) ( operator * ) '// &
                 '( left x ) ( right 2 ) ( rule R1217 ) ( clause 12.6.3 ) ( page 248 ) )') == 0 .and. &
+                index(print_statement, '( output-item ( kind integer-expression ) ( operator - ) '// &
+                '( left x ) ( right 2 ) ( rule R1217 ) ( clause 12.6.3 ) ( page 248 ) )') == 0 .and. &
                 index(print_statement, '( output-item ( kind integer-expression ) ( operator – ) '// &
                 '( left x ) ( right 2 ) ( rule R1217 ) ( clause 12.6.3 ) ( page 248 ) )') == 0 .and. &
                 index(print_statement, '( output-item ( kind integer-expression ) ( operator / ) '// &
@@ -1456,14 +1458,17 @@ contains
         else if (trim(item_kind) == 'integer-expression') then
             if (.not. read_named_atom(token, token_count, position, 'operator', item_operator, message)) return
             if (trim(item_operator) /= '+' .and. trim(item_operator) /= '*' .and. &
-                trim(item_operator) /= '/' .and. trim(item_operator) /= '–' .and. trim(item_operator) /= '**') then
+                trim(item_operator) /= '/' .and. trim(item_operator) /= '-' .and. &
+                trim(item_operator) /= '–' .and. trim(item_operator) /= '**') then
                 call set_message(message, 'unsupported-frontend-ast-v2-print-expression-operator')
                 parsed = .false.
                 return
             end if
             if (trim(item_operator) == '*') item_kind = 'integer-expression-multiply'
             if (trim(item_operator) == '/') item_kind = 'integer-expression-divide'
-            if (trim(item_operator) == '–') item_kind = 'integer-expression-subtract'
+            if (trim(item_operator) == '-' .or. trim(item_operator) == '–') then
+                item_kind = 'integer-expression-subtract'
+            end if
             if (trim(item_operator) == '**') item_kind = 'integer-expression-power'
             if (.not. read_named_atom(token, token_count, position, 'left', item_clause, message)) return
             if (trim(item_clause) /= 'x') then
@@ -1476,7 +1481,8 @@ contains
                 trim(item_value) /= 'x') .or. &
                 (trim(item_operator) == '*' .and. trim(item_value) /= '2') .or. &
                 (trim(item_operator) == '/' .and. trim(item_value) /= '2') .or. &
-                (trim(item_operator) == '–' .and. trim(item_value) /= '2')) then
+                ((trim(item_operator) == '-' .or. trim(item_operator) == '–') .and. &
+                trim(item_value) /= '2')) then
                 call set_message(message, 'unsupported-frontend-ast-v2-print-expression-right')
                 parsed = .false.
                 return
