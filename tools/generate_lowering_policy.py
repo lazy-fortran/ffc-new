@@ -11,7 +11,7 @@ def generate(spec_path: pathlib.Path) -> str:
         policy = tomllib.load(stream)["bounded_integer_program"]
     required = {"declaration_count", "variable_count", "instruction_count", "first_opcode",
                 "last_opcode", "result_kind", "result_type", "source_rule",
-                "initializer_minimum", "initializer_maximum"}
+        "initializer_minimum", "initializer_maximum", "addend_minimum", "addend_maximum"}
     if set(policy) != required:
         raise ValueError("bounded_integer_program fields do not match the policy schema")
     if policy["declaration_count"] != 1 or policy["variable_count"] != 1:
@@ -45,6 +45,10 @@ def generate(spec_path: pathlib.Path) -> str:
         f"        {policy['initializer_minimum']}_int32",
         f"    integer(int32), parameter, public :: bounded_integer_initializer_maximum = &",
         f"        {policy['initializer_maximum']}_int32",
+        "    integer(int32), parameter, public :: bounded_integer_addend_minimum = &",
+        f"        {policy['addend_minimum']}_int32",
+        "    integer(int32), parameter, public :: bounded_integer_addend_maximum = &",
+        f"        {policy['addend_maximum']}_int32",
         "",
         "    public :: bounded_integer_opcode_at",
         "",

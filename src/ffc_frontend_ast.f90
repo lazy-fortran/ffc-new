@@ -470,7 +470,8 @@ module ffc_frontend_ast
         mir_frontend_ast_v1_integer_expression_storage_key
     use ffc_lowering_policy, only: bounded_integer_declaration_count, &
         bounded_integer_variable_count, bounded_integer_initializer_minimum, &
-        bounded_integer_initializer_maximum
+        bounded_integer_initializer_maximum, bounded_integer_addend_minimum, &
+        bounded_integer_addend_maximum
     implicit none
     private
 
@@ -704,7 +705,8 @@ contains
         character(len=frontend_ast_expression_length) :: print_statement
         integer :: assignment_count, assignment_index, token_count, position
         integer(int64) :: declaration_count, variable_count
-        integer(int32) :: initializer_value, route
+        integer(int32) :: initializer_value, addend_value, route
+        logical :: initialized_xplus_addend
 
         call clear_message(message)
         lowered = .false.
@@ -875,11 +877,19 @@ contains
             call set_message(message, 'unsupported-frontend-ast-v2-execution-part')
             return
         end if
+        initialized_xplus_addend = .false.
+        if (assignment_count == 2 .and. trim(assignments(1)%target) == 'x' .and. &
+            trim(assignments(2)%target) == 'x' .and. &
+            starts_integer_literal_expression(trim(assignments(1)%value))) then
+            initialized_xplus_addend = parse_bounded_addend_expression(trim(assignments(2)%value), &
+                addend_value, message)
+        end if
         if (len_trim(print_statement) > 0) then
             if (index(print_statement, '( output-count 7 )') == 0 .and. &
                 index(print_statement, '( output-count 8 )') == 0 .and. &
                 index(print_statement, '( output-count 9 )') == 0 .and. &
                 index(print_statement, '( output-count 10 )') == 0 .and. &
+                .not. initialized_xplus_addend .and. &
                 ((assignment_count /= 1 .and. assignment_count /= 2) .or. &
                 trim(assignments(1)%target) /= 'x' .or. &
                 (assignment_count == 1 .and. .not. starts_integer_literal_expression(&
@@ -949,6 +959,19 @@ contains
                     initializer_value, message)) return
                 call emit_frontend_ast_v1_integer_expression(body, 21_int32)
                 body%instructions(1)%literal_value = initializer_value
+                lowered = mir_validate_function_body(body, message)
+                return
+            end if
+            if (route == 0_int32 .and. assignment_count == 2 .and. &
+                trim(assignments(1)%target) == 'x' .and. trim(assignments(2)%target) == 'x' .and. &
+                starts_integer_literal_expression(trim(assignments(1)%value))) then
+                if (.not. parse_bounded_addend_expression(trim(assignments(2)%value), addend_value, &
+                    message)) return
+                if (.not. parse_bounded_signed_initializer_literal(trim(assignments(1)%value), &
+                    initializer_value, message)) return
+                call emit_frontend_ast_v1_integer_expression(body, 21_int32)
+                body%instructions(1)%literal_value = initializer_value
+                body%instructions(4)%literal_value = addend_value
                 lowered = mir_validate_function_body(body, message)
                 return
             end if
@@ -4915,6 +4938,69 @@ contains
         if (len_trim(serialized) < len('( integer-literal')) return
         is_literal = index(trim(serialized), '( integer-literal') == 1
     end function starts_integer_literal_expression
+
+    logical function parse_bounded_addend_expression(serialized, value, message) result(ok)
+        character(len=*), intent(in) :: serialized
+        integer(int32), intent(out) :: value
+        character(len=:), allocatable, intent(out), optional :: message
+
+        character(len=frontend_ast_token_length) :: token(frontend_ast_token_capacity)
+        character(len=128) :: literal_text
+        integer :: token_count, position
+
+        value = 0_int32
+        call clear_message(message)
+        ok = tokenize_frontend_ast_sx(serialized, token, token_count, message)
+        if (.not. ok) return
+        position = 1
+        ok = expect_token(token, token_count, position, '(', message)
+        if (.not. ok) return
+        ok = expect_token(token, token_count, position, 'assignment-expression', message)
+        if (.not. ok) return
+        ok = expect_token(token, token_count, position, '(', message)
+        if (.not. ok) return
+        ok = expect_token(token, token_count, position, 'kind', message)
+        if (.not. ok) return
+        ok = expect_token(token, token_count, position, 'binary-expression', message)
+        if (.not. ok) return
+        ok = expect_token(token, token_count, position, '(', message)
+        if (.not. ok) return
+        ok = expect_token(token, token_count, position, 'operator', message)
+        if (.not. ok) return
+        ok = expect_token(token, token_count, position, '+', message)
+        if (.not. ok) return
+        ok = expect_token(token, token_count, position, ')', message)
+        if (.not. ok) return
+        ok = expect_token(token, token_count, position, '(', message)
+        if (.not. ok) return
+        ok = expect_token(token, token_count, position, 'left-operand', message)
+        if (.not. ok) return
+        ok = expect_token(token, token_count, position, 'x', message)
+        if (.not. ok) return
+        ok = expect_token(token, token_count, position, ')', message)
+        if (.not. ok) return
+        ok = expect_token(token, token_count, position, '(', message)
+        if (.not. ok) return
+        ok = expect_token(token, token_count, position, 'right-operand', message)
+        if (.not. ok) return
+        ok = read_atom(token, token_count, position, literal_text, message)
+        if (.not. ok) return
+        ok = parse_bounded_decimal_literal(literal_text, value, message)
+        if (.not. ok) return
+        if (value < bounded_integer_addend_minimum .or. value > bounded_integer_addend_maximum) then
+            call set_message(message, 'unsupported-frontend-ast-v2-integer-addend')
+            ok = .false.
+            return
+        end if
+        ok = expect_token(token, token_count, position, ')', message)
+        if (.not. ok) return
+        ok = expect_token(token, token_count, position, ')', message)
+        if (.not. ok) return
+        if (position <= token_count) then
+            call set_message(message, 'malformed-frontend-ast-v2-integer-addend')
+            ok = .false.
+        end if
+    end function parse_bounded_addend_expression
 
     logical function parse_bounded_decimal_literal(text, value, message) result(ok)
         character(len=*), intent(in) :: text

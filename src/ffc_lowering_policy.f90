@@ -22,6 +22,10 @@ module ffc_lowering_policy
         -100_int32
     integer(int32), parameter, public :: bounded_integer_initializer_maximum = &
         2047_int32
+    integer(int32), parameter, public :: bounded_integer_addend_minimum = &
+        1_int32
+    integer(int32), parameter, public :: bounded_integer_addend_maximum = &
+        10_int32
 
     public :: bounded_integer_opcode_at
 
