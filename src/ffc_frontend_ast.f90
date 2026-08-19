@@ -4819,10 +4819,12 @@ contains
                                 plus_supported = addend_value >= bounded_integer_addend_minimum .and. &
                                     addend_value <= bounded_integer_addend_maximum
                             end if
-                        else if (trim(operator) == '–' .and. trim(left_operand) == '5' .and. &
+                        else if ((trim(operator) == '–' .or. trim(operator) == '-') .and. &
+                                trim(left_operand) == '5' .and. &
                                 trim(right_operand) == '3') then
                             subtrahend_supported = .true.
-                        else if (trim(operator) == '–' .and. trim(left_operand) == 'x') then
+                        else if ((trim(operator) == '–' .or. trim(operator) == '-') .and. &
+                                trim(left_operand) == 'x') then
                             if (parse_bounded_decimal_literal( &
                                 trim(right_operand), subtrahend_value, message)) then
                                 subtrahend_supported = subtrahend_value >= &
@@ -4832,7 +4834,8 @@ contains
                         end if
                         if (trim(kind) /= 'binary-expression' .or. &
                             (trim(operator) /= '+' .and. trim(operator) /= '*' .and. &
-                            trim(operator) /= '/' .and. trim(operator) /= '–' .and. trim(operator) /= '**') .or. &
+                            trim(operator) /= '/' .and. trim(operator) /= '–' .and. trim(operator) /= '-' .and. &
+                            trim(operator) /= '**') .or. &
                             (trim(operator) == '+' .and. .not. plus_supported) .or. &
                             (trim(operator) == '*' .and. &
                             ((trim(left_operand) /= '2' .or. trim(right_operand) /= '3') .and. &
@@ -4840,7 +4843,8 @@ contains
                             (trim(operator) == '/' .and. &
                             ((trim(left_operand) /= '6' .or. trim(right_operand) /= '2') .and. &
                             (trim(left_operand) /= 'x' .or. trim(right_operand) /= '2'))) .or. &
-                            (trim(operator) == '–' .and. .not. subtrahend_supported) .or. &
+                            ((trim(operator) == '–' .or. trim(operator) == '-') .and. &
+                            .not. subtrahend_supported) .or. &
                             (trim(operator) == '**' .and. &
                             (trim(left_operand) /= 'x' .or. &
                             (trim(right_operand) /= '3' .and. trim(right_operand) /= '2')))) then
@@ -4864,11 +4868,13 @@ contains
                                 trim(right_operand) == '2') then
                             value = '(assignment-expression (kind binary-expression) '// &
                                 '(operator /) (left-operand x) (right-operand 2))'
-                        else if (trim(operator) == '–' .and. trim(left_operand) == 'x' .and. &
+                        else if ((trim(operator) == '–' .or. trim(operator) == '-') .and. &
+                                trim(left_operand) == 'x' .and. &
                                 trim(right_operand) == '2') then
                             value = '(assignment-expression (kind binary-expression) '// &
                                 '(operator –) (left-operand x) (right-operand 2))'
-                        else if (trim(operator) == '–' .and. trim(left_operand) == 'x') then
+                        else if ((trim(operator) == '–' .or. trim(operator) == '-') .and. &
+                                trim(left_operand) == 'x') then
                             value = '(assignment-expression (kind binary-expression) '// &
                                 '(operator –) (left-operand x) (right-operand '// &
                                 trim(right_operand)//'))'

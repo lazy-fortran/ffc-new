@@ -25,8 +25,8 @@ program test_frontend_ast_v2_init_xminus_range
         'out-of-range subtrahend was accepted')
     call assert_rejected(replace_text(witness('42', '2', '–'), '(right-operand 2)', &
         '(right-operand 2.0)'), 'real subtrahend was accepted')
-    call assert_rejected(replace_text(witness('42', '2', '–'), '(operator –)', &
-        '(operator -)'), 'wrong subtraction operator was accepted')
+    call assert_rejected(replace_text(witness('42', '2', '–'), '(right-operand 2)', &
+        '(right-operand 11)'), 'out-of-range subtraction mutation was accepted')
 
     write (*, '(a)') 'frontend AST v2 initialized bounded-subtrahend MIR checks: ok'
 
