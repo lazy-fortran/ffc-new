@@ -25,6 +25,8 @@ program test_frontend_ast_v2_print_generic_list
     call assert_true(body%instructions(10)%opcode == opcode_output, 'fourth output is missing')
     call assert_true(body%instructions(11)%opcode == opcode_return, 'return is missing')
     call assert_true(all_source_rules_are_print_stmt(body), 'print source identity was lost')
+    call assert_literal_list(literal_sx_20_22(), [20, 21, 22], '20,21,22')
+    call assert_literal_list(literal_sx_100_500(), [100, 200, 300, 400, 500], '100,200,300,400,500')
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_sx(), &
         '(print-stmt ', '(write-stmt '), body, message), 'WRITE was accepted')
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_sx(), &
@@ -71,6 +73,70 @@ contains
             '(statement-page 242) (format-page 244) (output-page 248) '// &
             '(source-hash generic-print))))'
     end function positive_sx
+
+    function literal_sx_20_22() result(value)
+        character(len=8192) :: value
+
+        value = positive_sx()
+        value = replace_text(value, '(output-count 4)', '(output-count 3)')
+        value = replace_text(value, '(output-item (kind variable) (name x) (rule R901) '// &
+            '(clause 12.6.3) (page 248))', '(output-item (kind integer-literal) (value 20) '// &
+            '(rule R1217) (clause 12.6.3) (page 248))')
+        value = replace_text(value, '(output-item (kind variable) (name x) (rule R901) '// &
+            '(clause 12.6.3) (page 248))', '(output-item (kind integer-literal) (value 22) '// &
+            '(rule R1217) (clause 12.6.3) (page 248))')
+        value = replace_text(value, '(output-item (kind integer-literal) (value 7) (rule R1217) '// &
+            '(clause 12.6.3) (page 248))', '(output-item (kind integer-literal) (value 21) '// &
+            '(rule R1217) (clause 12.6.3) (page 248))')
+        value = replace_text(value, ' (output-item (kind integer-literal) (value 8) (rule R1217) '// &
+            '(clause 12.6.3) (page 248))', '')
+    end function literal_sx_20_22
+
+    function literal_sx_100_500() result(value)
+        character(len=8192) :: value
+
+        value = positive_sx()
+        value = replace_text(value, '(output-count 4)', '(output-count 5)')
+        value = replace_text(value, '(output-item (kind variable) (name x) (rule R901) '// &
+            '(clause 12.6.3) (page 248))', '(output-item (kind integer-literal) (value 100) '// &
+            '(rule R1217) (clause 12.6.3) (page 248))')
+        value = replace_text(value, '(output-item (kind variable) (name x) (rule R901) '// &
+            '(clause 12.6.3) (page 248))', '(output-item (kind integer-literal) (value 300) '// &
+            '(rule R1217) (clause 12.6.3) (page 248))')
+        value = replace_text(value, '(output-item (kind integer-literal) (value 7) (rule R1217) '// &
+            '(clause 12.6.3) (page 248))', '(output-item (kind integer-literal) (value 200) '// &
+            '(rule R1217) (clause 12.6.3) (page 248))')
+        value = replace_text(value, '(output-item (kind integer-literal) (value 8) (rule R1217) '// &
+            '(clause 12.6.3) (page 248))', '(output-item (kind integer-literal) (value 400) '// &
+            '(rule R1217) (clause 12.6.3) (page 248))')
+        value = replace_text(value, ') (statement-rule R1212)', ' (output-item (kind integer-literal) '// &
+            '(value 500) (rule R1217) (clause 12.6.3) (page 248)) ) (statement-rule R1212)')
+    end function literal_sx_100_500
+
+    subroutine assert_literal_list(serialized, expected, description)
+        character(len=*), intent(in) :: serialized, description
+        integer, intent(in) :: expected(:)
+        type(mir_function_body_t) :: candidate
+        character(len=:), allocatable :: candidate_message
+        integer :: item_index, instruction_index
+
+        call assert_true(ffc_lower_frontend_ast_v2_from_sx(serialized, candidate, candidate_message), &
+            description//' was rejected')
+        call assert_true(mir_validate_function_body(candidate, candidate_message), &
+            description//' MIR is invalid')
+        call assert_true(candidate%function%instruction_count == 2 * size(expected) + 3, &
+            description//' MIR count changed')
+        do item_index = 1, size(expected)
+            instruction_index = 2 * item_index + 1
+            call assert_true(candidate%instructions(instruction_index)%opcode == opcode_const .and. &
+                candidate%instructions(instruction_index)%literal_value == expected(item_index), &
+                description//' literal value/order changed')
+            call assert_true(candidate%instructions(instruction_index + 1)%opcode == opcode_output, &
+                description//' output is missing')
+        end do
+        call assert_true(candidate%instructions(candidate%function%instruction_count)%opcode == opcode_return, &
+            description//' return is missing')
+    end subroutine assert_literal_list
 
     logical function all_source_rules_are_print_stmt(candidate) result(ok)
         type(mir_function_body_t), intent(in) :: candidate
