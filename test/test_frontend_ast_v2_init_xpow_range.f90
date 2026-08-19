@@ -18,7 +18,7 @@ program test_frontend_ast_v2_init_xpow_range
         '(right-operand 2)', '(right-operand 2.0)'), &
         'real exponent was accepted')
     call assert_rejected(replace_text(witness('3', '2', '**'), &
-        '(operator **)', '(operator *)'), &
+        '(operator **)', '(operator @)'), &
         'wrong power operator was accepted')
     call assert_rejected(replace_text(witness('3', '2', '**'), &
         '(assignment-stmt (variable x)', '(assignment-stmt (variable y)'), &
