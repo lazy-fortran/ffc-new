@@ -849,7 +849,7 @@ contains
             end if
             call mir_make_function_witness(body)
             body%function%name = trim(root%name)
-            if (.not. parse_integer_literal_expression(trim(assignments(1)%value), initializer_value, &
+            if (.not. parse_bounded_signed_initializer_literal(trim(assignments(1)%value), initializer_value, &
                 message)) return
             call emit_frontend_ast_v2_print_y_initializer(body, initializer_value)
             lowered = mir_validate_function_body(body, message)
@@ -877,7 +877,7 @@ contains
                 end if
                 call mir_make_function_witness(body)
                 body%function%name = trim(root%name)
-                if (.not. parse_integer_literal_expression(trim(assignments(1)%value), initializer_value, &
+                if (.not. parse_bounded_signed_initializer_literal(trim(assignments(1)%value), initializer_value, &
                     message)) return
                 call emit_frontend_ast_v2_print_y_initializer(body, initializer_value)
                 lowered = mir_validate_function_body(body, message)

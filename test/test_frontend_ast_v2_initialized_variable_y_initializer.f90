@@ -9,6 +9,7 @@ program test_frontend_ast_v2_initialized_variable_y_initializer
     character(len=:), allocatable :: message
 
     call check_initializer(0_int32)
+    call check_initializer(-4_int32)
     call check_initializer(23_int32)
     call check_initializer(2047_int32)
 
