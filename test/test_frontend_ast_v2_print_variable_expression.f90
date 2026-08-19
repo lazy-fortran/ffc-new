@@ -33,7 +33,7 @@ program test_frontend_ast_v2_print_variable_expression
     call assert_storage(7)
 
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_sx(), &
-        'left-operand 23', 'left-operand 24'), body, message), 'wrong literal was accepted')
+        'left-operand 23', 'left-operand 2048'), body, message), 'out-of-range initializer was accepted')
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_sx(), &
         '(operator +) (left-operand x)', '(operator *) (left-operand x)'), body, message), &
         'wrong operator was accepted')

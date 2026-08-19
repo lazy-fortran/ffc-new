@@ -885,12 +885,7 @@ contains
                 (assignment_count == 1 .and. .not. starts_integer_literal_expression(&
                 trim(assignments(1)%value))) .or. &
                 (assignment_count == 2 .and. &
-                ((trim(assignments(1)%value) /= '( integer-literal 23 )' .and. &
-                trim(assignments(1)%value) /= '( integer-literal 24 )' .and. &
-                trim(assignments(1)%value) /= '( integer-literal 4 )' .and. &
-                trim(assignments(1)%value) /= '( integer-literal 5 )' .and. &
-                trim(assignments(1)%value) /= '( integer-literal 2 )' .and. &
-                trim(assignments(1)%value) /= '( integer-literal 3 )') .or. &
+                (.not. starts_integer_literal_expression(trim(assignments(1)%value)) .or. &
                 trim(assignments(2)%target) /= 'x' .or. trim(assignments(2)%value) /= &
                 '(assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))' .and. &
                 trim(assignments(2)%value) /= &
@@ -947,6 +942,16 @@ contains
             route_key = trim(route_key)//') )'
             route = mir_frontend_ast_v1_integer_expression_route(&
                 route_key)
+            if (route == 0_int32 .and. assignment_count == 2 .and. &
+                trim(assignments(2)%value) == &
+                '(assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))') then
+                if (.not. parse_bounded_signed_initializer_literal(trim(assignments(1)%value), &
+                    initializer_value, message)) return
+                call emit_frontend_ast_v1_integer_expression(body, 21_int32)
+                body%instructions(1)%literal_value = initializer_value
+                lowered = mir_validate_function_body(body, message)
+                return
+            end if
             if (route == 0_int32) then
                 call set_message(message, 'unsupported-frontend-ast-v2-execution-part')
                 return
