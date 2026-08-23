@@ -783,14 +783,16 @@ contains
         initialized_xvariable_sub = .false.
         if (assignment_count == 2 .and. trim(assignments(1)%target) == 'x' .and. &
             trim(assignments(2)%target) == 'x') then
-            initialized_xplus_addend = parse_bounded_addend_expression(trim(assignments(2)%value), &
-                addend_value)
-            initialized_xminus_subtrahend = parse_bounded_subtrahend_expression(&
-                trim(assignments(2)%value), subtrahend_value)
-            initialized_xmultiply_multiplier = parse_bounded_multiplier_expression(&
-                trim(assignments(2)%value), multiplier_value)
-            initialized_xdivide_divisor = parse_bounded_divisor_expression(&
-                trim(assignments(2)%value), divisor_value)
+            initialized_xplus_addend = parse_bounded_binary_expression(trim(assignments(2)%value), &
+                '+', bounded_integer_addend_minimum, bounded_integer_addend_maximum, 'addend', addend_value)
+            initialized_xminus_subtrahend = parse_bounded_binary_expression(trim(assignments(2)%value), &
+                '–', bounded_integer_subtrahend_minimum, bounded_integer_subtrahend_maximum, 'subtrahend', &
+                subtrahend_value)
+            initialized_xmultiply_multiplier = parse_bounded_binary_expression(trim(assignments(2)%value), &
+                '*', bounded_integer_multiplier_minimum, bounded_integer_multiplier_maximum, 'multiplier', &
+                multiplier_value)
+            initialized_xdivide_divisor = parse_bounded_binary_expression(trim(assignments(2)%value), '/', &
+                bounded_integer_divisor_minimum, bounded_integer_divisor_maximum, 'divisor', divisor_value)
             initialized_xpower = parse_bounded_power_expression(trim(assignments(2)%value), power_value)
             initialized_xvariable_power = is_variable_power_expression(trim(assignments(2)%value))
             initialized_xvariable_add = is_variable_add_expression(trim(assignments(2)%value))
@@ -877,7 +879,8 @@ contains
                     call set_message(message, 'unsupported-frontend-ast-v2-execution-part')
                     return
                 end if
-                if (.not. parse_bounded_addend_expression(trim(assignments(2)%value), addend_value, &
+                if (.not. parse_bounded_binary_expression(trim(assignments(2)%value), '+', &
+                    bounded_integer_addend_minimum, bounded_integer_addend_maximum, 'addend', addend_value, &
                     message)) return
                 if (.not. parse_bounded_signed_initializer_literal(trim(assignments(1)%value), &
                     initializer_value, message)) return
@@ -920,7 +923,8 @@ contains
                 return
             end if
             if (route == 0_int32 .and. initialized_xminus_subtrahend) then
-                if (.not. parse_bounded_subtrahend_expression(trim(assignments(2)%value), &
+                if (.not. parse_bounded_binary_expression(trim(assignments(2)%value), '–', &
+                    bounded_integer_subtrahend_minimum, bounded_integer_subtrahend_maximum, 'subtrahend', &
                     subtrahend_value, message)) return
                 if (.not. parse_bounded_signed_initializer_literal(trim(assignments(1)%value), &
                     initializer_value, message)) return
@@ -931,7 +935,8 @@ contains
                 return
             end if
             if (route == 0_int32 .and. initialized_xmultiply_multiplier) then
-                if (.not. parse_bounded_multiplier_expression(trim(assignments(2)%value), &
+                if (.not. parse_bounded_binary_expression(trim(assignments(2)%value), '*', &
+                    bounded_integer_multiplier_minimum, bounded_integer_multiplier_maximum, 'multiplier', &
                     multiplier_value, message)) return
                 if (.not. parse_bounded_signed_initializer_literal(trim(assignments(1)%value), &
                     initializer_value, message)) return
@@ -942,8 +947,9 @@ contains
                 return
             end if
             if (route == 0_int32 .and. initialized_xdivide_divisor) then
-                if (.not. parse_bounded_divisor_expression(trim(assignments(2)%value), &
-                    divisor_value, message)) return
+                if (.not. parse_bounded_binary_expression(trim(assignments(2)%value), '/', &
+                    bounded_integer_divisor_minimum, bounded_integer_divisor_maximum, 'divisor', divisor_value, &
+                    message)) return
                 if (.not. parse_bounded_signed_initializer_literal(trim(assignments(1)%value), &
                     initializer_value, message)) return
                 call emit_frontend_ast_v1_integer_expression(body, 30_int32)
@@ -4185,11 +4191,14 @@ contains
             variable_power, variable_add, variable_mul, variable_div, variable_sub
 
         call clear_message(message)
-        bounded_addend = parse_bounded_addend_expression(trim(assignment%value), literal_value)
-        bounded_subtrahend = parse_bounded_subtrahend_expression(&
-            trim(assignment%value), literal_value)
-        bounded_multiplier = parse_bounded_multiplier_expression(trim(assignment%value), literal_value)
-        bounded_divisor = parse_bounded_divisor_expression(trim(assignment%value), literal_value)
+        bounded_addend = parse_bounded_binary_expression(trim(assignment%value), '+', &
+            bounded_integer_addend_minimum, bounded_integer_addend_maximum, 'addend', literal_value)
+        bounded_subtrahend = parse_bounded_binary_expression(trim(assignment%value), '–', &
+            bounded_integer_subtrahend_minimum, bounded_integer_subtrahend_maximum, 'subtrahend', literal_value)
+        bounded_multiplier = parse_bounded_binary_expression(trim(assignment%value), '*', &
+            bounded_integer_multiplier_minimum, bounded_integer_multiplier_maximum, 'multiplier', literal_value)
+        bounded_divisor = parse_bounded_binary_expression(trim(assignment%value), '/', &
+            bounded_integer_divisor_minimum, bounded_integer_divisor_maximum, 'divisor', literal_value)
         bounded_power = parse_bounded_power_expression(trim(assignment%value), literal_value)
         variable_power = is_variable_power_expression(trim(assignment%value))
         variable_add = is_variable_add_expression(trim(assignment%value))
@@ -4558,8 +4567,12 @@ contains
         is_literal = index(trim(serialized), '( integer-literal') == 1
     end function starts_integer_literal_expression
 
-    logical function parse_bounded_addend_expression(serialized, value, message) result(ok)
+    logical function parse_bounded_binary_expression(serialized, operator_token, minimum, maximum, diagnostic_label, &
+            value, message) result(ok)
         character(len=*), intent(in) :: serialized
+        character(len=*), intent(in) :: operator_token
+        integer(int32), intent(in) :: minimum, maximum
+        character(len=*), intent(in) :: diagnostic_label
         integer(int32), intent(out) :: value
         character(len=:), allocatable, intent(out), optional :: message
 
@@ -4588,7 +4601,7 @@ contains
         if (.not. ok) return
         ok = expect_token(token, token_count, position, 'operator', message)
         if (.not. ok) return
-        ok = expect_token(token, token_count, position, '+', message)
+        ok = expect_token(token, token_count, position, operator_token, message)
         if (.not. ok) return
         ok = expect_token(token, token_count, position, ')', message)
         if (.not. ok) return
@@ -4608,8 +4621,8 @@ contains
         if (.not. ok) return
         ok = parse_bounded_decimal_literal(literal_text, value, message)
         if (.not. ok) return
-        if (value < bounded_integer_addend_minimum .or. value > bounded_integer_addend_maximum) then
-            call set_message(message, 'unsupported-frontend-ast-v2-integer-addend')
+        if (value < minimum .or. value > maximum) then
+            call set_message(message, 'unsupported-frontend-ast-v2-integer-'//trim(diagnostic_label))
             ok = .false.
             return
         end if
@@ -4618,208 +4631,10 @@ contains
         ok = expect_token(token, token_count, position, ')', message)
         if (.not. ok) return
         if (position <= token_count) then
-            call set_message(message, 'malformed-frontend-ast-v2-integer-addend')
+            call set_message(message, 'malformed-frontend-ast-v2-integer-'//trim(diagnostic_label))
             ok = .false.
         end if
-    end function parse_bounded_addend_expression
-
-    logical function parse_bounded_subtrahend_expression(serialized, value, message) result(ok)
-        character(len=*), intent(in) :: serialized
-        integer(int32), intent(out) :: value
-        character(len=:), allocatable, intent(out), optional :: message
-
-        character(len=frontend_ast_token_length) :: token(frontend_ast_token_capacity)
-        character(len=128) :: literal_text
-        integer :: token_count, position
-
-        value = 0_int32
-        call clear_message(message)
-        ok = tokenize_frontend_ast_sx(serialized, token, token_count, message)
-        if (.not. ok) return
-        position = 1
-        ok = expect_token(token, token_count, position, '(', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, 'assignment-expression', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, '(', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, 'kind', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, 'binary-expression', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, ')', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, '(', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, 'operator', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, '–', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, ')', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, '(', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, 'left-operand', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, 'x', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, ')', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, '(', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, 'right-operand', message)
-        if (.not. ok) return
-        ok = read_atom(token, token_count, position, literal_text, message)
-        if (.not. ok) return
-        ok = parse_bounded_decimal_literal(literal_text, value, message)
-        if (.not. ok) return
-        if (value < bounded_integer_subtrahend_minimum .or. &
-            value > bounded_integer_subtrahend_maximum) then
-            call set_message(message, 'unsupported-frontend-ast-v2-integer-subtrahend')
-            ok = .false.
-            return
-        end if
-        ok = expect_token(token, token_count, position, ')', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, ')', message)
-        if (.not. ok) return
-        if (position <= token_count) then
-            call set_message(message, 'malformed-frontend-ast-v2-integer-subtrahend')
-            ok = .false.
-        end if
-    end function parse_bounded_subtrahend_expression
-
-    logical function parse_bounded_multiplier_expression(serialized, value, message) result(ok)
-        character(len=*), intent(in) :: serialized
-        integer(int32), intent(out) :: value
-        character(len=:), allocatable, intent(out), optional :: message
-
-        character(len=frontend_ast_token_length) :: token(frontend_ast_token_capacity)
-        character(len=128) :: literal_text
-        integer :: token_count, position
-
-        value = 0_int32
-        call clear_message(message)
-        ok = tokenize_frontend_ast_sx(serialized, token, token_count, message)
-        if (.not. ok) return
-        position = 1
-        ok = expect_token(token, token_count, position, '(', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, 'assignment-expression', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, '(', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, 'kind', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, 'binary-expression', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, ')', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, '(', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, 'operator', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, '*', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, ')', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, '(', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, 'left-operand', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, 'x', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, ')', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, '(', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, 'right-operand', message)
-        if (.not. ok) return
-        ok = read_atom(token, token_count, position, literal_text, message)
-        if (.not. ok) return
-        ok = parse_bounded_decimal_literal(literal_text, value, message)
-        if (.not. ok) return
-        if (value < bounded_integer_multiplier_minimum .or. &
-            value > bounded_integer_multiplier_maximum) then
-            call set_message(message, 'unsupported-frontend-ast-v2-integer-multiplier')
-            ok = .false.
-            return
-        end if
-        ok = expect_token(token, token_count, position, ')', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, ')', message)
-        if (.not. ok) return
-        if (position <= token_count) then
-            call set_message(message, 'malformed-frontend-ast-v2-integer-multiplier')
-            ok = .false.
-        end if
-    end function parse_bounded_multiplier_expression
-
-    logical function parse_bounded_divisor_expression(serialized, value, message) result(ok)
-        character(len=*), intent(in) :: serialized
-        integer(int32), intent(out) :: value
-        character(len=:), allocatable, intent(out), optional :: message
-
-        character(len=frontend_ast_token_length) :: token(frontend_ast_token_capacity)
-        character(len=128) :: literal_text
-        integer :: token_count, position
-
-        value = 0_int32
-        call clear_message(message)
-        ok = tokenize_frontend_ast_sx(serialized, token, token_count, message)
-        if (.not. ok) return
-        position = 1
-        ok = expect_token(token, token_count, position, '(', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, 'assignment-expression', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, '(', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, 'kind', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, 'binary-expression', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, ')', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, '(', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, 'operator', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, '/', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, ')', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, '(', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, 'left-operand', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, 'x', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, ')', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, '(', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, 'right-operand', message)
-        if (.not. ok) return
-        ok = read_atom(token, token_count, position, literal_text, message)
-        if (.not. ok) return
-        ok = parse_bounded_decimal_literal(literal_text, value, message)
-        if (.not. ok) return
-        if (value < bounded_integer_divisor_minimum .or. &
-            value > bounded_integer_divisor_maximum) then
-            call set_message(message, 'unsupported-frontend-ast-v2-integer-divisor')
-            ok = .false.
-            return
-        end if
-        ok = expect_token(token, token_count, position, ')', message)
-        if (.not. ok) return
-        ok = expect_token(token, token_count, position, ')', message)
-        if (.not. ok) return
-        if (position <= token_count) then
-            call set_message(message, 'malformed-frontend-ast-v2-integer-divisor')
-            ok = .false.
-        end if
-    end function parse_bounded_divisor_expression
+    end function parse_bounded_binary_expression
 
     logical function parse_power_expression(serialized, right_operand, message) result(ok)
         character(len=*), intent(in) :: serialized
