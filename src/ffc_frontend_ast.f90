@@ -797,7 +797,7 @@ contains
         if (trim(root%name) == 'main' .and. trim(declaration%name) == 'main' .and. &
             trim(variable%type_spec) == 'integer' .and. trim(variable%name) /= 'x' .and. &
             trim(variable%name) /= 'y' .and. trim(variable%name) /= 'z' .and. &
-            index(print_statement, 'output-items') == 0) then
+            index(print_statement, 'output-items') == 0 .and. index(trim(expression), 'assignment-count 1') /= 0) then
             if (.not. parse_v2_assignment_sequence(trim(expression), assignments, assignment_count, &
                 message)) return
             if (assignment_count /= 1 .or. trim(assignments(1)%target) /= trim(variable%name) .or. &
@@ -887,6 +887,31 @@ contains
         if (.not. expect_token(token, token_count, position, ')', message)) return
         if (position <= token_count) then
             call set_message(message, 'malformed-frontend-ast-v2')
+            return
+        end if
+        if (trim(variable%name) /= 'x' .and. trim(variable%name) /= 'y' .and. trim(variable%name) /= 'z' .and. &
+            assignment_count == 2) then
+            if (trim(root%source_file) /= trim(declaration%source_file) .or. &
+                trim(root%source_hash) /= trim(declaration%source_hash) .or. &
+                trim(root%source_file) /= trim(variable%source_file) .or. &
+                trim(root%source_hash) /= trim(variable%source_hash)) then
+                call set_message(message, 'frontend-ast-v2-invalid-provenance')
+                return
+            end if
+            if (index(trim(expression), 'binary-expression') == 0 .or. &
+                index(trim(expression), 'operator +') == 0 .or. &
+                index(trim(expression), 'left-operand '//trim(variable%name)) == 0 .or. &
+                index(trim(expression), 'right-operand 1') == 0) then
+                call set_message(message, 'unsupported-frontend-ast-v2-execution-part')
+                return
+            end if
+            addend_value = 1_int32
+            call mir_make_function_witness(body)
+            body%function%name = trim(root%name)
+            lowered = lower_frontend_ast_v2_initialized_literal_binary(body, trim(assignments(1)%value), &
+                '(assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))', &
+                '+', bounded_integer_addend_minimum, bounded_integer_addend_maximum, 'addend', 21_int32, message, &
+                trim(variable%name))
             return
         end if
         if (route == 18_int32) then
@@ -2040,11 +2065,12 @@ contains
     end function is_variable_sub_expression
 
     logical function lower_frontend_ast_v2_initialized_literal_binary(body, initializer_text, expression_text, &
-            operator_token, minimum, maximum, diagnostic_label, route, message) result(lowered)
+            operator_token, minimum, maximum, diagnostic_label, route, message, storage_key) result(lowered)
         type(mir_function_body_t), intent(inout) :: body
         character(len=*), intent(in) :: initializer_text, expression_text, operator_token, diagnostic_label
         integer(int32), intent(in) :: minimum, maximum, route
         character(len=:), allocatable, intent(out), optional :: message
+        character(len=*), intent(in), optional :: storage_key
         integer(int32) :: initializer_value, binary_value
 
         lowered = .false.
@@ -2054,6 +2080,12 @@ contains
         call emit_frontend_ast_v1_integer_expression(body, route)
         body%instructions(1)%literal_value = initializer_value
         body%instructions(4)%literal_value = binary_value
+        if (present(storage_key)) then
+            body%instructions(2)%storage_key = trim(storage_key)
+            body%instructions(3)%storage_key = trim(storage_key)
+            body%instructions(6)%storage_key = trim(storage_key)
+            body%instructions(7)%storage_key = trim(storage_key)
+        end if
         lowered = mir_validate_function_body(body, message)
     end function lower_frontend_ast_v2_initialized_literal_binary
 
@@ -4472,19 +4504,23 @@ contains
     end function starts_integer_literal_expression
 
     logical function parse_bounded_binary_expression(serialized, operator_token, minimum, maximum, diagnostic_label, &
-            value, message) result(ok)
+            value, message, left_operand) result(ok)
         character(len=*), intent(in) :: serialized
         character(len=*), intent(in) :: operator_token
         integer(int32), intent(in) :: minimum, maximum
         character(len=*), intent(in) :: diagnostic_label
         integer(int32), intent(out) :: value
         character(len=:), allocatable, intent(out), optional :: message
+        character(len=*), intent(in), optional :: left_operand
 
         character(len=frontend_ast_token_length) :: token(frontend_ast_token_capacity)
         character(len=128) :: literal_text
+        character(len=128) :: expected_left_operand
         integer :: token_count, position
 
         value = 0_int32
+        expected_left_operand = 'x'
+        if (present(left_operand)) expected_left_operand = trim(left_operand)
         call clear_message(message)
         ok = tokenize_frontend_ast_sx(serialized, token, token_count, message)
         if (.not. ok) return
@@ -4513,7 +4549,7 @@ contains
         if (.not. ok) return
         ok = expect_token(token, token_count, position, 'left-operand', message)
         if (.not. ok) return
-        ok = expect_token(token, token_count, position, 'x', message)
+        ok = expect_token(token, token_count, position, trim(expected_left_operand), message)
         if (.not. ok) return
         ok = expect_token(token, token_count, position, ')', message)
         if (.not. ok) return
