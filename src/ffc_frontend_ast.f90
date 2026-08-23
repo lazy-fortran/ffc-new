@@ -4051,27 +4051,8 @@ contains
 
     subroutine emit_frontend_ast_v2_print_7(body)
         type(mir_function_body_t), intent(inout) :: body
-        integer :: index
-
-        deallocate (body%instructions)
-        allocate (body%instructions(3))
-        body%function%instruction_count = 3
-        body%instructions(1)%id = 0
-        body%instructions(1)%opcode = instruction_shape_frontend_ast_v2_print_7_opcode_0
-        body%instructions(1)%literal_value = 7
-        body%instructions(2)%id = 1
-        body%instructions(2)%opcode = instruction_shape_frontend_ast_v2_print_7_opcode_1
-        body%instructions(3)%id = 2
-        body%instructions(3)%opcode = instruction_shape_frontend_ast_v2_print_7_opcode_2
-        do index = 1, 3
-            body%instructions(index)%result%id = 0
-            body%instructions(index)%result%kind = &
-                instruction_shape_frontend_ast_v2_print_7_result_kind
-            body%instructions(index)%result%type_name = &
-                instruction_shape_frontend_ast_v2_print_7_result_type
-            body%instructions(index)%source_rule = &
-                instruction_shape_frontend_ast_v2_print_7_source_rule
-        end do
+        call emit_frontend_ast_v2_print_literal_list(body, 1, instruction_shape_frontend_ast_v2_print_7_result_kind, &
+            instruction_shape_frontend_ast_v2_print_7_result_type, instruction_shape_frontend_ast_v2_print_7_source_rule)
     end subroutine emit_frontend_ast_v2_print_7
 
     logical function ffc_validate_frontend_ast_v2_print_7_shape(body, message) result(valid)
@@ -4109,29 +4090,8 @@ contains
 
     subroutine emit_frontend_ast_v2_print_7_8(body)
         type(mir_function_body_t), intent(inout) :: body
-        integer :: index
-
-        deallocate (body%instructions)
-        allocate (body%instructions(5))
-        body%function%instruction_count = 5
-        body%instructions(1)%id = 0
-        body%instructions(1)%opcode = instruction_shape_frontend_ast_v2_print_7_8_opcode_0
-        body%instructions(1)%literal_value = 7
-        body%instructions(2)%id = 1
-        body%instructions(2)%opcode = instruction_shape_frontend_ast_v2_print_7_8_opcode_1
-        body%instructions(3)%id = 2
-        body%instructions(3)%opcode = instruction_shape_frontend_ast_v2_print_7_8_opcode_2
-        body%instructions(3)%literal_value = 8
-        body%instructions(4)%id = 3
-        body%instructions(4)%opcode = instruction_shape_frontend_ast_v2_print_7_8_opcode_3
-        body%instructions(5)%id = 4
-        body%instructions(5)%opcode = instruction_shape_frontend_ast_v2_print_7_8_opcode_4
-        do index = 1, 5
-            body%instructions(index)%result%id = 0
-            body%instructions(index)%result%kind = instruction_shape_frontend_ast_v2_print_7_8_result_kind
-            body%instructions(index)%result%type_name = instruction_shape_frontend_ast_v2_print_7_8_result_type
-            body%instructions(index)%source_rule = instruction_shape_frontend_ast_v2_print_7_8_source_rule
-        end do
+        call emit_frontend_ast_v2_print_literal_list(body, 2, instruction_shape_frontend_ast_v2_print_7_8_result_kind, &
+            instruction_shape_frontend_ast_v2_print_7_8_result_type, instruction_shape_frontend_ast_v2_print_7_8_source_rule)
     end subroutine emit_frontend_ast_v2_print_7_8
 
     logical function ffc_validate_frontend_ast_v2_print_7_8_shape(body, message) result(valid)
@@ -4168,30 +4128,9 @@ contains
 
     subroutine emit_frontend_ast_v2_print_7_8_9(body)
         type(mir_function_body_t), intent(inout) :: body
-        integer :: index
-
-        deallocate (body%instructions)
-        allocate (body%instructions(7))
-        body%function%instruction_count = 7
-        do index = 1, 7
-            body%instructions(index)%id = index - 1
-            body%instructions(index)%opcode = &
-                instruction_shape_frontend_ast_v2_print_7_8_9_opcode_0
-            body%instructions(index)%result%id = 0
-            body%instructions(index)%result%kind = &
-                instruction_shape_frontend_ast_v2_print_7_8_9_result_kind
-            body%instructions(index)%result%type_name = &
-                instruction_shape_frontend_ast_v2_print_7_8_9_result_type
-            body%instructions(index)%source_rule = &
-                instruction_shape_frontend_ast_v2_print_7_8_9_source_rule
-        end do
-        body%instructions(1)%literal_value = 7
-        body%instructions(2)%opcode = instruction_shape_frontend_ast_v2_print_7_8_9_opcode_1
-        body%instructions(3)%literal_value = 8
-        body%instructions(4)%opcode = instruction_shape_frontend_ast_v2_print_7_8_9_opcode_3
-        body%instructions(5)%literal_value = 9
-        body%instructions(6)%opcode = instruction_shape_frontend_ast_v2_print_7_8_9_opcode_5
-        body%instructions(7)%opcode = instruction_shape_frontend_ast_v2_print_7_8_9_opcode_6
+        call emit_frontend_ast_v2_print_literal_list(body, 3, instruction_shape_frontend_ast_v2_print_7_8_9_result_kind, &
+            instruction_shape_frontend_ast_v2_print_7_8_9_result_type, &
+            instruction_shape_frontend_ast_v2_print_7_8_9_source_rule)
     end subroutine emit_frontend_ast_v2_print_7_8_9
 
     logical function ffc_validate_frontend_ast_v2_print_7_8_9_shape(body, message) result(valid)
@@ -4231,32 +4170,9 @@ contains
 
     subroutine emit_frontend_ast_v2_print_7_8_9_10(body)
         type(mir_function_body_t), intent(inout) :: body
-        integer :: index
-
-        deallocate (body%instructions)
-        allocate (body%instructions(9))
-        body%function%instruction_count = 9
-        do index = 1, 9
-            body%instructions(index)%id = index - 1
-            body%instructions(index)%opcode = &
-                instruction_shape_frontend_ast_v2_print_7_8_9_10_opcode_0
-            body%instructions(index)%result%id = 0
-            body%instructions(index)%result%kind = &
-                instruction_shape_frontend_ast_v2_print_7_8_9_10_result_kind
-            body%instructions(index)%result%type_name = &
-                instruction_shape_frontend_ast_v2_print_7_8_9_10_result_type
-            body%instructions(index)%source_rule = &
-                instruction_shape_frontend_ast_v2_print_7_8_9_10_source_rule
-        end do
-        body%instructions(1)%literal_value = 7
-        body%instructions(2)%opcode = instruction_shape_frontend_ast_v2_print_7_8_9_10_opcode_1
-        body%instructions(3)%literal_value = 8
-        body%instructions(4)%opcode = instruction_shape_frontend_ast_v2_print_7_8_9_10_opcode_3
-        body%instructions(5)%literal_value = 9
-        body%instructions(6)%opcode = instruction_shape_frontend_ast_v2_print_7_8_9_10_opcode_5
-        body%instructions(7)%literal_value = 10
-        body%instructions(8)%opcode = instruction_shape_frontend_ast_v2_print_7_8_9_10_opcode_7
-        body%instructions(9)%opcode = instruction_shape_frontend_ast_v2_print_7_8_9_10_opcode_8
+        call emit_frontend_ast_v2_print_literal_list(body, 4, instruction_shape_frontend_ast_v2_print_7_8_9_10_result_kind, &
+            instruction_shape_frontend_ast_v2_print_7_8_9_10_result_type, &
+            instruction_shape_frontend_ast_v2_print_7_8_9_10_source_rule)
     end subroutine emit_frontend_ast_v2_print_7_8_9_10
 
     logical function ffc_validate_frontend_ast_v2_print_7_8_9_10_shape(body, message) result(valid)
@@ -4301,34 +4217,9 @@ contains
 
     subroutine emit_frontend_ast_v2_print_7_8_9_10_11(body)
         type(mir_function_body_t), intent(inout) :: body
-        integer :: index
-
-        deallocate (body%instructions)
-        allocate (body%instructions(11))
-        body%function%instruction_count = 11
-        do index = 1, 11
-            body%instructions(index)%id = index - 1
-            body%instructions(index)%opcode = &
-                instruction_shape_frontend_ast_v2_print_7_8_9_10_11_opcode_0
-            body%instructions(index)%result%id = 0
-            body%instructions(index)%result%kind = &
-                instruction_shape_frontend_ast_v2_print_7_8_9_10_11_result_kind
-            body%instructions(index)%result%type_name = &
-                instruction_shape_frontend_ast_v2_print_7_8_9_10_11_result_type
-            body%instructions(index)%source_rule = &
-                instruction_shape_frontend_ast_v2_print_7_8_9_10_11_source_rule
-        end do
-        body%instructions(1)%literal_value = 7
-        body%instructions(2)%opcode = instruction_shape_frontend_ast_v2_print_7_8_9_10_11_opcode_1
-        body%instructions(3)%literal_value = 8
-        body%instructions(4)%opcode = instruction_shape_frontend_ast_v2_print_7_8_9_10_11_opcode_3
-        body%instructions(5)%literal_value = 9
-        body%instructions(6)%opcode = instruction_shape_frontend_ast_v2_print_7_8_9_10_11_opcode_5
-        body%instructions(7)%literal_value = 10
-        body%instructions(8)%opcode = instruction_shape_frontend_ast_v2_print_7_8_9_10_11_opcode_7
-        body%instructions(9)%literal_value = 11
-        body%instructions(10)%opcode = instruction_shape_frontend_ast_v2_print_7_8_9_10_11_opcode_9
-        body%instructions(11)%opcode = instruction_shape_frontend_ast_v2_print_7_8_9_10_11_opcode_10
+        call emit_frontend_ast_v2_print_literal_list(body, 5, instruction_shape_frontend_ast_v2_print_7_8_9_10_11_result_kind, &
+            instruction_shape_frontend_ast_v2_print_7_8_9_10_11_result_type, &
+            instruction_shape_frontend_ast_v2_print_7_8_9_10_11_source_rule)
     end subroutine emit_frontend_ast_v2_print_7_8_9_10_11
 
     logical function ffc_validate_frontend_ast_v2_print_7_8_9_10_11_shape(body, message) result(valid)
@@ -4376,32 +4267,9 @@ contains
 
     subroutine emit_frontend_ast_v2_print_7_8_9_10_11_12(body)
         type(mir_function_body_t), intent(inout) :: body
-        integer :: index
-
-        deallocate (body%instructions)
-        allocate (body%instructions(13))
-        body%function%instruction_count = 13
-        do index = 1, 13
-            body%instructions(index)%id = index - 1
-            body%instructions(index)%opcode = instruction_shape_frontend_ast_v2_print_six_opcode_0
-            body%instructions(index)%result%id = 0
-            body%instructions(index)%result%kind = instruction_shape_frontend_ast_v2_print_six_result_kind
-            body%instructions(index)%result%type_name = instruction_shape_frontend_ast_v2_print_six_result_type
-            body%instructions(index)%source_rule = instruction_shape_frontend_ast_v2_print_six_source_rule
-        end do
-        body%instructions(1)%literal_value = 7
-        body%instructions(2)%opcode = instruction_shape_frontend_ast_v2_print_six_opcode_1
-        body%instructions(3)%literal_value = 8
-        body%instructions(4)%opcode = instruction_shape_frontend_ast_v2_print_six_opcode_3
-        body%instructions(5)%literal_value = 9
-        body%instructions(6)%opcode = instruction_shape_frontend_ast_v2_print_six_opcode_5
-        body%instructions(7)%literal_value = 10
-        body%instructions(8)%opcode = instruction_shape_frontend_ast_v2_print_six_opcode_7
-        body%instructions(9)%literal_value = 11
-        body%instructions(10)%opcode = instruction_shape_frontend_ast_v2_print_six_opcode_9
-        body%instructions(11)%literal_value = 12
-        body%instructions(12)%opcode = instruction_shape_frontend_ast_v2_print_six_opcode_11
-        body%instructions(13)%opcode = instruction_shape_frontend_ast_v2_print_six_opcode_12
+        call emit_frontend_ast_v2_print_literal_list(body, 6, instruction_shape_frontend_ast_v2_print_six_result_kind, &
+            instruction_shape_frontend_ast_v2_print_six_result_type, &
+            instruction_shape_frontend_ast_v2_print_six_source_rule)
     end subroutine emit_frontend_ast_v2_print_7_8_9_10_11_12
 
     logical function ffc_validate_frontend_ast_v2_print_7_8_9_10_11_12_shape(body, message) result(valid)
@@ -4448,34 +4316,9 @@ contains
 
     subroutine emit_frontend_ast_v2_print_seven(body)
         type(mir_function_body_t), intent(inout) :: body
-        integer :: index
-
-        deallocate (body%instructions)
-        allocate (body%instructions(15))
-        body%function%instruction_count = 15
-        do index = 1, 15
-            body%instructions(index)%id = index - 1
-            body%instructions(index)%opcode = instruction_shape_frontend_ast_v2_print_seven_opcode_0
-            body%instructions(index)%result%id = 0
-            body%instructions(index)%result%kind = instruction_shape_frontend_ast_v2_print_seven_result_kind
-            body%instructions(index)%result%type_name = instruction_shape_frontend_ast_v2_print_seven_result_type
-            body%instructions(index)%source_rule = instruction_shape_frontend_ast_v2_print_seven_source_rule
-        end do
-        body%instructions(1)%literal_value = 7
-        body%instructions(2)%opcode = instruction_shape_frontend_ast_v2_print_seven_opcode_1
-        body%instructions(3)%literal_value = 8
-        body%instructions(4)%opcode = instruction_shape_frontend_ast_v2_print_seven_opcode_3
-        body%instructions(5)%literal_value = 9
-        body%instructions(6)%opcode = instruction_shape_frontend_ast_v2_print_seven_opcode_5
-        body%instructions(7)%literal_value = 10
-        body%instructions(8)%opcode = instruction_shape_frontend_ast_v2_print_seven_opcode_7
-        body%instructions(9)%literal_value = 11
-        body%instructions(10)%opcode = instruction_shape_frontend_ast_v2_print_seven_opcode_9
-        body%instructions(11)%literal_value = 12
-        body%instructions(12)%opcode = instruction_shape_frontend_ast_v2_print_seven_opcode_11
-        body%instructions(13)%literal_value = 13
-        body%instructions(14)%opcode = instruction_shape_frontend_ast_v2_print_seven_opcode_13
-        body%instructions(15)%opcode = instruction_shape_frontend_ast_v2_print_seven_opcode_14
+        call emit_frontend_ast_v2_print_literal_list(body, 7, instruction_shape_frontend_ast_v2_print_seven_result_kind, &
+            instruction_shape_frontend_ast_v2_print_seven_result_type, &
+            instruction_shape_frontend_ast_v2_print_seven_source_rule)
     end subroutine emit_frontend_ast_v2_print_seven
 
     logical function ffc_validate_frontend_ast_v2_print_seven_shape(body, message) result(valid)
@@ -4525,24 +4368,9 @@ contains
 
     subroutine emit_frontend_ast_v2_print_eight(body)
         type(mir_function_body_t), intent(inout) :: body
-        integer :: index
-
-        deallocate (body%instructions)
-        allocate (body%instructions(17))
-        body%function%instruction_count = 17
-        do index = 1, 17
-            body%instructions(index)%id = index - 1
-            body%instructions(index)%opcode = instruction_shape_frontend_ast_v2_print_eight_opcode_0
-            body%instructions(index)%result%id = 0
-            body%instructions(index)%result%kind = instruction_shape_frontend_ast_v2_print_eight_result_kind
-            body%instructions(index)%result%type_name = instruction_shape_frontend_ast_v2_print_eight_result_type
-            body%instructions(index)%source_rule = instruction_shape_frontend_ast_v2_print_eight_source_rule
-        end do
-        do index = 1, 8
-            body%instructions(2 * index - 1)%literal_value = index + 6
-            body%instructions(2 * index)%opcode = instruction_shape_frontend_ast_v2_print_eight_opcode_1
-        end do
-        body%instructions(17)%opcode = instruction_shape_frontend_ast_v2_print_eight_opcode_16
+        call emit_frontend_ast_v2_print_literal_list(body, 8, instruction_shape_frontend_ast_v2_print_eight_result_kind, &
+            instruction_shape_frontend_ast_v2_print_eight_result_type, &
+            instruction_shape_frontend_ast_v2_print_eight_source_rule)
     end subroutine emit_frontend_ast_v2_print_eight
 
     logical function ffc_validate_frontend_ast_v2_print_eight_shape(body, message) result(valid)
@@ -4587,24 +4415,9 @@ contains
 
     subroutine emit_frontend_ast_v2_print_nine(body)
         type(mir_function_body_t), intent(inout) :: body
-        integer :: index
-
-        deallocate (body%instructions)
-        allocate (body%instructions(19))
-        body%function%instruction_count = 19
-        do index = 1, 19
-            body%instructions(index)%id = index - 1
-            body%instructions(index)%opcode = instruction_shape_frontend_ast_v2_print_nine_opcode_0
-            body%instructions(index)%result%id = 0
-            body%instructions(index)%result%kind = instruction_shape_frontend_ast_v2_print_nine_result_kind
-            body%instructions(index)%result%type_name = instruction_shape_frontend_ast_v2_print_nine_result_type
-            body%instructions(index)%source_rule = instruction_shape_frontend_ast_v2_print_nine_source_rule
-        end do
-        do index = 1, 9
-            body%instructions(2 * index - 1)%literal_value = index + 6
-            body%instructions(2 * index)%opcode = instruction_shape_frontend_ast_v2_print_nine_opcode_1
-        end do
-        body%instructions(19)%opcode = instruction_shape_frontend_ast_v2_print_nine_opcode_18
+        call emit_frontend_ast_v2_print_literal_list(body, 9, instruction_shape_frontend_ast_v2_print_nine_result_kind, &
+            instruction_shape_frontend_ast_v2_print_nine_result_type, &
+            instruction_shape_frontend_ast_v2_print_nine_source_rule)
     end subroutine emit_frontend_ast_v2_print_nine
 
     logical function ffc_validate_frontend_ast_v2_print_nine_shape(body, message) result(valid)
@@ -4649,25 +4462,38 @@ contains
 
     subroutine emit_frontend_ast_v2_print_ten(body)
         type(mir_function_body_t), intent(inout) :: body
-        integer :: index
-
-        deallocate (body%instructions)
-        allocate (body%instructions(21))
-        body%function%instruction_count = 21
-        do index = 1, 21
-            body%instructions(index)%id = index - 1
-            body%instructions(index)%opcode = instruction_shape_frontend_ast_v2_print_ten_opcode_0
-            body%instructions(index)%result%id = 0
-            body%instructions(index)%result%kind = instruction_shape_frontend_ast_v2_print_ten_result_kind
-            body%instructions(index)%result%type_name = instruction_shape_frontend_ast_v2_print_ten_result_type
-            body%instructions(index)%source_rule = instruction_shape_frontend_ast_v2_print_ten_source_rule
-        end do
-        do index = 1, 10
-            body%instructions(2 * index - 1)%literal_value = index + 6
-            body%instructions(2 * index)%opcode = instruction_shape_frontend_ast_v2_print_ten_opcode_1
-        end do
-        body%instructions(21)%opcode = instruction_shape_frontend_ast_v2_print_ten_opcode_20
+        call emit_frontend_ast_v2_print_literal_list(body, 10, instruction_shape_frontend_ast_v2_print_ten_result_kind, &
+            instruction_shape_frontend_ast_v2_print_ten_result_type, &
+            instruction_shape_frontend_ast_v2_print_ten_source_rule)
     end subroutine emit_frontend_ast_v2_print_ten
+
+    subroutine emit_frontend_ast_v2_print_literal_list(body, item_count, result_kind, result_type, source_rule)
+        type(mir_function_body_t), intent(inout) :: body
+        integer, intent(in) :: item_count
+        integer(int32), intent(in) :: result_kind
+        character(len=*), intent(in) :: result_type, source_rule
+        integer :: index, instruction_count
+
+        instruction_count = 2 * item_count + 1
+        deallocate (body%instructions)
+        allocate (body%instructions(instruction_count))
+        body%function%instruction_count = instruction_count
+        do index = 1, instruction_count
+            body%instructions(index)%id = index - 1
+            body%instructions(index)%result%id = 0
+            body%instructions(index)%result%kind = result_kind
+            body%instructions(index)%result%type_name = result_type
+            body%instructions(index)%source_rule = source_rule
+            if (index == instruction_count) then
+                body%instructions(index)%opcode = opcode_return
+            else if (mod(index, 2) == 1) then
+                body%instructions(index)%opcode = opcode_const
+                body%instructions(index)%literal_value = (index + 13) / 2
+            else
+                body%instructions(index)%opcode = opcode_output
+            end if
+        end do
+    end subroutine emit_frontend_ast_v2_print_literal_list
 
     logical function ffc_validate_frontend_ast_v2_print_ten_shape(body, message) result(valid)
         type(mir_function_body_t), intent(in) :: body
