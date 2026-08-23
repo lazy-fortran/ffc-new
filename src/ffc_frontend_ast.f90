@@ -709,6 +709,7 @@ contains
         character(len=64) :: count_text
         type(ffc_program_root_t) :: root, declaration
         type(ffc_frontend_variable_declaration_v1_t) :: variable
+        type(mir_function_body_t) :: generic_expression_body
         type(ffc_frontend_assignment_v1_t) :: assignments(6)
         character(len=frontend_ast_expression_length) :: route_key
         character(len=frontend_ast_expression_length) :: print_statement
@@ -1078,17 +1079,13 @@ contains
             route_key = trim(route_key)//') )'
             route = mir_frontend_ast_v1_integer_expression_route(&
                 route_key)
-            if (route == 0_int32 .and. assignment_count == 2 .and. &
-                trim(assignments(2)%value) == &
-                '(assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))') then
-                if (.not. parse_bounded_signed_initializer_literal(trim(assignments(1)%value), &
-                    initializer_value, message)) return
-                call emit_frontend_ast_v1_integer_expression(body, 21_int32)
-                body%instructions(1)%literal_value = initializer_value
-                lowered = mir_validate_function_body(body, message)
-                return
-            end if
             if (route == 0_int32 .and. initialized_xplus_addend) then
+                if (.not. lower_generic_integer_expression(trim(assignments(2)%value), &
+                    generic_expression_body, message)) return
+                if (generic_expression_body%instructions(3)%opcode /= opcode_add) then
+                    call set_message(message, 'unsupported-frontend-ast-v2-execution-part')
+                    return
+                end if
                 if (.not. parse_bounded_addend_expression(trim(assignments(2)%value), addend_value, &
                     message)) return
                 if (.not. parse_bounded_signed_initializer_literal(trim(assignments(1)%value), &

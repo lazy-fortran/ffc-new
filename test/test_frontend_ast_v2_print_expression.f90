@@ -12,6 +12,11 @@ program test_frontend_ast_v2_print_expression
     call check_shape(positive_sx(.true.), [opcode_const, opcode_store, opcode_load, opcode_const, opcode_add, &
         opcode_output, opcode_load, opcode_output, opcode_return])
     call assert_true(body%instructions(1)%literal_value == 3, 'x=3 initializer changed')
+    call check_shape(replace_text(replace_text(positive_sx(.true.), '(left-operand 3)', '(left-operand 42)'), &
+        '(right 1)', '(right 7)'), [opcode_const, opcode_store, opcode_load, opcode_const, opcode_add, &
+        opcode_output, opcode_load, opcode_output, opcode_return])
+    call assert_true(body%instructions(1)%literal_value == 42 .and. body%instructions(4)%literal_value == 7, &
+        'generic initializer/addend changed')
     call check_shape(replace_text(positive_sx(.true.), '(right 1)', '(right 2)'), &
         [opcode_const, opcode_store, opcode_load, opcode_const, opcode_add, opcode_output, opcode_load, &
         opcode_output, opcode_return])
