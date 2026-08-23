@@ -902,11 +902,15 @@ contains
                 (index(trim(expression), 'operator +') == 0 .and. &
                 index(trim(expression), 'operator -') == 0 .and. &
                 index(trim(expression), 'operator –') == 0 .and. &
-                index(trim(expression), 'operator *') == 0) .or. &
+                index(trim(expression), 'operator *') == 0 .and. &
+                index(trim(expression), 'operator /') == 0) .or. &
                 index(trim(expression), 'left-operand '//trim(variable%name)) == 0 .or. &
                 (index(trim(expression), 'operator *') == 0 .and. &
+                index(trim(expression), 'operator /') == 0 .and. &
                 index(trim(expression), 'right-operand 1') == 0) .or. &
                 (index(trim(expression), 'operator *') /= 0 .and. &
+                index(trim(expression), 'right-operand 2') == 0) .or. &
+                (index(trim(expression), 'operator /') /= 0 .and. &
                 index(trim(expression), 'right-operand 2') == 0)) then
                 call set_message(message, 'unsupported-frontend-ast-v2-execution-part')
                 return
@@ -923,6 +927,11 @@ contains
                     trim(assignments(2)%value), '*', bounded_integer_multiplier_minimum, &
                     bounded_integer_multiplier_maximum, 'multiplier', 28_int32, message, trim(variable%name), &
                     trim(variable%name))
+            else if (index(trim(assignments(2)%value), 'operator /') /= 0) then
+                lowered = lower_frontend_ast_v2_initialized_literal_binary(body, trim(assignments(1)%value), &
+                    trim(assignments(2)%value), '/', bounded_integer_divisor_minimum, &
+                    bounded_integer_divisor_maximum, 'divisor', 30_int32, message, &
+                    storage_key=trim(variable%name), left_operand=trim(variable%name))
             else
                 lowered = lower_frontend_ast_v2_initialized_literal_binary(body, trim(assignments(1)%value), &
                     trim(assignments(2)%value), '–', bounded_integer_subtrahend_minimum, &
@@ -4350,6 +4359,13 @@ contains
                                 divisor_supported = divisor_value >= bounded_integer_divisor_minimum .and. &
                                     divisor_value <= bounded_integer_divisor_maximum
                             end if
+                        else if (trim(operator) == '/' .and. trim(left_operand) /= '1' .and. &
+                                trim(left_operand) /= '6' .and. &
+                                is_legal_assignment_identifier(trim(left_operand))) then
+                            if (parse_bounded_decimal_literal(trim(right_operand), divisor_value, message)) then
+                                divisor_supported = divisor_value >= bounded_integer_divisor_minimum .and. &
+                                    divisor_value <= bounded_integer_divisor_maximum
+                            end if
                         else if (trim(operator) == '**' .and. trim(left_operand) == 'x') then
                             if (trim(right_operand) == 'x') then
                                 variable_power_supported = .true.
@@ -4370,8 +4386,8 @@ contains
                             .not. multiplier_supported .and. .not. variable_mul_supported)) .or. &
                             (trim(operator) == '/' .and. &
                             ((trim(left_operand) /= '6' .or. trim(right_operand) /= '2') .and. &
-                            (trim(left_operand) /= 'x' .or. &
-                            (.not. divisor_supported .and. .not. variable_div_supported)))) .or. &
+                            .not. divisor_supported .and. &
+                            (trim(left_operand) /= 'x' .or. .not. variable_div_supported))) .or. &
                             ((trim(operator) == '–' .or. trim(operator) == '-') .and. &
                             .not. subtrahend_supported .and. .not. variable_sub_supported) .or. &
                             (trim(operator) == '**' .and. .not. power_supported .and. &
@@ -4420,6 +4436,12 @@ contains
                         else if (trim(operator) == '/' .and. trim(left_operand) == 'x') then
                             value = '(assignment-expression (kind binary-expression) '// &
                                 '(operator /) (left-operand x) (right-operand '//trim(right_operand)//'))'
+                        else if (trim(operator) == '/' .and. trim(left_operand) /= '1' .and. &
+                                trim(left_operand) /= '6' .and. &
+                                is_legal_assignment_identifier(trim(left_operand))) then
+                            value = '(assignment-expression (kind binary-expression) '// &
+                                '(operator /) (left-operand '//trim(left_operand)//') (right-operand '// &
+                                trim(right_operand)//'))'
                         else if ((trim(operator) == '–' .or. trim(operator) == '-') .and. &
                                 trim(left_operand) == 'x' .and. &
                                 trim(right_operand) == '2') then
