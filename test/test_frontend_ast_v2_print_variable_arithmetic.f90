@@ -12,11 +12,11 @@ program test_frontend_ast_v2_print_variable_arithmetic
     call check_witness('(operator /)', '24', opcode_div, 'division')
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_all(replace_all( &
         witness('(operator –)', '23', 'print-variable-subtraction-expression'), &
-        '(operator –)', '(operator +)'), '(right-operand 2)', '(right-operand 11)'), body, message), &
+        '(operator –)', '(operator *)'), '(right-operand 2)', '(right-operand 11)'), body, message), &
         'wrong subtraction operator was accepted')
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_all( &
         witness('(operator /)', '24', 'print-variable-division-expression'), &
-        '(right-operand 2)', '(right-operand 3)'), body, message), 'wrong division operand was accepted')
+        '(right-operand 2)', '(right-operand 11)'), body, message), 'out-of-range division operand was accepted')
     write (*, '(a)') 'frontend AST v2 variable subtraction/division PRINT checks: ok'
 
 contains

@@ -18,7 +18,7 @@ program test_frontend_ast_v2_init_xdiv_range
     call assert_rejected(replace_text(witness('42', '2'), '(right-operand 2)', &
         '(right-operand 2.0)'), 'real divisor was accepted')
     call assert_rejected(replace_text(witness('42', '2'), '(right-operand 2)', &
-        '(right-operand x)'), 'wrong divisor AST shape was accepted')
+        '(right-operand )'), 'malformed divisor AST was accepted')
     call assert_rejected(replace_text(witness('42', '2'), &
         '(assignment-stmt (variable x)', '(assignment-stmt (variable y)'), &
         'wrong assignment AST shape was accepted')

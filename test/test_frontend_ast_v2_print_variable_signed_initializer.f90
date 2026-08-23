@@ -26,7 +26,9 @@ program test_frontend_ast_v2_print_variable_signed_initializer
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(witness('42'), &
         '(name x)', '(name y)'), body, message), 'mutated variable fact was accepted')
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(witness('42'), &
-        '(output-name x)', '(output-name y)'), body, message), 'mutated PRINT fact was accepted')
+        '(variable-declaration (type-spec integer) (name x)', &
+        '(variable-declaration (type-spec integer) (name y)'), body, message), &
+        'mutated variable name was accepted')
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(witness('42'), &
         '(source-hash signed-init)', '(source-hash mutated)'), body, message), &
         'mutated provenance fact was accepted')

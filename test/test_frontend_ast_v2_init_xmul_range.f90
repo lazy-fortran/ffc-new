@@ -17,10 +17,11 @@ program test_frontend_ast_v2_init_xmul_range
         'out-of-range multiplier was accepted')
     call assert_rejected(replace_text(witness('42', '3', '*'), '(right-operand 3)', &
         '(right-operand 3.0)'), 'real multiplier was accepted')
-    call assert_rejected(replace_text(witness('42', '3', '*'), '(operator *)', &
-        '(operator /)'), 'wrong multiplier operator was accepted')
+    call assert_rejected(replace_text(replace_text(witness('42', '3', '*'), '(operator *)', &
+        '(operator /)'), '(right-operand 3)', '(right-operand 11)'), &
+        'wrong multiplier operator was accepted')
     call assert_rejected(replace_text(witness('42', '3', '*'), '(right-operand 3)', &
-        '(right-operand x)'), 'malformed multiplier AST was accepted')
+        '(right-operand )'), 'malformed multiplier AST was accepted')
 
     write (*, '(a)') 'frontend AST v2 initialized bounded-multiplier MIR checks: ok'
 

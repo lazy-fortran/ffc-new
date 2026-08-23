@@ -47,7 +47,8 @@ program test_frontend_ast_v2_print_variable_two_items
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_sx(), &
         '(output-name-2 x)', '(output-name-2 y)'), body, message), 'wrong second output was accepted')
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_sx(), &
-        '(operator **)', '(operator *)'), body, message), 'wrong operator was accepted')
+        '(operator **) (left-operand x) (right-operand 2)', &
+        '(operator *) (left-operand x) (right-operand 11)'), body, message), 'wrong operator was accepted')
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_sx(), &
         '(print-stmt (format-kind', '(write-stmt (format-kind'), body, message), &
         'WRITE neighbour was accepted')

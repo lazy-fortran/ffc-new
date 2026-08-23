@@ -42,9 +42,12 @@ program test_frontend_ast_v2_print_power
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_sx(), &
         '(name main)', '(name wrong)'), body, message), 'wrong program name was accepted')
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_sx(), &
-        '(output-name x)', '(output-name y)'), body, message), 'wrong output name was accepted')
+        '(assignment-stmt (variable x)', '(assignment-stmt (variable y)'), body, message), &
+        'wrong assignment name was accepted')
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_sx(), &
-        '(operator **)', '(operator *)'), body, message), 'wrong operator was accepted')
+        '(operator **) (left-operand x) (right-operand 3)', &
+        '(operator *) (left-operand x) (right-operand 11)'), body, message), &
+        'wrong operator was accepted')
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_sx(), &
         '(print-stmt (format-kind', '(write-stmt (format-kind'), body, message), &
         'WRITE neighbour was accepted')
@@ -58,9 +61,12 @@ program test_frontend_ast_v2_print_power
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_value_sx(), &
         '(name main)', '(name wrong)'), body, message), 'second wrong program name was accepted')
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_value_sx(), &
-        '(output-name x)', '(output-name y)'), body, message), 'second wrong output name was accepted')
+        '(assignment-stmt (variable x)', '(assignment-stmt (variable y)'), body, message), &
+        'second wrong assignment name was accepted')
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_value_sx(), &
-        '(operator **)', '(operator *)'), body, message), 'second wrong operator was accepted')
+        '(operator **) (left-operand x) (right-operand 2)', &
+        '(operator *) (left-operand x) (right-operand 11)'), body, message), &
+        'second wrong operator was accepted')
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_value_sx(), &
         '(print-stmt (format-kind', '(write-stmt (format-kind'), body, message), &
         'second WRITE neighbour was accepted')

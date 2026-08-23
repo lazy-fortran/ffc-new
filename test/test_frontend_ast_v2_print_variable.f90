@@ -111,7 +111,8 @@ contains
     function wrong_name_sx() result(value)
         character(len=8192) :: value
 
-        value = replace_text(positive_sx(), '(output-name x)', '(output-name y)')
+        value = replace_text(positive_sx(), '(assignment-stmt (variable x)', &
+            '(assignment-stmt (variable y)')
     end function wrong_name_sx
 
     function write_sx() result(value)
