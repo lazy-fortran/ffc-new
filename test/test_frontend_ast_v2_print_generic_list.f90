@@ -1,7 +1,7 @@
 program test_frontend_ast_v2_print_generic_list
     use ffc_frontend_ast, only: ffc_lower_frontend_ast_v2_from_sx
     use ffc_mir, only: mir_function_body_t, mir_validate_function_body, opcode_const, &
-        opcode_load, opcode_output, opcode_return
+        opcode_load, opcode_output, opcode_return, opcode_store
     implicit none
 
     type(mir_function_body_t) :: body
@@ -61,6 +61,7 @@ program test_frontend_ast_v2_print_generic_list
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(positive_sx(), &
         ' (page 248)', ''), body, message), &
         'missing output-item page was accepted')
+    call assert_pure_literal_list()
     write (*, '(a)') 'frontend AST v2 generic PRINT list checks: ok'
 
 contains
@@ -111,6 +112,65 @@ contains
         value = replace_text(value, ' (output-item (kind integer-literal) (value 8) (rule R1217) '// &
             '(clause 12.6.3) (page 248))', '')
     end function literal_sx_20_22
+
+    subroutine assert_pure_literal_list()
+        type(mir_function_body_t) :: pure_body
+        character(len=:), allocatable :: pure_message
+        integer :: instruction_index
+
+        call assert_true(ffc_lower_frontend_ast_v2_from_sx(pure_literal_sx(), pure_body, pure_message), &
+            'pure literal PRINT list was rejected')
+        call assert_true(mir_validate_function_body(pure_body, pure_message), &
+            'pure literal PRINT MIR is invalid')
+        call assert_true(pure_body%function%instruction_count == 7, &
+            'pure literal PRINT instruction count changed')
+        call assert_true(pure_body%instructions(1)%opcode == opcode_const .and. &
+            pure_body%instructions(1)%literal_value == 4 .and. &
+            pure_body%instructions(2)%opcode == opcode_output .and. &
+            pure_body%instructions(3)%opcode == opcode_const .and. &
+            pure_body%instructions(3)%literal_value == 5 .and. &
+            pure_body%instructions(4)%opcode == opcode_output .and. &
+            pure_body%instructions(5)%opcode == opcode_const .and. &
+            pure_body%instructions(5)%literal_value == 6 .and. &
+            pure_body%instructions(6)%opcode == opcode_output .and. &
+            pure_body%instructions(7)%opcode == opcode_return, &
+            'pure literal PRINT MIR sequence changed')
+        do instruction_index = 1, pure_body%function%instruction_count
+            call assert_true(trim(pure_body%instructions(instruction_index)%source_rule) == &
+                'frontend-ast-v2/print-stmt', 'pure literal PRINT source identity was lost')
+            call assert_true(pure_body%instructions(instruction_index)%opcode /= opcode_store, &
+                'pure literal PRINT invented storage')
+        end do
+        call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(pure_literal_sx(), &
+            '(output-count 3)', '(output-count 4)'), pure_body, pure_message), &
+            'malformed pure literal PRINT list was accepted')
+        call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(pure_literal_sx(), &
+            '(output-item (kind integer-literal) (value 4) (rule R1217) (clause 12.6.3) '// &
+            '(page 248))', '(output-item (kind variable) (name x) (rule R901) '// &
+            '(clause 12.6.3) (page 248))'), pure_body, pure_message), &
+            'pure literal PRINT variable item was accepted')
+        call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(pure_literal_sx(), &
+            '(output-item (kind integer-literal) (value 4) (rule R1217) (clause 12.6.3) '// &
+            '(page 248))', '(output-item (kind integer-expression) (operator +) (left x) '// &
+            '(right 1) (rule R1217) (clause 12.6.3) (page 248))'), pure_body, pure_message), &
+            'pure literal PRINT expression item was accepted')
+    end subroutine assert_pure_literal_list
+
+    function pure_literal_sx() result(value)
+        character(len=8192) :: value
+
+        value = '(program-unit-v2 (root (program-root (name p) (span (source-span '// &
+            '(file pure.f90) (start-byte 0) (end-byte 44) (source-hash pure-print))))) '// &
+            '(declaration-count 0) (declaration) (variable-count 0) (variable) '// &
+            '(execution-part (print-stmt (format-kind default-char-expr) (format-value *) '// &
+            '(output-count 3) (output-items (output-item (kind integer-literal) (value 4) '// &
+            '(rule R1217) (clause 12.6.3) (page 248)) (output-item (kind integer-literal) '// &
+            '(value 5) (rule R1217) (clause 12.6.3) (page 248)) (output-item '// &
+            '(kind integer-literal) (value 6) (rule R1217) (clause 12.6.3) (page 248))) '// &
+            '(statement-rule R1212) (format-rule R1215) (source-document J3-24-007) '// &
+            '(statement-clause 12.6.1) (format-clause 12.6.2.2) (output-clause 12.6.3) '// &
+            '(statement-page 242) (format-page 244) (output-page 248) (source-hash pure-print))))'
+    end function pure_literal_sx
 
     function literal_sx_count(item_count) result(value)
         integer, intent(in) :: item_count

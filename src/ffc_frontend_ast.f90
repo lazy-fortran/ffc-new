@@ -720,7 +720,7 @@ contains
         logical :: initialized_xplus_addend, initialized_xminus_subtrahend, &
             initialized_xmultiply_multiplier, initialized_xdivide_divisor, initialized_xpower, &
             initialized_xvariable_power, initialized_xvariable_add, initialized_xvariable_mul, &
-            initialized_xvariable_div, initialized_xvariable_sub
+            initialized_xvariable_div, initialized_xvariable_sub, pure_literal_print
 
         call clear_message(message)
         lowered = .false.
@@ -751,7 +751,11 @@ contains
                 expression, message)) return
             route = frontend_ast_v2_stop_route(expression)
             if (route == 0_int32) route = frontend_ast_v2_print_route(expression)
+            pure_literal_print = .false.
             if (route == 0_int32) then
+                pure_literal_print = frontend_ast_v2_print_generic_literal_list_match(expression)
+            end if
+            if (route == 0_int32 .and. .not. pure_literal_print) then
                 call set_message(message, 'unsupported-frontend-ast-v2-stop-stmt')
                 return
             end if
@@ -766,7 +770,10 @@ contains
             end if
             call mir_make_function_witness(body)
             body%function%name = trim(root%name)
-            if (route == 18_int32) then
+            if (pure_literal_print) then
+                call emit_frontend_ast_v2_print_generic_list(body, expression, 0_int32, .false.)
+                lowered = mir_validate_function_body(body, message)
+            else if (route == 18_int32) then
                 call emit_frontend_ast_v1_integer_expression(body, route)
                 lowered = ffc_validate_frontend_ast_v2_stop_7_shape(body, message)
             else if (route == 29_int32) then
@@ -1594,6 +1601,23 @@ contains
             item_rule, item_count, message)
     end function frontend_ast_v2_print_generic_list_match
 
+    logical function frontend_ast_v2_print_generic_literal_list_match(expression) result(matches)
+        character(len=*), intent(in) :: expression
+        character(len=:), allocatable :: message
+        character(len=:), allocatable :: item_kind(:), item_value(:), item_rule(:)
+        integer :: item_count, item_index
+
+        matches = parse_frontend_ast_v2_print_generic_list(expression, item_kind, item_value, &
+            item_rule, item_count, message)
+        if (.not. matches) return
+        do item_index = 1, item_count
+            if (trim(item_kind(item_index)) /= 'integer-literal') then
+                matches = .false.
+                return
+            end if
+        end do
+    end function frontend_ast_v2_print_generic_literal_list_match
+
     logical function parse_frontend_ast_v2_print_generic_list(expression, item_kind, item_value, &
             item_rule, item_count, message) result(parsed)
         character(len=*), intent(in) :: expression
@@ -1805,12 +1829,17 @@ contains
         end if
     end function parse_frontend_ast_v2_print_item
 
-    subroutine emit_frontend_ast_v2_print_generic_list(body, expression, initializer_value)
+    subroutine emit_frontend_ast_v2_print_generic_list(body, expression, initializer_value, include_initializer)
         type(mir_function_body_t), intent(inout) :: body
         character(len=*), intent(in) :: expression
         integer(int32), intent(in) :: initializer_value
+        logical, intent(in), optional :: include_initializer
         character(len=:), allocatable :: item_kind(:), item_value(:), item_rule(:), message
         integer :: item_count, item_index, instruction_index, instruction_count, value, io_status
+        logical :: has_initializer
+
+        has_initializer = .true.
+        if (present(include_initializer)) has_initializer = include_initializer
 
         if (.not. parse_frontend_ast_v2_print_generic_list(expression, item_kind, item_value, &
             item_rule, item_count, message)) then
@@ -1822,7 +1851,11 @@ contains
             if (len_trim(item_kind(item_count + 1)) == 0) exit
             item_count = item_count + 1
         end do
-        instruction_count = 3
+        if (has_initializer) then
+            instruction_count = 3
+        else
+            instruction_count = 1
+        end if
         do item_index = 1, item_count
             if (trim(item_kind(item_index)) == 'integer-expression') then
                 instruction_count = instruction_count + 4
@@ -1848,11 +1881,15 @@ contains
             body%instructions(instruction_index)%result%type_name = 'i32'
             body%instructions(instruction_index)%source_rule = 'frontend-ast-v2/execution-part'
         end do
-        body%instructions(1)%opcode = opcode_const
-        body%instructions(1)%literal_value = initializer_value
-        body%instructions(2)%opcode = opcode_store
-        body%instructions(2)%storage_key = 'x'
-        instruction_index = 2
+        if (has_initializer) then
+            body%instructions(1)%opcode = opcode_const
+            body%instructions(1)%literal_value = initializer_value
+            body%instructions(2)%opcode = opcode_store
+            body%instructions(2)%storage_key = 'x'
+            instruction_index = 2
+        else
+            instruction_index = 0
+        end if
         do item_index = 1, item_count
             if (trim(item_kind(item_index)) == 'variable') then
                 instruction_index = instruction_index + 1
