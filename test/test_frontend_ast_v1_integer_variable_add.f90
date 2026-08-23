@@ -58,7 +58,7 @@ program test_integer_variable_add
     call assert_false(lower('(assignment-expression (kind binary-expression) (operator +) '// &
         '(left-operand y) (right-operand 1))', body), 'wrong variable was accepted')
     call assert_false(lower('(assignment-expression (kind binary-expression) (operator +) '// &
-        '(left-operand x) (right-operand 2))', body), 'wrong operand was accepted')
+        '(left-operand x) (right-operand 11))', body), 'out-of-range operand was accepted')
     call assert_false(lower('(assignment-expression (kind binary-expression) (operator +) '// &
         '(left-operand x) (right-operand 1)', body), 'malformed expression was accepted')
     write (*, '(a)') 'frontend AST-v1 integer variable add checks: ok'
