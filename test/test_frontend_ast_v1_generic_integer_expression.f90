@@ -2,7 +2,8 @@ program test_frontend_ast_v1_generic_integer_expression
     use, intrinsic :: iso_fortran_env, only: int32
     use ffc_frontend_ast, only: ffc_frontend_ast_v1_from_sx, ffc_frontend_ast_v1_t, &
         ffc_lower_frontend_ast_v1
-    use ffc_mir, only: mir_function_body_t, opcode_add, opcode_load, opcode_return, opcode_store
+    use ffc_mir, only: mir_function_body_t, opcode_add, opcode_const, opcode_load, opcode_mul, &
+        opcode_return, opcode_store
     implicit none
 
     type(ffc_frontend_ast_v1_t) :: ast
@@ -49,6 +50,30 @@ program test_frontend_ast_v1_generic_integer_expression
     call assert_true(all([(trim(body%instructions(index)%source_rule) == &
         'frontend-ast-v1/expression', index = 1, 5)]), &
         'generic expression source rule changed')
+
+    ast%assignment%value = '(assignment-expression (kind binary-expression) (operator *) '// &
+        '(left-operand x) (right-operand 4))'
+    call assert_true(ffc_lower_frontend_ast_v1(ast, body, message), &
+        'unseen generic multiplication was not lowered')
+    call assert_true(body%function%instruction_count == 5_int32 .and. &
+        body%instructions(1)%opcode == opcode_load .and. &
+        body%instructions(2)%opcode == opcode_const .and. &
+        body%instructions(2)%literal_value == 4_int32 .and. &
+        body%instructions(3)%opcode == opcode_mul .and. &
+        body%instructions(4)%opcode == opcode_store .and. &
+        body%instructions(5)%opcode == opcode_return, &
+        'generic x * 4 MIR does not follow source semantics')
+    call assert_true(allocated(body%instructions(1)%storage_key) .and. &
+        trim(body%instructions(1)%storage_key) == 'x' .and. &
+        allocated(body%instructions(4)%storage_key) .and. &
+        trim(body%instructions(4)%storage_key) == 'x' .and. &
+        all([(body%instructions(index)%result%id == merge(2, index - 1, index >= 3), &
+        index = 1, 5)]), 'generic x * 4 MIR metadata changed')
+
+    ast%assignment%value = '(assignment-expression (kind binary-expression) (operator *) '// &
+        '(left-operand x) (right-operand 11))'
+    call assert_false(ffc_lower_frontend_ast_v1(ast, body, message), &
+        'unsupported generic x * 11 neighbor was accepted')
     write (*, '(a)') 'frontend AST-v1 generic integer expression checks: ok'
 
 contains
@@ -59,5 +84,12 @@ contains
 
         if (.not. value) error stop description
     end subroutine assert_true
+
+    subroutine assert_false(value, description)
+        logical, intent(in) :: value
+        character(len=*), intent(in) :: description
+
+        call assert_true(.not. value, description)
+    end subroutine assert_false
 
 end program test_frontend_ast_v1_generic_integer_expression
