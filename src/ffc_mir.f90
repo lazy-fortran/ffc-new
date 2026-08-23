@@ -82,6 +82,7 @@ module ffc_mir
     public :: mir_validate_function_block_table
     public :: mir_function_block_table_range_at
     public :: mir_function_block_table_instruction_at
+    public :: mir_function_block_table_opcode_count_at
     public :: mir_validate_function_witness
     public :: mir_validate_value
     public :: mir_validate_instruction
@@ -674,6 +675,43 @@ contains
         valid = mir_function_instruction_at(body, first_instruction + instruction_index, &
             instruction, message)
     end function mir_function_block_table_instruction_at
+
+    logical function mir_function_block_table_opcode_count_at(body, table, block_index, &
+            opcode, count, message) result(valid)
+        type(mir_function_body_t), intent(in) :: body
+        type(mir_block_table_t), intent(in) :: table
+        integer(int32), intent(in) :: block_index
+        integer(int32), intent(in) :: opcode
+        integer(int32), intent(out) :: count
+        character(len=:), allocatable, intent(out), optional :: message
+
+        integer(int32) :: first_instruction
+        integer(int32) :: block_instruction_count
+        integer(int32) :: index
+
+        count = 0_int32
+        call clear_message(message)
+        valid = .false.
+        if (.not. mir_validate_function_block_table(body, table, message)) return
+        if (opcode < opcode_add .or. opcode > opcode_pow) then
+            call set_message(message, "opcode is outside mir-v0")
+            return
+        end if
+        if (block_index < 0_int32) then
+            call set_message(message, "block index must be non-negative")
+            return
+        end if
+        if (block_index >= int(size(table%ranges), int32)) then
+            call set_message(message, "block index is outside block table")
+            return
+        end if
+        first_instruction = table%ranges(block_index + 1_int32)%first_instruction
+        block_instruction_count = table%ranges(block_index + 1_int32)%instruction_count
+        do index = first_instruction + 1_int32, first_instruction + block_instruction_count
+            if (body%instructions(index)%opcode == opcode) count = count + 1_int32
+        end do
+        valid = .true.
+    end function mir_function_block_table_opcode_count_at
 
     logical function mir_validate_function_witness(body, message) result(valid)
         type(mir_function_body_t), intent(in) :: body
