@@ -1080,6 +1080,7 @@ contains
             route = mir_frontend_ast_v1_integer_expression_route(&
                 route_key)
             if (route == 0_int32 .and. initialized_xplus_addend) then
+                call mir_make_function_witness(generic_expression_body)
                 if (.not. lower_generic_integer_expression(trim(assignments(2)%value), &
                     generic_expression_body, message)) return
                 if (generic_expression_body%instructions(3)%opcode /= opcode_add) then
