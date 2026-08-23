@@ -802,7 +802,7 @@ contains
                 message)) return
             if (assignment_count /= 1 .or. trim(assignments(1)%target) /= trim(variable%name) .or. &
                 index(trim(assignments(1)%value), 'integer-literal') == 0 .or. &
-                .not. frontend_ast_v2_print_named_variable_match(print_statement, trim(variable%name))) then
+                .not. frontend_ast_v2_print_variable_match(print_statement, trim(variable%name))) then
                 call set_message(message, 'unsupported-frontend-ast-v2-execution-part')
                 return
             end if
@@ -819,7 +819,7 @@ contains
             body%function%name = trim(root%name)
             if (.not. parse_bounded_signed_initializer_literal(trim(assignments(1)%value), &
                 initializer_value, message)) return
-            call emit_frontend_ast_v2_print_named_initializer(body, initializer_value, trim(variable%name))
+            call emit_frontend_ast_v2_print_y_initializer(body, initializer_value, trim(variable%name))
             lowered = mir_validate_function_body(body, message)
             return
         end if
@@ -1297,17 +1297,21 @@ contains
         end if
     end function parse_v2_assignment_sequence
 
-    logical function frontend_ast_v2_print_variable_match(expression) result(matches)
+    logical function frontend_ast_v2_print_variable_match(expression, name) result(matches)
         character(len=*), intent(in) :: expression
+        character(len=*), intent(in), optional :: name
         character(len=:), allocatable :: canonical
+        character(len=256) :: output_name
 
         canonical = trim(expression)
+        output_name = '( output-name x )'
+        if (present(name)) output_name = '( output-name '//trim(name)//' )'
         matches = index(canonical, '( print-stmt ') == 1 .and. &
             index(canonical, '( format-kind default-char-expr )') /= 0 .and. &
             index(canonical, '( format-value * )') /= 0 .and. &
             index(canonical, '( output-kind variable )') /= 0 .and. &
-            (index(canonical, '( output-name x )') /= 0 .or. &
-            index(canonical, '( output-name y )') /= 0) .and. &
+            (index(canonical, trim(output_name)) /= 0 .or. &
+            (.not. present(name) .and. index(canonical, '( output-name y )') /= 0)) .and. &
             index(canonical, '( statement-rule R1212 )') /= 0 .and. &
             index(canonical, '( format-rule R1215 )') /= 0 .and. &
             index(canonical, '( output-rule R901 )') /= 0 .and. &
@@ -1323,32 +1327,6 @@ contains
             index(canonical, 'control-list') == 0 .and. &
             index(canonical, 'io-implied-do') == 0
     end function frontend_ast_v2_print_variable_match
-
-    logical function frontend_ast_v2_print_named_variable_match(expression, name) result(matches)
-        character(len=*), intent(in) :: expression, name
-        character(len=:), allocatable :: canonical
-
-        canonical = trim(expression)
-        matches = index(canonical, '( print-stmt ') == 1 .and. &
-            index(canonical, '( format-kind default-char-expr )') /= 0 .and. &
-            index(canonical, '( format-value * )') /= 0 .and. &
-            index(canonical, '( output-kind variable )') /= 0 .and. &
-            index(canonical, '( output-name '//trim(name)//' )') /= 0 .and. &
-            index(canonical, '( statement-rule R1212 )') /= 0 .and. &
-            index(canonical, '( format-rule R1215 )') /= 0 .and. &
-            index(canonical, '( output-rule R901 )') /= 0 .and. &
-            index(canonical, '( source-document J3-24-007 )') /= 0 .and. &
-            index(canonical, '( statement-clause 12.6.1 )') /= 0 .and. &
-            index(canonical, '( format-clause 12.6.2.2 )') /= 0 .and. &
-            index(canonical, '( output-clause 12.6.3 )') /= 0 .and. &
-            index(canonical, '( statement-page 242 )') /= 0 .and. &
-            index(canonical, '( format-page 244 )') /= 0 .and. &
-            index(canonical, '( output-page 248 )') /= 0 .and. &
-            index(canonical, '( source-hash ') /= 0 .and. &
-            index(canonical, 'write-stmt') == 0 .and. &
-            index(canonical, 'control-list') == 0 .and. &
-            index(canonical, 'io-implied-do') == 0
-    end function frontend_ast_v2_print_named_variable_match
 
     logical function frontend_ast_v2_print_z_variable_match(expression) result(matches)
         character(len=*), intent(in) :: expression
@@ -1800,11 +1778,15 @@ contains
         body%instructions(instruction_count)%source_rule = 'frontend-ast-v2/print-stmt'
     end subroutine emit_frontend_ast_v2_print_generic_list
 
-    subroutine emit_frontend_ast_v2_print_y_initializer(body, initializer_value)
+    subroutine emit_frontend_ast_v2_print_y_initializer(body, initializer_value, storage_key)
         type(mir_function_body_t), intent(inout) :: body
         integer(int32), intent(in) :: initializer_value
+        character(len=*), intent(in), optional :: storage_key
+        character(len=128) :: resolved_storage_key
         integer :: index
 
+        resolved_storage_key = 'y'
+        if (present(storage_key)) resolved_storage_key = trim(storage_key)
         if (allocated(body%instructions)) deallocate (body%instructions)
         allocate (body%instructions(5))
         body%function%instruction_count = 5
@@ -1823,43 +1805,12 @@ contains
         body%instructions(1)%opcode = opcode_const
         body%instructions(1)%literal_value = initializer_value
         body%instructions(2)%opcode = opcode_store
-        body%instructions(2)%storage_key = 'y'
+        body%instructions(2)%storage_key = trim(resolved_storage_key)
         body%instructions(3)%opcode = opcode_load
-        body%instructions(3)%storage_key = 'y'
+        body%instructions(3)%storage_key = trim(resolved_storage_key)
         body%instructions(4)%opcode = opcode_output
         body%instructions(5)%opcode = opcode_return
     end subroutine emit_frontend_ast_v2_print_y_initializer
-
-    subroutine emit_frontend_ast_v2_print_named_initializer(body, initializer_value, storage_key)
-        type(mir_function_body_t), intent(inout) :: body
-        integer(int32), intent(in) :: initializer_value
-        character(len=*), intent(in) :: storage_key
-        integer :: index
-
-        if (allocated(body%instructions)) deallocate (body%instructions)
-        allocate (body%instructions(5))
-        body%function%instruction_count = 5
-        do index = 1, 5
-            body%instructions(index)%id = index - 1
-            body%instructions(index)%result%id = 1
-            body%instructions(index)%result%kind = value_kind_integer
-            body%instructions(index)%result%type_name = 'i32'
-            if (index <= 2) then
-                body%instructions(index)%source_rule = 'frontend-ast-v2/execution-part'
-            else
-                body%instructions(index)%source_rule = 'frontend-ast-v2/print-stmt'
-            end if
-        end do
-        body%instructions(1)%result%id = 2
-        body%instructions(1)%opcode = opcode_const
-        body%instructions(1)%literal_value = initializer_value
-        body%instructions(2)%opcode = opcode_store
-        body%instructions(2)%storage_key = trim(storage_key)
-        body%instructions(3)%opcode = opcode_load
-        body%instructions(3)%storage_key = trim(storage_key)
-        body%instructions(4)%opcode = opcode_output
-        body%instructions(5)%opcode = opcode_return
-    end subroutine emit_frontend_ast_v2_print_named_initializer
 
     subroutine emit_frontend_ast_v2_print_z_initializer(body, initializer_value)
         type(mir_function_body_t), intent(inout) :: body
