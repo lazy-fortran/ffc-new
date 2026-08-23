@@ -916,13 +916,16 @@ contains
                 lowered = mir_validate_function_body(body, message)
                 return
             end if
-            if (trim(root%name) /= 'main' .or. trim(declaration%name) /= 'main' .or. &
-                trim(variable%type_spec) /= 'integer' .or. trim(variable%name) /= 'x') then
-                call set_message(message, 'unsupported-frontend-ast-v2-execution-part')
-                return
-            end if
+        end if
+        route = mir_frontend_ast_v1_integer_expression_route(&
+            '(execution-part '//trim(expression)//')')
+        if (route /= 18_int32) then
             if (.not. parse_v2_assignment_sequence(trim(expression), assignments, assignment_count, &
                 message)) return
+        end if
+        if (index(print_statement, 'output-items') /= 0 .and. &
+            trim(root%name) == 'main' .and. trim(declaration%name) == 'main' .and. &
+            trim(variable%type_spec) == 'integer' .and. trim(variable%name) == 'x') then
             if (.not. frontend_ast_v2_print_generic_list_match(print_statement) .or. &
                 assignment_count /= 1 .or. trim(assignments(1)%target) /= 'x' .or. &
                 index(trim(assignments(1)%value), 'integer-literal') == 0) then
@@ -945,12 +948,6 @@ contains
             call emit_frontend_ast_v2_print_generic_list(body, print_statement, initializer_value)
             lowered = mir_validate_function_body(body, message)
             return
-        end if
-        route = mir_frontend_ast_v1_integer_expression_route(&
-            '(execution-part '//trim(expression)//')')
-        if (route /= 18_int32) then
-            if (.not. parse_v2_assignment_sequence(trim(expression), assignments, assignment_count, &
-                message)) return
         end if
         if (.not. expect_token(token, token_count, position, ')', message)) return
         if (position <= token_count) then
