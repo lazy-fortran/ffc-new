@@ -4728,6 +4728,8 @@ contains
     integer(int32) function frontend_ast_v2_print_route(expression) result(route)
         character(len=*), intent(in) :: expression
         character(len=:), allocatable :: canonical
+        character(len=32) :: count_text, index_text, value_text
+        integer :: item_count, item_index
 
         canonical = trim(expression)
         route = 0_int32
@@ -4748,165 +4750,25 @@ contains
             index(canonical, '( source-hash ') == 0) return
         if (index(canonical, 'write-stmt') /= 0 .or. index(canonical, 'control-list') /= 0 .or. &
             index(canonical, 'io-implied-do') /= 0) return
-        if (index(canonical, '( output-count 10 )') /= 0) then
-            if (index(canonical, '( output-kind-2 integer-literal )') == 0 .or. &
-                index(canonical, '( output-value-2 8 )') == 0 .or. index(canonical, '( output-rule-2 R1217 )') == 0 .or. &
-                index(canonical, '( output-kind-3 integer-literal )') == 0 .or. &
-                index(canonical, '( output-value-3 9 )') == 0 .or. index(canonical, '( output-rule-3 R1217 )') == 0 .or. &
-                index(canonical, '( output-kind-4 integer-literal )') == 0 .or. &
-                index(canonical, '( output-value-4 10 )') == 0 .or. index(canonical, '( output-rule-4 R1217 )') == 0 .or. &
-                index(canonical, '( output-kind-5 integer-literal )') == 0 .or. &
-                index(canonical, '( output-value-5 11 )') == 0 .or. index(canonical, '( output-rule-5 R1217 )') == 0 .or. &
-                index(canonical, '( output-kind-6 integer-literal )') == 0 .or. &
-                index(canonical, '( output-value-6 12 )') == 0 .or. index(canonical, '( output-rule-6 R1217 )') == 0 .or. &
-                index(canonical, '( output-kind-7 integer-literal )') == 0 .or. &
-                index(canonical, '( output-value-7 13 )') == 0 .or. index(canonical, '( output-rule-7 R1217 )') == 0 .or. &
-                index(canonical, '( output-kind-8 integer-literal )') == 0 .or. &
-                index(canonical, '( output-value-8 14 )') == 0 .or. index(canonical, '( output-rule-8 R1217 )') == 0 .or. &
-                index(canonical, '( output-kind-9 integer-literal )') == 0 .or. &
-                index(canonical, '( output-value-9 15 )') == 0 .or. index(canonical, '( output-rule-9 R1217 )') == 0 .or. &
-                index(canonical, '( output-kind-10 integer-literal )') == 0 .or. &
-                index(canonical, '( output-value-10 16 )') == 0 .or. index(canonical, '( output-rule-10 R1217 )') == 0) return
-            route = 28_int32
+        do item_count = 10, 2, -1
+            write (count_text, '(i0)') item_count
+            if (index(canonical, '( output-count '//trim(count_text)//' )') /= 0) exit
+        end do
+        if (item_count < 2) then
+            if (index(canonical, '( output-count ') /= 0) return
+            if (count_substring(canonical, '( output-kind integer-literal )') /= 1 .or. &
+                count_substring(canonical, '( output-value 7 )') /= 1) return
+            route = 19_int32
             return
         end if
-        if (index(canonical, '( output-count 9 )') /= 0) then
-            if (index(canonical, '( output-kind-2 integer-literal )') == 0 .or. &
-                index(canonical, '( output-value-2 8 )') == 0 .or. index(canonical, '( output-rule-2 R1217 )') == 0 .or. &
-                index(canonical, '( output-kind-3 integer-literal )') == 0 .or. &
-                index(canonical, '( output-value-3 9 )') == 0 .or. index(canonical, '( output-rule-3 R1217 )') == 0 .or. &
-                index(canonical, '( output-kind-4 integer-literal )') == 0 .or. &
-                index(canonical, '( output-value-4 10 )') == 0 .or. index(canonical, '( output-rule-4 R1217 )') == 0 .or. &
-                index(canonical, '( output-kind-5 integer-literal )') == 0 .or. &
-                index(canonical, '( output-value-5 11 )') == 0 .or. index(canonical, '( output-rule-5 R1217 )') == 0 .or. &
-                index(canonical, '( output-kind-6 integer-literal )') == 0 .or. &
-                index(canonical, '( output-value-6 12 )') == 0 .or. index(canonical, '( output-rule-6 R1217 )') == 0 .or. &
-                index(canonical, '( output-kind-7 integer-literal )') == 0 .or. &
-                index(canonical, '( output-value-7 13 )') == 0 .or. index(canonical, '( output-rule-7 R1217 )') == 0 .or. &
-                index(canonical, '( output-kind-8 integer-literal )') == 0 .or. &
-                index(canonical, '( output-value-8 14 )') == 0 .or. index(canonical, '( output-rule-8 R1217 )') == 0 .or. &
-                index(canonical, '( output-kind-9 integer-literal )') == 0 .or. &
-                index(canonical, '( output-value-9 15 )') == 0 .or. index(canonical, '( output-rule-9 R1217 )') == 0) return
-            route = 27_int32
-            return
-        end if
-        if (index(canonical, '( output-count 8 )') /= 0) then
-            if (index(canonical, '( output-kind-2 integer-literal )') == 0 .or. &
-                index(canonical, '( output-value-2 8 )') == 0 .or. &
-                index(canonical, '( output-rule-2 R1217 )') == 0 .or. &
-                index(canonical, '( output-kind-3 integer-literal )') == 0 .or. &
-                index(canonical, '( output-value-3 9 )') == 0 .or. &
-                index(canonical, '( output-rule-3 R1217 )') == 0 .or. &
-                index(canonical, '( output-kind-4 integer-literal )') == 0 .or. &
-                index(canonical, '( output-value-4 10 )') == 0 .or. &
-                index(canonical, '( output-rule-4 R1217 )') == 0 .or. &
-                index(canonical, '( output-kind-5 integer-literal )') == 0 .or. &
-                index(canonical, '( output-value-5 11 )') == 0 .or. &
-                index(canonical, '( output-rule-5 R1217 )') == 0 .or. &
-                index(canonical, '( output-kind-6 integer-literal )') == 0 .or. &
-                index(canonical, '( output-value-6 12 )') == 0 .or. &
-                index(canonical, '( output-rule-6 R1217 )') == 0 .or. &
-                index(canonical, '( output-kind-7 integer-literal )') == 0 .or. &
-                index(canonical, '( output-value-7 13 )') == 0 .or. &
-                index(canonical, '( output-rule-7 R1217 )') == 0 .or. &
-                index(canonical, '( output-kind-8 integer-literal )') == 0 .or. &
-                index(canonical, '( output-value-8 14 )') == 0 .or. &
-                index(canonical, '( output-rule-8 R1217 )') == 0) return
-            route = 26_int32
-            return
-        end if
-        if (index(canonical, '( output-count 7 )') /= 0) then
-            if (index(canonical, '( output-kind-2 integer-literal )') == 0 .or. &
-                index(canonical, '( output-value-2 8 )') == 0 .or. &
-                index(canonical, '( output-rule-2 R1217 )') == 0 .or. &
-                index(canonical, '( output-kind-3 integer-literal )') == 0 .or. &
-                index(canonical, '( output-value-3 9 )') == 0 .or. &
-                index(canonical, '( output-rule-3 R1217 )') == 0 .or. &
-                index(canonical, '( output-kind-4 integer-literal )') == 0 .or. &
-                index(canonical, '( output-value-4 10 )') == 0 .or. &
-                index(canonical, '( output-rule-4 R1217 )') == 0 .or. &
-                index(canonical, '( output-kind-5 integer-literal )') == 0 .or. &
-                index(canonical, '( output-value-5 11 )') == 0 .or. &
-                index(canonical, '( output-rule-5 R1217 )') == 0 .or. &
-                index(canonical, '( output-kind-6 integer-literal )') == 0 .or. &
-                index(canonical, '( output-value-6 12 )') == 0 .or. &
-                index(canonical, '( output-rule-6 R1217 )') == 0 .or. &
-                index(canonical, '( output-kind-7 integer-literal )') == 0 .or. &
-                index(canonical, '( output-value-7 13 )') == 0 .or. &
-                index(canonical, '( output-rule-7 R1217 )') == 0) return
-            route = 25_int32
-            return
-        end if
-        if (index(canonical, '( output-count 6 )') /= 0) then
-            if (index(canonical, '( output-kind-2 integer-literal )') == 0 .or. &
-                index(canonical, '( output-value-2 8 )') == 0 .or. &
-                index(canonical, '( output-rule-2 R1217 )') == 0 .or. &
-                index(canonical, '( output-kind-3 integer-literal )') == 0 .or. &
-                index(canonical, '( output-value-3 9 )') == 0 .or. &
-                index(canonical, '( output-rule-3 R1217 )') == 0 .or. &
-                index(canonical, '( output-kind-4 integer-literal )') == 0 .or. &
-                index(canonical, '( output-value-4 10 )') == 0 .or. &
-                index(canonical, '( output-rule-4 R1217 )') == 0 .or. &
-                index(canonical, '( output-kind-5 integer-literal )') == 0 .or. &
-                index(canonical, '( output-value-5 11 )') == 0 .or. &
-                index(canonical, '( output-rule-5 R1217 )') == 0 .or. &
-                index(canonical, '( output-kind-6 integer-literal )') == 0 .or. &
-                index(canonical, '( output-value-6 12 )') == 0 .or. &
-                index(canonical, '( output-rule-6 R1217 )') == 0) return
-            route = 24_int32
-            return
-        end if
-        if (index(canonical, '( output-count 5 )') /= 0) then
-            if (index(canonical, '( output-kind-2 integer-literal )') == 0 .or. &
-                index(canonical, '( output-value-2 8 )') == 0 .or. &
-                index(canonical, '( output-rule-2 R1217 )') == 0 .or. &
-                index(canonical, '( output-kind-3 integer-literal )') == 0 .or. &
-                index(canonical, '( output-value-3 9 )') == 0 .or. &
-                index(canonical, '( output-rule-3 R1217 )') == 0 .or. &
-                index(canonical, '( output-kind-4 integer-literal )') == 0 .or. &
-                index(canonical, '( output-value-4 10 )') == 0 .or. &
-                index(canonical, '( output-rule-4 R1217 )') == 0 .or. &
-                index(canonical, '( output-kind-5 integer-literal )') == 0 .or. &
-                index(canonical, '( output-value-5 11 )') == 0 .or. &
-                index(canonical, '( output-rule-5 R1217 )') == 0) return
-            route = 23_int32
-            return
-        end if
-        if (index(canonical, '( output-count 4 )') /= 0) then
-            if (index(canonical, '( output-kind-2 integer-literal )') == 0 .or. &
-                index(canonical, '( output-value-2 8 )') == 0 .or. &
-                index(canonical, '( output-rule-2 R1217 )') == 0 .or. &
-                index(canonical, '( output-kind-3 integer-literal )') == 0 .or. &
-                index(canonical, '( output-value-3 9 )') == 0 .or. &
-                index(canonical, '( output-rule-3 R1217 )') == 0 .or. &
-                index(canonical, '( output-kind-4 integer-literal )') == 0 .or. &
-                index(canonical, '( output-value-4 10 )') == 0 .or. &
-                index(canonical, '( output-rule-4 R1217 )') == 0) return
-            route = 22_int32
-            return
-        end if
-        if (index(canonical, '( output-count 3 )') /= 0) then
-            if (index(canonical, '( output-kind-2 integer-literal )') == 0 .or. &
-                index(canonical, '( output-value-2 8 )') == 0 .or. &
-                index(canonical, '( output-rule-2 R1217 )') == 0 .or. &
-                index(canonical, '( output-kind-3 integer-literal )') == 0 .or. &
-                index(canonical, '( output-value-3 9 )') == 0 .or. &
-                index(canonical, '( output-rule-3 R1217 )') == 0) return
-            route = 21_int32
-            return
-        end if
-        if (index(canonical, '( output-count 2 )') /= 0 .and. &
-            index(canonical, '( output-kind-2 integer-literal )') /= 0 .and. &
-            index(canonical, '( output-value-2 8 )') /= 0 .and. &
-            index(canonical, '( output-rule-2 R1217 )') /= 0) then
-            route = 20_int32
-            return
-        end if
-        if (index(canonical, '( output-count 2 )') /= 0) return
-        if (index(canonical, '( output-count ') /= 0) return
-        if (count_substring(canonical, '( output-kind integer-literal )') /= 1 .or. &
-            count_substring(canonical, '( output-value 7 )') /= 1) return
-        route = 19_int32
+        do item_index = 2, item_count
+            write (index_text, '(i0)') item_index
+            write (value_text, '(i0)') item_index + 6
+            if (index(canonical, '( output-kind-'//trim(index_text)//' integer-literal )') == 0 .or. &
+                index(canonical, '( output-value-'//trim(index_text)//' '//trim(value_text)//' )') == 0 .or. &
+                index(canonical, '( output-rule-'//trim(index_text)//' R1217 )') == 0) return
+        end do
+        route = 18_int32 + int(item_count, int32)
     end function frontend_ast_v2_print_route
 
     integer function count_substring(value, needle) result(count)
