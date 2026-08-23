@@ -12,213 +12,6 @@ module ffc_frontend_ast
         instruction_shape_frontend_ast_v1_integer_program_result_kind, &
         instruction_shape_frontend_ast_v1_integer_program_result_type, &
         instruction_shape_frontend_ast_v1_integer_program_source_rule, &
-        instruction_shape_v2_pow_print_two_items_count, &
-        instruction_shape_v2_pow_print_two_items_opcode_0, &
-        instruction_shape_v2_pow_print_two_items_opcode_1, &
-        instruction_shape_v2_pow_print_two_items_opcode_2, &
-        instruction_shape_v2_pow_print_two_items_opcode_3, &
-        instruction_shape_v2_pow_print_two_items_opcode_4, &
-        instruction_shape_v2_pow_print_two_items_opcode_5, &
-        instruction_shape_v2_pow_print_two_items_opcode_6, &
-        instruction_shape_v2_pow_print_two_items_opcode_7, &
-        instruction_shape_v2_pow_print_two_items_opcode_8, &
-        instruction_shape_v2_pow_print_two_items_opcode_9, &
-        instruction_shape_v2_pow_print_two_items_opcode_10, &
-        instruction_shape_v2_pow_print_two_items_result_kind, &
-        instruction_shape_v2_pow_print_two_items_result_type, &
-        instruction_shape_v2_pow_print_two_items_source_rule, &
-        instruction_shape_v2_pow_print_three_items_count, &
-        instruction_shape_v2_pow_print_three_items_opcode_0, &
-        instruction_shape_v2_pow_print_three_items_opcode_1, &
-        instruction_shape_v2_pow_print_three_items_opcode_2, &
-        instruction_shape_v2_pow_print_three_items_opcode_3, &
-        instruction_shape_v2_pow_print_three_items_opcode_4, &
-        instruction_shape_v2_pow_print_three_items_opcode_5, &
-        instruction_shape_v2_pow_print_three_items_opcode_6, &
-        instruction_shape_v2_pow_print_three_items_opcode_7, &
-        instruction_shape_v2_pow_print_three_items_opcode_8, &
-        instruction_shape_v2_pow_print_three_items_opcode_9, &
-        instruction_shape_v2_pow_print_three_items_opcode_10, &
-        instruction_shape_v2_pow_print_three_items_opcode_11, &
-        instruction_shape_v2_pow_print_three_items_opcode_12, &
-        instruction_shape_v2_pow_print_three_items_result_kind, &
-        instruction_shape_v2_pow_print_three_items_result_type, &
-        instruction_shape_v2_pow_print_three_items_source_rule, &
-        instruction_shape_v2_pow_print_four_items_count, &
-        instruction_shape_v2_pow_print_four_items_opcode_0, &
-        instruction_shape_v2_pow_print_four_items_opcode_1, &
-        instruction_shape_v2_pow_print_four_items_opcode_2, &
-        instruction_shape_v2_pow_print_four_items_opcode_3, &
-        instruction_shape_v2_pow_print_four_items_opcode_4, &
-        instruction_shape_v2_pow_print_four_items_opcode_5, &
-        instruction_shape_v2_pow_print_four_items_opcode_6, &
-        instruction_shape_v2_pow_print_four_items_opcode_7, &
-        instruction_shape_v2_pow_print_four_items_opcode_8, &
-        instruction_shape_v2_pow_print_four_items_opcode_9, &
-        instruction_shape_v2_pow_print_four_items_opcode_10, &
-        instruction_shape_v2_pow_print_four_items_opcode_11, &
-        instruction_shape_v2_pow_print_four_items_opcode_12, &
-        instruction_shape_v2_pow_print_four_items_opcode_13, &
-        instruction_shape_v2_pow_print_four_items_opcode_14, &
-        instruction_shape_v2_pow_print_four_items_result_kind, &
-        instruction_shape_v2_pow_print_four_items_result_type, &
-        instruction_shape_v2_pow_print_four_items_source_rule, &
-        instruction_shape_v2_pow_print_five_items_count, &
-        instruction_shape_v2_pow_print_five_items_opcode_0, &
-        instruction_shape_v2_pow_print_five_items_opcode_1, &
-        instruction_shape_v2_pow_print_five_items_opcode_2, &
-        instruction_shape_v2_pow_print_five_items_opcode_3, &
-        instruction_shape_v2_pow_print_five_items_opcode_4, &
-        instruction_shape_v2_pow_print_five_items_opcode_5, &
-        instruction_shape_v2_pow_print_five_items_opcode_6, &
-        instruction_shape_v2_pow_print_five_items_opcode_7, &
-        instruction_shape_v2_pow_print_five_items_opcode_8, &
-        instruction_shape_v2_pow_print_five_items_opcode_9, &
-        instruction_shape_v2_pow_print_five_items_opcode_10, &
-        instruction_shape_v2_pow_print_five_items_opcode_11, &
-        instruction_shape_v2_pow_print_five_items_opcode_12, &
-        instruction_shape_v2_pow_print_five_items_opcode_13, &
-        instruction_shape_v2_pow_print_five_items_opcode_14, &
-        instruction_shape_v2_pow_print_five_items_opcode_15, &
-        instruction_shape_v2_pow_print_five_items_opcode_16, &
-        instruction_shape_v2_pow_print_five_items_result_kind, &
-        instruction_shape_v2_pow_print_five_items_result_type, &
-        instruction_shape_v2_pow_print_five_items_source_rule, &
-        instruction_shape_v2_pow_print_six_items_count, &
-        instruction_shape_v2_pow_print_six_items_opcode_0, &
-        instruction_shape_v2_pow_print_six_items_opcode_1, &
-        instruction_shape_v2_pow_print_six_items_opcode_2, &
-        instruction_shape_v2_pow_print_six_items_opcode_3, &
-        instruction_shape_v2_pow_print_six_items_opcode_4, &
-        instruction_shape_v2_pow_print_six_items_opcode_5, &
-        instruction_shape_v2_pow_print_six_items_opcode_6, &
-        instruction_shape_v2_pow_print_six_items_opcode_7, &
-        instruction_shape_v2_pow_print_six_items_opcode_8, &
-        instruction_shape_v2_pow_print_six_items_opcode_9, &
-        instruction_shape_v2_pow_print_six_items_opcode_10, &
-        instruction_shape_v2_pow_print_six_items_opcode_11, &
-        instruction_shape_v2_pow_print_six_items_opcode_12, &
-        instruction_shape_v2_pow_print_six_items_opcode_13, &
-        instruction_shape_v2_pow_print_six_items_opcode_14, &
-        instruction_shape_v2_pow_print_six_items_opcode_15, &
-        instruction_shape_v2_pow_print_six_items_opcode_16, &
-        instruction_shape_v2_pow_print_six_items_opcode_17, &
-        instruction_shape_v2_pow_print_six_items_opcode_18, &
-        instruction_shape_v2_pow_print_six_items_result_kind, &
-        instruction_shape_v2_pow_print_six_items_result_type, &
-        instruction_shape_v2_pow_print_six_items_source_rule, &
-        instruction_shape_v2_pow_print_seven_items_count, &
-        instruction_shape_v2_pow_print_seven_items_opcode_0, &
-        instruction_shape_v2_pow_print_seven_items_opcode_1, &
-        instruction_shape_v2_pow_print_seven_items_opcode_2, &
-        instruction_shape_v2_pow_print_seven_items_opcode_3, &
-        instruction_shape_v2_pow_print_seven_items_opcode_4, &
-        instruction_shape_v2_pow_print_seven_items_opcode_5, &
-        instruction_shape_v2_pow_print_seven_items_opcode_6, &
-        instruction_shape_v2_pow_print_seven_items_opcode_7, &
-        instruction_shape_v2_pow_print_seven_items_opcode_8, &
-        instruction_shape_v2_pow_print_seven_items_opcode_9, &
-        instruction_shape_v2_pow_print_seven_items_opcode_10, &
-        instruction_shape_v2_pow_print_seven_items_opcode_11, &
-        instruction_shape_v2_pow_print_seven_items_opcode_12, &
-        instruction_shape_v2_pow_print_seven_items_opcode_13, &
-        instruction_shape_v2_pow_print_seven_items_opcode_14, &
-        instruction_shape_v2_pow_print_seven_items_opcode_15, &
-        instruction_shape_v2_pow_print_seven_items_opcode_16, &
-        instruction_shape_v2_pow_print_seven_items_opcode_17, &
-        instruction_shape_v2_pow_print_seven_items_opcode_18, &
-        instruction_shape_v2_pow_print_seven_items_opcode_19, &
-        instruction_shape_v2_pow_print_seven_items_opcode_20, &
-        instruction_shape_v2_pow_print_seven_items_result_kind, &
-        instruction_shape_v2_pow_print_seven_items_result_type, &
-        instruction_shape_v2_pow_print_seven_items_source_rule, &
-        instruction_shape_v2_pow_print_eight_items_count, &
-        instruction_shape_v2_pow_print_eight_items_opcode_0, &
-        instruction_shape_v2_pow_print_eight_items_opcode_1, &
-        instruction_shape_v2_pow_print_eight_items_opcode_2, &
-        instruction_shape_v2_pow_print_eight_items_opcode_3, &
-        instruction_shape_v2_pow_print_eight_items_opcode_4, &
-        instruction_shape_v2_pow_print_eight_items_opcode_5, &
-        instruction_shape_v2_pow_print_eight_items_opcode_6, &
-        instruction_shape_v2_pow_print_eight_items_opcode_7, &
-        instruction_shape_v2_pow_print_eight_items_opcode_8, &
-        instruction_shape_v2_pow_print_eight_items_opcode_9, &
-        instruction_shape_v2_pow_print_eight_items_opcode_10, &
-        instruction_shape_v2_pow_print_eight_items_opcode_11, &
-        instruction_shape_v2_pow_print_eight_items_opcode_12, &
-        instruction_shape_v2_pow_print_eight_items_opcode_13, &
-        instruction_shape_v2_pow_print_eight_items_opcode_14, &
-        instruction_shape_v2_pow_print_eight_items_opcode_15, &
-        instruction_shape_v2_pow_print_eight_items_opcode_16, &
-        instruction_shape_v2_pow_print_eight_items_opcode_17, &
-        instruction_shape_v2_pow_print_eight_items_opcode_18, &
-        instruction_shape_v2_pow_print_eight_items_opcode_19, &
-        instruction_shape_v2_pow_print_eight_items_opcode_20, &
-        instruction_shape_v2_pow_print_eight_items_opcode_21, &
-        instruction_shape_v2_pow_print_eight_items_opcode_22, &
-        instruction_shape_v2_pow_print_eight_items_result_kind, &
-        instruction_shape_v2_pow_print_eight_items_result_type, &
-        instruction_shape_v2_pow_print_eight_items_source_rule, &
-        instruction_shape_v2_pow_print_nine_items_count, &
-        instruction_shape_v2_pow_print_nine_items_opcode_0, &
-        instruction_shape_v2_pow_print_nine_items_opcode_1, &
-        instruction_shape_v2_pow_print_nine_items_opcode_2, &
-        instruction_shape_v2_pow_print_nine_items_opcode_3, &
-        instruction_shape_v2_pow_print_nine_items_opcode_4, &
-        instruction_shape_v2_pow_print_nine_items_opcode_5, &
-        instruction_shape_v2_pow_print_nine_items_opcode_6, &
-        instruction_shape_v2_pow_print_nine_items_opcode_7, &
-        instruction_shape_v2_pow_print_nine_items_opcode_8, &
-        instruction_shape_v2_pow_print_nine_items_opcode_9, &
-        instruction_shape_v2_pow_print_nine_items_opcode_10, &
-        instruction_shape_v2_pow_print_nine_items_opcode_11, &
-        instruction_shape_v2_pow_print_nine_items_opcode_12, &
-        instruction_shape_v2_pow_print_nine_items_opcode_13, &
-        instruction_shape_v2_pow_print_nine_items_opcode_14, &
-        instruction_shape_v2_pow_print_nine_items_opcode_15, &
-        instruction_shape_v2_pow_print_nine_items_opcode_16, &
-        instruction_shape_v2_pow_print_nine_items_opcode_17, &
-        instruction_shape_v2_pow_print_nine_items_opcode_18, &
-        instruction_shape_v2_pow_print_nine_items_opcode_19, &
-        instruction_shape_v2_pow_print_nine_items_opcode_20, &
-        instruction_shape_v2_pow_print_nine_items_opcode_21, &
-        instruction_shape_v2_pow_print_nine_items_opcode_22, &
-        instruction_shape_v2_pow_print_nine_items_opcode_23, &
-        instruction_shape_v2_pow_print_nine_items_opcode_24, &
-        instruction_shape_v2_pow_print_nine_items_result_kind, &
-        instruction_shape_v2_pow_print_nine_items_result_type, &
-        instruction_shape_v2_pow_print_nine_items_source_rule, &
-        instruction_shape_v2_pow_print_ten_items_count, &
-        instruction_shape_v2_pow_print_ten_items_opcode_0, &
-        instruction_shape_v2_pow_print_ten_items_opcode_1, &
-        instruction_shape_v2_pow_print_ten_items_opcode_2, &
-        instruction_shape_v2_pow_print_ten_items_opcode_3, &
-        instruction_shape_v2_pow_print_ten_items_opcode_4, &
-        instruction_shape_v2_pow_print_ten_items_opcode_5, &
-        instruction_shape_v2_pow_print_ten_items_opcode_6, &
-        instruction_shape_v2_pow_print_ten_items_opcode_7, &
-        instruction_shape_v2_pow_print_ten_items_opcode_8, &
-        instruction_shape_v2_pow_print_ten_items_opcode_9, &
-        instruction_shape_v2_pow_print_ten_items_opcode_10, &
-        instruction_shape_v2_pow_print_ten_items_opcode_11, &
-        instruction_shape_v2_pow_print_ten_items_opcode_12, &
-        instruction_shape_v2_pow_print_ten_items_opcode_13, &
-        instruction_shape_v2_pow_print_ten_items_opcode_14, &
-        instruction_shape_v2_pow_print_ten_items_opcode_15, &
-        instruction_shape_v2_pow_print_ten_items_opcode_16, &
-        instruction_shape_v2_pow_print_ten_items_opcode_17, &
-        instruction_shape_v2_pow_print_ten_items_opcode_18, &
-        instruction_shape_v2_pow_print_ten_items_opcode_19, &
-        instruction_shape_v2_pow_print_ten_items_opcode_20, &
-        instruction_shape_v2_pow_print_ten_items_opcode_21, &
-        instruction_shape_v2_pow_print_ten_items_opcode_22, &
-        instruction_shape_v2_pow_print_ten_items_opcode_23, &
-        instruction_shape_v2_pow_print_ten_items_opcode_24, &
-        instruction_shape_v2_pow_print_ten_items_opcode_25, &
-        instruction_shape_v2_pow_print_ten_items_opcode_26, &
-        instruction_shape_v2_pow_print_ten_items_result_kind, &
-        instruction_shape_v2_pow_print_ten_items_result_type, &
-        instruction_shape_v2_pow_print_ten_items_source_rule, &
         instruction_shape_v2_pow_print_41_60_count, &
         instruction_shape_v2_pow_print_41_60_result_kind, &
         instruction_shape_v2_pow_print_41_60_result_type, &
@@ -1187,6 +980,16 @@ contains
                 return
             end if
             if (index(print_statement, '( output-count ') /= 0) then
+                do assignment_index = 10, 2, -1
+                    if (frontend_ast_v2_print_variable_item_count_match(print_statement, assignment_index)) then
+                        call emit_frontend_ast_v2_print_variable_count(body, assignment_index, value_kind_integer, &
+                            'i32', 'frontend-ast-v2/print-stmt')
+                        lowered = ffc_validate_frontend_ast_v2_print_variable_items_shape(body, assignment_index, &
+                            int(2 * assignment_index + 7, int32), value_kind_integer, 'i32', &
+                            'frontend-ast-v2/print-stmt', message)
+                        return
+                    end if
+                end do
                 do assignment_index = 11, 60
                     if (frontend_ast_v2_print_variable_item_count_match(print_statement, assignment_index)) then
                         call emit_frontend_ast_v2_print_variable_items_11_to_60(body, assignment_index)
@@ -1220,51 +1023,6 @@ contains
                         return
                     end if
                 end do
-                if (frontend_ast_v2_print_variable_item_count_match(print_statement, 10)) then
-                    call emit_frontend_ast_v2_print_variable_ten_items(body)
-                    lowered = ffc_validate_frontend_ast_v2_print_variable_ten_items_shape(body, message)
-                    return
-                end if
-                if (frontend_ast_v2_print_variable_item_count_match(print_statement, 9)) then
-                    call emit_frontend_ast_v2_print_variable_nine_items(body)
-                    lowered = ffc_validate_frontend_ast_v2_print_variable_nine_items_shape(body, message)
-                    return
-                end if
-                if (frontend_ast_v2_print_variable_item_count_match(print_statement, 8)) then
-                    call emit_frontend_ast_v2_print_variable_eight_items(body)
-                    lowered = ffc_validate_frontend_ast_v2_print_variable_eight_items_shape(body, message)
-                    return
-                end if
-                if (frontend_ast_v2_print_variable_item_count_match(print_statement, 7)) then
-                    call emit_frontend_ast_v2_print_variable_seven_items(body)
-                    lowered = ffc_validate_frontend_ast_v2_print_variable_seven_items_shape(body, message)
-                    return
-                end if
-                if (frontend_ast_v2_print_variable_six_item_match(print_statement)) then
-                    call emit_frontend_ast_v2_print_variable_six_items(body)
-                    lowered = ffc_validate_frontend_ast_v2_print_variable_six_items_shape(body, message)
-                    return
-                end if
-                if (frontend_ast_v2_print_variable_five_item_match(print_statement)) then
-                    call emit_frontend_ast_v2_print_variable_five_items(body)
-                    lowered = ffc_validate_frontend_ast_v2_print_variable_five_items_shape(body, message)
-                    return
-                end if
-                if (frontend_ast_v2_print_variable_four_item_match(print_statement)) then
-                    call emit_frontend_ast_v2_print_variable_four_items(body)
-                    lowered = ffc_validate_frontend_ast_v2_print_variable_four_items_shape(body, message)
-                    return
-                end if
-                if (frontend_ast_v2_print_variable_three_item_match(print_statement)) then
-                    call emit_frontend_ast_v2_print_variable_three_items(body)
-                    lowered = ffc_validate_frontend_ast_v2_print_variable_three_items_shape(body, message)
-                    return
-                end if
-                if (frontend_ast_v2_print_variable_two_item_match(print_statement)) then
-                    call emit_frontend_ast_v2_print_variable_two_items(body)
-                    lowered = ffc_validate_frontend_ast_v2_print_variable_two_items_shape(body, message)
-                    return
-                end if
                 if (index(print_statement, '( output-count ') /= 0) then
                     call set_message(message, 'unsupported-frontend-ast-v2-execution-part')
                     return
@@ -1474,96 +1232,6 @@ contains
             index(canonical, 'control-list') == 0 .and. &
             index(canonical, 'io-implied-do') == 0
     end function frontend_ast_v2_print_z_variable_match
-
-    logical function frontend_ast_v2_print_variable_two_item_match(expression) result(matches)
-        character(len=*), intent(in) :: expression
-        character(len=:), allocatable :: canonical
-
-        canonical = trim(expression)
-        matches = frontend_ast_v2_print_variable_match(canonical) .and. &
-            index(canonical, '( output-count 2 )') /= 0 .and. &
-            index(canonical, '( output-kind-2 variable )') /= 0 .and. &
-            index(canonical, '( output-name-2 x )') /= 0 .and. &
-            index(canonical, '( output-rule-2 R901 )') /= 0
-    end function frontend_ast_v2_print_variable_two_item_match
-
-    logical function frontend_ast_v2_print_variable_three_item_match(expression) result(matches)
-        character(len=*), intent(in) :: expression
-        character(len=:), allocatable :: canonical
-
-        canonical = trim(expression)
-        matches = frontend_ast_v2_print_variable_match(canonical) .and. &
-            index(canonical, '( output-count 3 )') /= 0 .and. &
-            index(canonical, '( output-kind-2 variable )') /= 0 .and. &
-            index(canonical, '( output-name-2 x )') /= 0 .and. &
-            index(canonical, '( output-rule-2 R901 )') /= 0 .and. &
-            index(canonical, '( output-kind-3 variable )') /= 0 .and. &
-            index(canonical, '( output-name-3 x )') /= 0 .and. &
-            index(canonical, '( output-rule-3 R901 )') /= 0
-    end function frontend_ast_v2_print_variable_three_item_match
-
-    logical function frontend_ast_v2_print_variable_four_item_match(expression) result(matches)
-        character(len=*), intent(in) :: expression
-        character(len=:), allocatable :: canonical
-
-        canonical = trim(expression)
-        matches = frontend_ast_v2_print_variable_match(canonical) .and. &
-            index(canonical, '( output-count 4 )') /= 0 .and. &
-            index(canonical, '( output-kind-2 variable )') /= 0 .and. &
-            index(canonical, '( output-name-2 x )') /= 0 .and. &
-            index(canonical, '( output-rule-2 R901 )') /= 0 .and. &
-            index(canonical, '( output-kind-3 variable )') /= 0 .and. &
-            index(canonical, '( output-name-3 x )') /= 0 .and. &
-            index(canonical, '( output-rule-3 R901 )') /= 0 .and. &
-            index(canonical, '( output-kind-4 variable )') /= 0 .and. &
-            index(canonical, '( output-name-4 x )') /= 0 .and. &
-            index(canonical, '( output-rule-4 R901 )') /= 0
-    end function frontend_ast_v2_print_variable_four_item_match
-
-    logical function frontend_ast_v2_print_variable_five_item_match(expression) result(matches)
-        character(len=*), intent(in) :: expression
-        character(len=:), allocatable :: canonical
-
-        canonical = trim(expression)
-        matches = frontend_ast_v2_print_variable_match(canonical) .and. &
-            index(canonical, '( output-count 5 )') /= 0 .and. &
-            index(canonical, '( output-kind-2 variable )') /= 0 .and. &
-            index(canonical, '( output-name-2 x )') /= 0 .and. &
-            index(canonical, '( output-rule-2 R901 )') /= 0 .and. &
-            index(canonical, '( output-kind-3 variable )') /= 0 .and. &
-            index(canonical, '( output-name-3 x )') /= 0 .and. &
-            index(canonical, '( output-rule-3 R901 )') /= 0 .and. &
-            index(canonical, '( output-kind-4 variable )') /= 0 .and. &
-            index(canonical, '( output-name-4 x )') /= 0 .and. &
-            index(canonical, '( output-rule-4 R901 )') /= 0 .and. &
-            index(canonical, '( output-kind-5 variable )') /= 0 .and. &
-            index(canonical, '( output-name-5 x )') /= 0 .and. &
-            index(canonical, '( output-rule-5 R901 )') /= 0
-    end function frontend_ast_v2_print_variable_five_item_match
-
-    logical function frontend_ast_v2_print_variable_six_item_match(expression) result(matches)
-        character(len=*), intent(in) :: expression
-        character(len=:), allocatable :: canonical
-
-        canonical = trim(expression)
-        matches = frontend_ast_v2_print_variable_match(canonical) .and. &
-            index(canonical, '( output-count 6 )') /= 0 .and. &
-            index(canonical, '( output-kind-2 variable )') /= 0 .and. &
-            index(canonical, '( output-name-2 x )') /= 0 .and. &
-            index(canonical, '( output-rule-2 R901 )') /= 0 .and. &
-            index(canonical, '( output-kind-3 variable )') /= 0 .and. &
-            index(canonical, '( output-name-3 x )') /= 0 .and. &
-            index(canonical, '( output-rule-3 R901 )') /= 0 .and. &
-            index(canonical, '( output-kind-4 variable )') /= 0 .and. &
-            index(canonical, '( output-name-4 x )') /= 0 .and. &
-            index(canonical, '( output-rule-4 R901 )') /= 0 .and. &
-            index(canonical, '( output-kind-5 variable )') /= 0 .and. &
-            index(canonical, '( output-name-5 x )') /= 0 .and. &
-            index(canonical, '( output-rule-5 R901 )') /= 0 .and. &
-            index(canonical, '( output-kind-6 variable )') /= 0 .and. &
-            index(canonical, '( output-name-6 x )') /= 0 .and. &
-            index(canonical, '( output-rule-6 R901 )') /= 0
-    end function frontend_ast_v2_print_variable_six_item_match
 
     logical function frontend_ast_v2_print_variable_item_count_match(expression, item_count) result(matches)
         character(len=*), intent(in) :: expression
@@ -2119,83 +1787,29 @@ contains
             instruction_shape_v2_pow_print_81_100_result_type, instruction_shape_v2_pow_print_81_100_source_rule)
     end subroutine emit_frontend_ast_v2_print_variable_items_81_to_100
 
-    subroutine emit_frontend_ast_v2_print_variable_seven_items(body)
+    subroutine emit_frontend_ast_v2_print_variable_count(body, item_count, result_kind, result_type, source_rule)
         type(mir_function_body_t), intent(inout) :: body
+        integer, intent(in) :: item_count
+        integer(int32), intent(in) :: result_kind
+        character(len=*), intent(in) :: result_type, source_rule
+        integer(int32) :: opcodes(2 * item_count + 7)
+        integer :: output_index
 
-        call emit_frontend_ast_v2_print_variable_items(body, 7, 3, 2, instruction_shape_v2_pow_print_seven_items_count, &
-            [instruction_shape_v2_pow_print_seven_items_opcode_0, instruction_shape_v2_pow_print_seven_items_opcode_1, &
-            instruction_shape_v2_pow_print_seven_items_opcode_2, instruction_shape_v2_pow_print_seven_items_opcode_3, &
-            instruction_shape_v2_pow_print_seven_items_opcode_4, instruction_shape_v2_pow_print_seven_items_opcode_5, &
-            instruction_shape_v2_pow_print_seven_items_opcode_6, instruction_shape_v2_pow_print_seven_items_opcode_7, &
-            instruction_shape_v2_pow_print_seven_items_opcode_8, instruction_shape_v2_pow_print_seven_items_opcode_9, &
-            instruction_shape_v2_pow_print_seven_items_opcode_10, instruction_shape_v2_pow_print_seven_items_opcode_11, &
-            instruction_shape_v2_pow_print_seven_items_opcode_12, instruction_shape_v2_pow_print_seven_items_opcode_13, &
-            instruction_shape_v2_pow_print_seven_items_opcode_14, instruction_shape_v2_pow_print_seven_items_opcode_15, &
-            instruction_shape_v2_pow_print_seven_items_opcode_16, instruction_shape_v2_pow_print_seven_items_opcode_17, &
-            instruction_shape_v2_pow_print_seven_items_opcode_18, instruction_shape_v2_pow_print_seven_items_opcode_19, &
-            instruction_shape_v2_pow_print_seven_items_opcode_20], instruction_shape_v2_pow_print_seven_items_result_kind, &
-            instruction_shape_v2_pow_print_seven_items_result_type, instruction_shape_v2_pow_print_seven_items_source_rule)
-    end subroutine emit_frontend_ast_v2_print_variable_seven_items
-
-    subroutine emit_frontend_ast_v2_print_variable_eight_items(body)
-        type(mir_function_body_t), intent(inout) :: body
-
-        call emit_frontend_ast_v2_print_variable_items(body, 8, 3, 2, instruction_shape_v2_pow_print_eight_items_count, &
-            [instruction_shape_v2_pow_print_eight_items_opcode_0, instruction_shape_v2_pow_print_eight_items_opcode_1, &
-            instruction_shape_v2_pow_print_eight_items_opcode_2, instruction_shape_v2_pow_print_eight_items_opcode_3, &
-            instruction_shape_v2_pow_print_eight_items_opcode_4, instruction_shape_v2_pow_print_eight_items_opcode_5, &
-            instruction_shape_v2_pow_print_eight_items_opcode_6, instruction_shape_v2_pow_print_eight_items_opcode_7, &
-            instruction_shape_v2_pow_print_eight_items_opcode_8, instruction_shape_v2_pow_print_eight_items_opcode_9, &
-            instruction_shape_v2_pow_print_eight_items_opcode_10, instruction_shape_v2_pow_print_eight_items_opcode_11, &
-            instruction_shape_v2_pow_print_eight_items_opcode_12, instruction_shape_v2_pow_print_eight_items_opcode_13, &
-            instruction_shape_v2_pow_print_eight_items_opcode_14, instruction_shape_v2_pow_print_eight_items_opcode_15, &
-            instruction_shape_v2_pow_print_eight_items_opcode_16, instruction_shape_v2_pow_print_eight_items_opcode_17, &
-            instruction_shape_v2_pow_print_eight_items_opcode_18, instruction_shape_v2_pow_print_eight_items_opcode_19, &
-            instruction_shape_v2_pow_print_eight_items_opcode_20, instruction_shape_v2_pow_print_eight_items_opcode_21, &
-            instruction_shape_v2_pow_print_eight_items_opcode_22], instruction_shape_v2_pow_print_eight_items_result_kind, &
-            instruction_shape_v2_pow_print_eight_items_result_type, instruction_shape_v2_pow_print_eight_items_source_rule)
-    end subroutine emit_frontend_ast_v2_print_variable_eight_items
-
-    subroutine emit_frontend_ast_v2_print_variable_nine_items(body)
-        type(mir_function_body_t), intent(inout) :: body
-
-        call emit_frontend_ast_v2_print_variable_items(body, 9, 3, 2, instruction_shape_v2_pow_print_nine_items_count, &
-            [instruction_shape_v2_pow_print_nine_items_opcode_0, instruction_shape_v2_pow_print_nine_items_opcode_1, &
-            instruction_shape_v2_pow_print_nine_items_opcode_2, instruction_shape_v2_pow_print_nine_items_opcode_3, &
-            instruction_shape_v2_pow_print_nine_items_opcode_4, instruction_shape_v2_pow_print_nine_items_opcode_5, &
-            instruction_shape_v2_pow_print_nine_items_opcode_6, instruction_shape_v2_pow_print_nine_items_opcode_7, &
-            instruction_shape_v2_pow_print_nine_items_opcode_8, instruction_shape_v2_pow_print_nine_items_opcode_9, &
-            instruction_shape_v2_pow_print_nine_items_opcode_10, instruction_shape_v2_pow_print_nine_items_opcode_11, &
-            instruction_shape_v2_pow_print_nine_items_opcode_12, instruction_shape_v2_pow_print_nine_items_opcode_13, &
-            instruction_shape_v2_pow_print_nine_items_opcode_14, instruction_shape_v2_pow_print_nine_items_opcode_15, &
-            instruction_shape_v2_pow_print_nine_items_opcode_16, instruction_shape_v2_pow_print_nine_items_opcode_17, &
-            instruction_shape_v2_pow_print_nine_items_opcode_18, instruction_shape_v2_pow_print_nine_items_opcode_19, &
-            instruction_shape_v2_pow_print_nine_items_opcode_20, instruction_shape_v2_pow_print_nine_items_opcode_21, &
-            instruction_shape_v2_pow_print_nine_items_opcode_22, instruction_shape_v2_pow_print_nine_items_opcode_23, &
-            instruction_shape_v2_pow_print_nine_items_opcode_24], instruction_shape_v2_pow_print_nine_items_result_kind, &
-            instruction_shape_v2_pow_print_nine_items_result_type, instruction_shape_v2_pow_print_nine_items_source_rule)
-    end subroutine emit_frontend_ast_v2_print_variable_nine_items
-
-    subroutine emit_frontend_ast_v2_print_variable_ten_items(body)
-        type(mir_function_body_t), intent(inout) :: body
-
-        call emit_frontend_ast_v2_print_variable_items(body, 10, 3, 2, instruction_shape_v2_pow_print_ten_items_count, &
-            [instruction_shape_v2_pow_print_ten_items_opcode_0, instruction_shape_v2_pow_print_ten_items_opcode_1, &
-            instruction_shape_v2_pow_print_ten_items_opcode_2, instruction_shape_v2_pow_print_ten_items_opcode_3, &
-            instruction_shape_v2_pow_print_ten_items_opcode_4, instruction_shape_v2_pow_print_ten_items_opcode_5, &
-            instruction_shape_v2_pow_print_ten_items_opcode_6, instruction_shape_v2_pow_print_ten_items_opcode_7, &
-            instruction_shape_v2_pow_print_ten_items_opcode_8, instruction_shape_v2_pow_print_ten_items_opcode_9, &
-            instruction_shape_v2_pow_print_ten_items_opcode_10, instruction_shape_v2_pow_print_ten_items_opcode_11, &
-            instruction_shape_v2_pow_print_ten_items_opcode_12, instruction_shape_v2_pow_print_ten_items_opcode_13, &
-            instruction_shape_v2_pow_print_ten_items_opcode_14, instruction_shape_v2_pow_print_ten_items_opcode_15, &
-            instruction_shape_v2_pow_print_ten_items_opcode_16, instruction_shape_v2_pow_print_ten_items_opcode_17, &
-            instruction_shape_v2_pow_print_ten_items_opcode_18, instruction_shape_v2_pow_print_ten_items_opcode_19, &
-            instruction_shape_v2_pow_print_ten_items_opcode_20, instruction_shape_v2_pow_print_ten_items_opcode_21, &
-            instruction_shape_v2_pow_print_ten_items_opcode_22, instruction_shape_v2_pow_print_ten_items_opcode_23, &
-            instruction_shape_v2_pow_print_ten_items_opcode_24, instruction_shape_v2_pow_print_ten_items_opcode_25, &
-            instruction_shape_v2_pow_print_ten_items_opcode_26], instruction_shape_v2_pow_print_ten_items_result_kind, &
-            instruction_shape_v2_pow_print_ten_items_result_type, instruction_shape_v2_pow_print_ten_items_source_rule)
-    end subroutine emit_frontend_ast_v2_print_variable_ten_items
+        opcodes = opcode_load
+        opcodes(1) = opcode_const
+        opcodes(2) = opcode_store
+        opcodes(3) = opcode_load
+        opcodes(4) = opcode_const
+        opcodes(5) = opcode_pow
+        opcodes(6) = opcode_store
+        do output_index = 1, item_count
+            opcodes(7 + 2 * (output_index - 1)) = opcode_load
+            opcodes(8 + 2 * (output_index - 1)) = opcode_output
+        end do
+        opcodes(2 * item_count + 7) = opcode_return
+        call emit_frontend_ast_v2_print_variable_items(body, item_count, 3, 2, int(size(opcodes), int32), &
+            opcodes, result_kind, result_type, source_rule)
+    end subroutine emit_frontend_ast_v2_print_variable_count
 
     subroutine emit_frontend_ast_v2_print_variable_items(body, item_count, literal_value, exponent, instruction_count, &
             opcodes, result_kind, result_type, source_rule)
@@ -2238,273 +1852,6 @@ contains
         end do
         body%instructions(instruction_count)%result%id = 5 + item_count
     end subroutine emit_frontend_ast_v2_print_variable_items
-
-    subroutine emit_frontend_ast_v2_print_variable_two_items(body)
-        type(mir_function_body_t), intent(inout) :: body
-        integer :: index
-
-        deallocate (body%instructions)
-        allocate (body%instructions(instruction_shape_v2_pow_print_two_items_count))
-        body%function%instruction_count = instruction_shape_v2_pow_print_two_items_count
-        do index = 1, instruction_shape_v2_pow_print_two_items_count
-            body%instructions(index)%id = index - 1
-            body%instructions(index)%result%id = 0
-            body%instructions(index)%result%kind = instruction_shape_v2_pow_print_two_items_result_kind
-            body%instructions(index)%result%type_name = instruction_shape_v2_pow_print_two_items_result_type
-            if (index <= 6) then
-                body%instructions(index)%source_rule = 'frontend-ast-v2/execution-part'
-            else
-                body%instructions(index)%source_rule = instruction_shape_v2_pow_print_two_items_source_rule
-            end if
-        end do
-        body%instructions(1)%opcode = instruction_shape_v2_pow_print_two_items_opcode_0
-        body%instructions(1)%literal_value = 3
-        body%instructions(2)%opcode = instruction_shape_v2_pow_print_two_items_opcode_1
-        body%instructions(3)%opcode = instruction_shape_v2_pow_print_two_items_opcode_2
-        body%instructions(4)%opcode = instruction_shape_v2_pow_print_two_items_opcode_3
-        body%instructions(4)%literal_value = 2
-        body%instructions(5)%opcode = instruction_shape_v2_pow_print_two_items_opcode_4
-        body%instructions(6)%opcode = instruction_shape_v2_pow_print_two_items_opcode_5
-        body%instructions(7)%opcode = instruction_shape_v2_pow_print_two_items_opcode_6
-        body%instructions(8)%opcode = instruction_shape_v2_pow_print_two_items_opcode_7
-        body%instructions(9)%opcode = instruction_shape_v2_pow_print_two_items_opcode_8
-        body%instructions(10)%opcode = instruction_shape_v2_pow_print_two_items_opcode_9
-        body%instructions(11)%opcode = instruction_shape_v2_pow_print_two_items_opcode_10
-        body%instructions(1)%result%id = 0
-        body%instructions(2)%result%id = 1
-        body%instructions(3)%result%id = 2
-        body%instructions(4)%result%id = 3
-        body%instructions(5)%result%id = 4
-        body%instructions(6)%result%id = 4
-        body%instructions(7)%result%id = 6
-        body%instructions(8)%result%id = 6
-        body%instructions(9)%result%id = 7
-        body%instructions(10)%result%id = 7
-        body%instructions(11)%result%id = 7
-        body%instructions(2)%storage_key = 'x'
-        body%instructions(3)%storage_key = 'x'
-        body%instructions(6)%storage_key = 'x'
-        body%instructions(7)%storage_key = 'x'
-        body%instructions(9)%storage_key = 'x'
-    end subroutine emit_frontend_ast_v2_print_variable_two_items
-
-    subroutine emit_frontend_ast_v2_print_variable_three_items(body)
-        type(mir_function_body_t), intent(inout) :: body
-        integer :: index
-
-        deallocate (body%instructions)
-        allocate (body%instructions(instruction_shape_v2_pow_print_three_items_count))
-        body%function%instruction_count = instruction_shape_v2_pow_print_three_items_count
-        do index = 1, instruction_shape_v2_pow_print_three_items_count
-            body%instructions(index)%id = index - 1
-            body%instructions(index)%result%kind = instruction_shape_v2_pow_print_three_items_result_kind
-            body%instructions(index)%result%type_name = instruction_shape_v2_pow_print_three_items_result_type
-            if (index <= 6) then
-                body%instructions(index)%source_rule = 'frontend-ast-v2/execution-part'
-            else
-                body%instructions(index)%source_rule = instruction_shape_v2_pow_print_three_items_source_rule
-            end if
-        end do
-        body%instructions(1)%opcode = instruction_shape_v2_pow_print_three_items_opcode_0
-        body%instructions(1)%literal_value = 3
-        body%instructions(2)%opcode = instruction_shape_v2_pow_print_three_items_opcode_1
-        body%instructions(3)%opcode = instruction_shape_v2_pow_print_three_items_opcode_2
-        body%instructions(4)%opcode = instruction_shape_v2_pow_print_three_items_opcode_3
-        body%instructions(4)%literal_value = 2
-        body%instructions(5)%opcode = instruction_shape_v2_pow_print_three_items_opcode_4
-        body%instructions(6)%opcode = instruction_shape_v2_pow_print_three_items_opcode_5
-        body%instructions(7)%opcode = instruction_shape_v2_pow_print_three_items_opcode_6
-        body%instructions(8)%opcode = instruction_shape_v2_pow_print_three_items_opcode_7
-        body%instructions(9)%opcode = instruction_shape_v2_pow_print_three_items_opcode_8
-        body%instructions(10)%opcode = instruction_shape_v2_pow_print_three_items_opcode_9
-        body%instructions(11)%opcode = instruction_shape_v2_pow_print_three_items_opcode_10
-        body%instructions(12)%opcode = instruction_shape_v2_pow_print_three_items_opcode_11
-        body%instructions(13)%opcode = instruction_shape_v2_pow_print_three_items_opcode_12
-        body%instructions(:)%result%id = [0, 1, 2, 3, 4, 4, 6, 6, 7, 7, 8, 8, 8]
-        body%instructions(2)%storage_key = 'x'
-        body%instructions(3)%storage_key = 'x'
-        body%instructions(6)%storage_key = 'x'
-        body%instructions(7)%storage_key = 'x'
-        body%instructions(9)%storage_key = 'x'
-        body%instructions(11)%storage_key = 'x'
-    end subroutine emit_frontend_ast_v2_print_variable_three_items
-
-    subroutine emit_frontend_ast_v2_print_variable_four_items(body)
-        type(mir_function_body_t), intent(inout) :: body
-        integer :: index
-
-        deallocate (body%instructions)
-        allocate (body%instructions(instruction_shape_v2_pow_print_four_items_count))
-        body%function%instruction_count = instruction_shape_v2_pow_print_four_items_count
-        do index = 1, instruction_shape_v2_pow_print_four_items_count
-            body%instructions(index)%id = index - 1
-            body%instructions(index)%result%kind = instruction_shape_v2_pow_print_four_items_result_kind
-            body%instructions(index)%result%type_name = instruction_shape_v2_pow_print_four_items_result_type
-            if (index <= 6) then
-                body%instructions(index)%source_rule = 'frontend-ast-v2/execution-part'
-            else
-                body%instructions(index)%source_rule = instruction_shape_v2_pow_print_four_items_source_rule
-            end if
-        end do
-        body%instructions(1)%opcode = instruction_shape_v2_pow_print_four_items_opcode_0
-        body%instructions(1)%literal_value = 3
-        body%instructions(2)%opcode = instruction_shape_v2_pow_print_four_items_opcode_1
-        body%instructions(3)%opcode = instruction_shape_v2_pow_print_four_items_opcode_2
-        body%instructions(4)%opcode = instruction_shape_v2_pow_print_four_items_opcode_3
-        body%instructions(4)%literal_value = 2
-        body%instructions(5)%opcode = instruction_shape_v2_pow_print_four_items_opcode_4
-        body%instructions(6)%opcode = instruction_shape_v2_pow_print_four_items_opcode_5
-        body%instructions(7)%opcode = instruction_shape_v2_pow_print_four_items_opcode_6
-        body%instructions(8)%opcode = instruction_shape_v2_pow_print_four_items_opcode_7
-        body%instructions(9)%opcode = instruction_shape_v2_pow_print_four_items_opcode_8
-        body%instructions(10)%opcode = instruction_shape_v2_pow_print_four_items_opcode_9
-        body%instructions(11)%opcode = instruction_shape_v2_pow_print_four_items_opcode_10
-        body%instructions(12)%opcode = instruction_shape_v2_pow_print_four_items_opcode_11
-        body%instructions(13)%opcode = instruction_shape_v2_pow_print_four_items_opcode_12
-        body%instructions(14)%opcode = instruction_shape_v2_pow_print_four_items_opcode_13
-        body%instructions(15)%opcode = instruction_shape_v2_pow_print_four_items_opcode_14
-        body%instructions(:)%result%id = [0, 1, 2, 3, 4, 4, 6, 6, 7, 7, 8, 8, 9, 9, 9]
-        body%instructions(2)%storage_key = 'x'
-        body%instructions(3)%storage_key = 'x'
-        body%instructions(6)%storage_key = 'x'
-        body%instructions(7)%storage_key = 'x'
-        body%instructions(9)%storage_key = 'x'
-        body%instructions(11)%storage_key = 'x'
-        body%instructions(13)%storage_key = 'x'
-    end subroutine emit_frontend_ast_v2_print_variable_four_items
-
-    subroutine emit_frontend_ast_v2_print_variable_five_items(body)
-        type(mir_function_body_t), intent(inout) :: body
-        integer :: index
-
-        deallocate (body%instructions)
-        allocate (body%instructions(instruction_shape_v2_pow_print_five_items_count))
-        body%function%instruction_count = instruction_shape_v2_pow_print_five_items_count
-        do index = 1, instruction_shape_v2_pow_print_five_items_count
-            body%instructions(index)%id = index - 1
-            body%instructions(index)%result%kind = instruction_shape_v2_pow_print_five_items_result_kind
-            body%instructions(index)%result%type_name = instruction_shape_v2_pow_print_five_items_result_type
-            if (index <= 6) then
-                body%instructions(index)%source_rule = 'frontend-ast-v2/execution-part'
-            else
-                body%instructions(index)%source_rule = instruction_shape_v2_pow_print_five_items_source_rule
-            end if
-        end do
-        body%instructions(1)%opcode = instruction_shape_v2_pow_print_five_items_opcode_0
-        body%instructions(1)%literal_value = 3
-        body%instructions(2)%opcode = instruction_shape_v2_pow_print_five_items_opcode_1
-        body%instructions(3)%opcode = instruction_shape_v2_pow_print_five_items_opcode_2
-        body%instructions(4)%opcode = instruction_shape_v2_pow_print_five_items_opcode_3
-        body%instructions(4)%literal_value = 2
-        body%instructions(5)%opcode = instruction_shape_v2_pow_print_five_items_opcode_4
-        body%instructions(6)%opcode = instruction_shape_v2_pow_print_five_items_opcode_5
-        body%instructions(7)%opcode = instruction_shape_v2_pow_print_five_items_opcode_6
-        body%instructions(8)%opcode = instruction_shape_v2_pow_print_five_items_opcode_7
-        body%instructions(9)%opcode = instruction_shape_v2_pow_print_five_items_opcode_8
-        body%instructions(10)%opcode = instruction_shape_v2_pow_print_five_items_opcode_9
-        body%instructions(11)%opcode = instruction_shape_v2_pow_print_five_items_opcode_10
-        body%instructions(12)%opcode = instruction_shape_v2_pow_print_five_items_opcode_11
-        body%instructions(13)%opcode = instruction_shape_v2_pow_print_five_items_opcode_12
-        body%instructions(14)%opcode = instruction_shape_v2_pow_print_five_items_opcode_13
-        body%instructions(15)%opcode = instruction_shape_v2_pow_print_five_items_opcode_14
-        body%instructions(16)%opcode = instruction_shape_v2_pow_print_five_items_opcode_15
-        body%instructions(17)%opcode = instruction_shape_v2_pow_print_five_items_opcode_16
-        body%instructions(:)%result%id = [0, 1, 2, 3, 4, 4, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 10]
-        body%instructions(2)%storage_key = 'x'
-        body%instructions(3)%storage_key = 'x'
-        body%instructions(6)%storage_key = 'x'
-        body%instructions(7)%storage_key = 'x'
-        body%instructions(9)%storage_key = 'x'
-        body%instructions(11)%storage_key = 'x'
-        body%instructions(13)%storage_key = 'x'
-        body%instructions(15)%storage_key = 'x'
-    end subroutine emit_frontend_ast_v2_print_variable_five_items
-
-    subroutine emit_frontend_ast_v2_print_variable_six_items(body)
-        type(mir_function_body_t), intent(inout) :: body
-        integer :: index
-
-        deallocate (body%instructions)
-        allocate (body%instructions(instruction_shape_v2_pow_print_six_items_count))
-        body%function%instruction_count = instruction_shape_v2_pow_print_six_items_count
-        do index = 1, instruction_shape_v2_pow_print_six_items_count
-            body%instructions(index)%id = index - 1
-            body%instructions(index)%result%kind = instruction_shape_v2_pow_print_six_items_result_kind
-            body%instructions(index)%result%type_name = instruction_shape_v2_pow_print_six_items_result_type
-            if (index <= 6) then
-                body%instructions(index)%source_rule = 'frontend-ast-v2/execution-part'
-            else
-                body%instructions(index)%source_rule = instruction_shape_v2_pow_print_six_items_source_rule
-            end if
-        end do
-        body%instructions(1)%opcode = instruction_shape_v2_pow_print_six_items_opcode_0
-        body%instructions(1)%literal_value = 3
-        body%instructions(2)%opcode = instruction_shape_v2_pow_print_six_items_opcode_1
-        body%instructions(3)%opcode = instruction_shape_v2_pow_print_six_items_opcode_2
-        body%instructions(4)%opcode = instruction_shape_v2_pow_print_six_items_opcode_3
-        body%instructions(4)%literal_value = 2
-        body%instructions(5)%opcode = instruction_shape_v2_pow_print_six_items_opcode_4
-        body%instructions(6)%opcode = instruction_shape_v2_pow_print_six_items_opcode_5
-        body%instructions(7)%opcode = instruction_shape_v2_pow_print_six_items_opcode_6
-        body%instructions(8)%opcode = instruction_shape_v2_pow_print_six_items_opcode_7
-        body%instructions(9)%opcode = instruction_shape_v2_pow_print_six_items_opcode_8
-        body%instructions(10)%opcode = instruction_shape_v2_pow_print_six_items_opcode_9
-        body%instructions(11)%opcode = instruction_shape_v2_pow_print_six_items_opcode_10
-        body%instructions(12)%opcode = instruction_shape_v2_pow_print_six_items_opcode_11
-        body%instructions(13)%opcode = instruction_shape_v2_pow_print_six_items_opcode_12
-        body%instructions(14)%opcode = instruction_shape_v2_pow_print_six_items_opcode_13
-        body%instructions(15)%opcode = instruction_shape_v2_pow_print_six_items_opcode_14
-        body%instructions(16)%opcode = instruction_shape_v2_pow_print_six_items_opcode_15
-        body%instructions(17)%opcode = instruction_shape_v2_pow_print_six_items_opcode_16
-        body%instructions(18)%opcode = instruction_shape_v2_pow_print_six_items_opcode_17
-        body%instructions(19)%opcode = instruction_shape_v2_pow_print_six_items_opcode_18
-        body%instructions(:)%result%id = [0, 1, 2, 3, 4, 4, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 11]
-        body%instructions(2)%storage_key = 'x'
-        body%instructions(3)%storage_key = 'x'
-        body%instructions(6)%storage_key = 'x'
-        body%instructions(7)%storage_key = 'x'
-        body%instructions(9)%storage_key = 'x'
-        body%instructions(11)%storage_key = 'x'
-        body%instructions(13)%storage_key = 'x'
-        body%instructions(15)%storage_key = 'x'
-        body%instructions(17)%storage_key = 'x'
-    end subroutine emit_frontend_ast_v2_print_variable_six_items
-
-    logical function ffc_validate_frontend_ast_v2_print_variable_seven_items_shape(body, message) result(valid)
-        type(mir_function_body_t), intent(in) :: body
-        character(len=:), allocatable, intent(out), optional :: message
-
-        valid = ffc_validate_frontend_ast_v2_print_variable_items_shape(body, 7, &
-            instruction_shape_v2_pow_print_seven_items_count, instruction_shape_v2_pow_print_seven_items_result_kind, &
-            instruction_shape_v2_pow_print_seven_items_result_type, instruction_shape_v2_pow_print_seven_items_source_rule, message)
-    end function ffc_validate_frontend_ast_v2_print_variable_seven_items_shape
-
-    logical function ffc_validate_frontend_ast_v2_print_variable_eight_items_shape(body, message) result(valid)
-        type(mir_function_body_t), intent(in) :: body
-        character(len=:), allocatable, intent(out), optional :: message
-
-        valid = ffc_validate_frontend_ast_v2_print_variable_items_shape(body, 8, &
-            instruction_shape_v2_pow_print_eight_items_count, instruction_shape_v2_pow_print_eight_items_result_kind, &
-            instruction_shape_v2_pow_print_eight_items_result_type, instruction_shape_v2_pow_print_eight_items_source_rule, message)
-    end function ffc_validate_frontend_ast_v2_print_variable_eight_items_shape
-
-    logical function ffc_validate_frontend_ast_v2_print_variable_nine_items_shape(body, message) result(valid)
-        type(mir_function_body_t), intent(in) :: body
-        character(len=:), allocatable, intent(out), optional :: message
-
-        valid = ffc_validate_frontend_ast_v2_print_variable_items_shape(body, 9, &
-            instruction_shape_v2_pow_print_nine_items_count, instruction_shape_v2_pow_print_nine_items_result_kind, &
-            instruction_shape_v2_pow_print_nine_items_result_type, instruction_shape_v2_pow_print_nine_items_source_rule, message)
-    end function ffc_validate_frontend_ast_v2_print_variable_nine_items_shape
-
-    logical function ffc_validate_frontend_ast_v2_print_variable_ten_items_shape(body, message) result(valid)
-        type(mir_function_body_t), intent(in) :: body
-        character(len=:), allocatable, intent(out), optional :: message
-
-        valid = ffc_validate_frontend_ast_v2_print_variable_items_shape(body, 10, &
-            instruction_shape_v2_pow_print_ten_items_count, instruction_shape_v2_pow_print_ten_items_result_kind, &
-            instruction_shape_v2_pow_print_ten_items_result_type, instruction_shape_v2_pow_print_ten_items_source_rule, message)
-    end function ffc_validate_frontend_ast_v2_print_variable_ten_items_shape
 
     logical function ffc_validate_frontend_ast_v2_print_variable_items_shape(body, item_count, instruction_count, result_kind, &
             result_type, source_rule, message) result(valid)
@@ -2823,141 +2170,6 @@ contains
         end do
         valid = .true.
     end function ffc_validate_frontend_ast_v2_initialized_variable_power_shape
-
-    logical function ffc_validate_frontend_ast_v2_print_variable_two_items_shape(body, message) &
-            result(valid)
-        type(mir_function_body_t), intent(in) :: body
-        character(len=:), allocatable, intent(out), optional :: message
-        integer :: index
-
-        call clear_message(message)
-        valid = .false.
-        if (.not. mir_validate_function_body(body, message)) return
-        if (body%function%instruction_count /= instruction_shape_v2_pow_print_two_items_count) then
-            call set_message(message, 'frontend-ast-v2 variable two-item instruction count changed')
-            return
-        end if
-        do index = 1, instruction_shape_v2_pow_print_two_items_count
-            if (body%instructions(index)%result%kind /= instruction_shape_v2_pow_print_two_items_result_kind .or. &
-                trim(body%instructions(index)%result%type_name) /= instruction_shape_v2_pow_print_two_items_result_type .or. &
-                (index <= 6 .and. trim(body%instructions(index)%source_rule) /= &
-                'frontend-ast-v2/execution-part') .or. &
-                (index > 6 .and. trim(body%instructions(index)%source_rule) /= &
-                instruction_shape_v2_pow_print_two_items_source_rule)) then
-                call set_message(message, 'frontend-ast-v2 variable two-item result shape changed')
-                return
-            end if
-        end do
-        valid = .true.
-    end function ffc_validate_frontend_ast_v2_print_variable_two_items_shape
-
-    logical function ffc_validate_frontend_ast_v2_print_variable_three_items_shape(body, message) &
-            result(valid)
-        type(mir_function_body_t), intent(in) :: body
-        character(len=:), allocatable, intent(out), optional :: message
-        integer :: index
-
-        call clear_message(message)
-        valid = .false.
-        if (.not. mir_validate_function_body(body, message)) return
-        if (body%function%instruction_count /= instruction_shape_v2_pow_print_three_items_count) then
-            call set_message(message, 'frontend-ast-v2 variable three-item instruction count changed')
-            return
-        end if
-        do index = 1, instruction_shape_v2_pow_print_three_items_count
-            if (body%instructions(index)%result%kind /= instruction_shape_v2_pow_print_three_items_result_kind .or. &
-                trim(body%instructions(index)%result%type_name) /= instruction_shape_v2_pow_print_three_items_result_type .or. &
-                (index <= 6 .and. trim(body%instructions(index)%source_rule) /= &
-                'frontend-ast-v2/execution-part') .or. &
-                (index > 6 .and. trim(body%instructions(index)%source_rule) /= &
-                instruction_shape_v2_pow_print_three_items_source_rule)) then
-                call set_message(message, 'frontend-ast-v2 variable three-item result shape changed')
-                return
-            end if
-        end do
-        valid = .true.
-    end function ffc_validate_frontend_ast_v2_print_variable_three_items_shape
-
-    logical function ffc_validate_frontend_ast_v2_print_variable_four_items_shape(body, message) &
-            result(valid)
-        type(mir_function_body_t), intent(in) :: body
-        character(len=:), allocatable, intent(out), optional :: message
-        integer :: index
-
-        call clear_message(message)
-        valid = .false.
-        if (.not. mir_validate_function_body(body, message)) return
-        if (body%function%instruction_count /= instruction_shape_v2_pow_print_four_items_count) then
-            call set_message(message, 'frontend-ast-v2 variable four-item instruction count changed')
-            return
-        end if
-        do index = 1, instruction_shape_v2_pow_print_four_items_count
-            if (body%instructions(index)%result%kind /= instruction_shape_v2_pow_print_four_items_result_kind .or. &
-                trim(body%instructions(index)%result%type_name) /= instruction_shape_v2_pow_print_four_items_result_type .or. &
-                (index <= 6 .and. trim(body%instructions(index)%source_rule) /= &
-                'frontend-ast-v2/execution-part') .or. &
-                (index > 6 .and. trim(body%instructions(index)%source_rule) /= &
-                instruction_shape_v2_pow_print_four_items_source_rule)) then
-                call set_message(message, 'frontend-ast-v2 variable four-item result shape changed')
-                return
-            end if
-        end do
-        valid = .true.
-    end function ffc_validate_frontend_ast_v2_print_variable_four_items_shape
-
-    logical function ffc_validate_frontend_ast_v2_print_variable_five_items_shape(body, message) &
-            result(valid)
-        type(mir_function_body_t), intent(in) :: body
-        character(len=:), allocatable, intent(out), optional :: message
-        integer :: index
-
-        call clear_message(message)
-        valid = .false.
-        if (.not. mir_validate_function_body(body, message)) return
-        if (body%function%instruction_count /= instruction_shape_v2_pow_print_five_items_count) then
-            call set_message(message, 'frontend-ast-v2 variable five-item instruction count changed')
-            return
-        end if
-        do index = 1, instruction_shape_v2_pow_print_five_items_count
-            if (body%instructions(index)%result%kind /= instruction_shape_v2_pow_print_five_items_result_kind .or. &
-                trim(body%instructions(index)%result%type_name) /= instruction_shape_v2_pow_print_five_items_result_type .or. &
-                (index <= 6 .and. trim(body%instructions(index)%source_rule) /= &
-                'frontend-ast-v2/execution-part') .or. &
-                (index > 6 .and. trim(body%instructions(index)%source_rule) /= &
-                instruction_shape_v2_pow_print_five_items_source_rule)) then
-                call set_message(message, 'frontend-ast-v2 variable five-item result shape changed')
-                return
-            end if
-        end do
-        valid = .true.
-    end function ffc_validate_frontend_ast_v2_print_variable_five_items_shape
-
-    logical function ffc_validate_frontend_ast_v2_print_variable_six_items_shape(body, message) &
-            result(valid)
-        type(mir_function_body_t), intent(in) :: body
-        character(len=:), allocatable, intent(out), optional :: message
-        integer :: index
-
-        call clear_message(message)
-        valid = .false.
-        if (.not. mir_validate_function_body(body, message)) return
-        if (body%function%instruction_count /= instruction_shape_v2_pow_print_six_items_count) then
-            call set_message(message, 'frontend-ast-v2 variable six-item instruction count changed')
-            return
-        end if
-        do index = 1, instruction_shape_v2_pow_print_six_items_count
-            if (body%instructions(index)%result%kind /= instruction_shape_v2_pow_print_six_items_result_kind .or. &
-                trim(body%instructions(index)%result%type_name) /= instruction_shape_v2_pow_print_six_items_result_type .or. &
-                (index <= 6 .and. trim(body%instructions(index)%source_rule) /= &
-                'frontend-ast-v2/execution-part') .or. &
-                (index > 6 .and. trim(body%instructions(index)%source_rule) /= &
-                instruction_shape_v2_pow_print_six_items_source_rule)) then
-                call set_message(message, 'frontend-ast-v2 variable six-item result shape changed')
-                return
-            end if
-        end do
-        valid = .true.
-    end function ffc_validate_frontend_ast_v2_print_variable_six_items_shape
 
     character(len=16) function sequence_position_name(position)
         integer, intent(in) :: position
@@ -5198,7 +4410,7 @@ contains
                             value = '(assignment-expression (kind binary-expression) '// &
                                 '(operator +) (left-operand x) (right-operand x))'
                         else if (trim(operator) == '+' .and. trim(left_operand) == 'x' .and. &
-                            trim(right_operand) == '1') then
+                                trim(right_operand) == '1') then
                             value = '(assignment-expression (kind binary-expression) '// &
                                 '(operator +) (left-operand x) (right-operand 1))'
                         else if (trim(operator) == '+' .and. trim(left_operand) == 'x') then
@@ -5209,11 +4421,11 @@ contains
                             value = '(assignment-expression (kind binary-expression) '// &
                                 '(operator *) (left-operand x) (right-operand 2))'
                         else if (trim(operator) == '*' .and. trim(left_operand) == 'x' .and. &
-                            trim(right_operand) == 'x') then
+                                trim(right_operand) == 'x') then
                             value = '(assignment-expression (kind binary-expression) '// &
                                 '(operator *) (left-operand x) (right-operand x))'
                         else if (trim(operator) == '/' .and. trim(left_operand) == 'x' .and. &
-                            trim(right_operand) == 'x') then
+                                trim(right_operand) == 'x') then
                             value = '(assignment-expression (kind binary-expression) '// &
                                 '(operator /) (left-operand x) (right-operand x))'
                         else if (trim(operator) == '*' .and. trim(left_operand) == 'x') then
