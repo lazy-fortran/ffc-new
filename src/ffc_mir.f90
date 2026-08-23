@@ -81,6 +81,7 @@ module ffc_mir
     public :: mir_make_function_block_table_from_lengths
     public :: mir_validate_function_block_table
     public :: mir_function_block_table_range_at
+    public :: mir_function_block_table_instruction_at
     public :: mir_validate_function_witness
     public :: mir_validate_value
     public :: mir_validate_instruction
@@ -644,6 +645,35 @@ contains
         instruction_count = table%ranges(block_index + 1_int32)%instruction_count
         valid = .true.
     end function mir_function_block_table_range_at
+
+    logical function mir_function_block_table_instruction_at(body, table, block_index, &
+            instruction_index, instruction, message) result(valid)
+        type(mir_function_body_t), intent(in) :: body
+        type(mir_block_table_t), intent(in) :: table
+        integer(int32), intent(in) :: block_index
+        integer(int32), intent(in) :: instruction_index
+        type(mir_instruction_t), intent(out) :: instruction
+        character(len=:), allocatable, intent(out), optional :: message
+
+        integer(int32) :: first_instruction
+        integer(int32) :: block_instruction_count
+
+        instruction = mir_instruction_t()
+        call clear_message(message)
+        valid = .false.
+        if (.not. mir_function_block_table_range_at(body, table, block_index, &
+            first_instruction, block_instruction_count, message)) return
+        if (instruction_index < 0_int32) then
+            call set_message(message, "instruction index must be non-negative")
+            return
+        end if
+        if (instruction_index >= block_instruction_count) then
+            call set_message(message, "instruction index is outside block")
+            return
+        end if
+        valid = mir_function_instruction_at(body, first_instruction + instruction_index, &
+            instruction, message)
+    end function mir_function_block_table_instruction_at
 
     logical function mir_validate_function_witness(body, message) result(valid)
         type(mir_function_body_t), intent(in) :: body
