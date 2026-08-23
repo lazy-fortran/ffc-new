@@ -1,7 +1,7 @@
 program test_frontend_ast_v1_generic_integer_expression
     use, intrinsic :: iso_fortran_env, only: int32
     use ffc_frontend_ast, only: ffc_frontend_ast_v1_from_sx, ffc_frontend_ast_v1_t, &
-        ffc_lower_frontend_ast_v1
+        ffc_lower_frontend_ast_v1, ffc_validate_frontend_ast_v1_int_var_assignment_shape
     use ffc_mir, only: mir_function_body_t, opcode_add, opcode_const, opcode_load, opcode_mul, &
         opcode_return, opcode_store
     implicit none
@@ -50,6 +50,23 @@ program test_frontend_ast_v1_generic_integer_expression
     call assert_true(all([(trim(body%instructions(index)%source_rule) == &
         'frontend-ast-v1/expression', index = 1, 5)]), &
         'generic expression source rule changed')
+
+    ast%assignment%value = '(assignment-expression (kind binary-expression) (operator +) '// &
+        '(left-operand x) (right-operand 1))'
+    call assert_true(ffc_lower_frontend_ast_v1(ast, body, message), &
+        'known x + 1 route was not lowered')
+    call assert_true(ffc_validate_frontend_ast_v1_int_var_assignment_shape(body, message), &
+        'known x + 1 route-specific shape changed')
+    call assert_true(body%instructions(1)%opcode == opcode_load .and. &
+        body%instructions(1)%result%id == 0_int32 .and. &
+        allocated(body%instructions(1)%storage_key) .and. &
+        trim(body%instructions(1)%storage_key) == 'x' .and. &
+        body%instructions(2)%opcode == opcode_const .and. &
+        body%instructions(2)%literal_value == 1_int32 .and. &
+        body%instructions(3)%opcode == opcode_add .and. &
+        body%instructions(4)%opcode == opcode_store .and. &
+        body%instructions(5)%opcode == opcode_return, &
+        'known x + 1 route MIR changed')
 
     ast%assignment%value = '(assignment-expression (kind binary-expression) (operator *) '// &
         '(left-operand x) (right-operand 4))'

@@ -3267,7 +3267,7 @@ contains
         character(len=:), allocatable, intent(out), optional :: message
 
         integer :: kind
-        integer(int32) :: literal_value
+        integer(int32) :: expression_route, literal_value
         character(len=32) :: type_name
         character(len=:), allocatable :: generic_message
 
@@ -3283,6 +3283,24 @@ contains
         body%instructions(2)%result = body%instructions(1)%result
         if (trim(ast%variable%type_spec) == 'integer') then
             if (ast%assignment_count == 1_int64) then
+                expression_route = mir_frontend_ast_v1_integer_expression_route(&
+                    trim(ast%assignment%value))
+                if (expression_route > 0_int32) then
+                    call emit_frontend_ast_v1_integer_expression(body, expression_route)
+                    select case (expression_route)
+                    case (1_int32); lowered = ffc_validate_frontend_ast_v1_int_expr_assignment_shape(&
+                            body, message)
+                    case (2_int32); lowered = ffc_validate_frontend_ast_v1_int_var_assignment_shape(&
+                            body, message)
+                    case (3_int32); lowered = ffc_validate_frontend_ast_v1_int_mul_expr_assignment_shape(&
+                            body, message)
+                    case (4_int32); lowered = ffc_validate_frontend_ast_v1_int_div_expr_assignment_shape(&
+                            body, message)
+                    case (5_int32); lowered = ffc_validate_frontend_ast_v1_int_sub_expr_assignment_shape(&
+                            body, message)
+                    end select
+                    return
+                end if
                 if (lower_generic_integer_expression(trim(ast%assignment%value), body, generic_message)) then
                     lowered = mir_validate_function_body(body, message)
                     return
