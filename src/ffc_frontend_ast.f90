@@ -506,7 +506,8 @@ contains
         integer :: assignment_count, assignment_index, token_count, position
         integer(int64) :: declaration_count, variable_count
         integer(int32) :: initializer_value, addend_value, subtrahend_value, multiplier_value, &
-            divisor_value, power_value, route
+            divisor_value, power_value, route, initialized_xvariable_binary_opcode
+        character(len=11) :: initialized_xvariable_binary_name
         logical :: initialized_xplus_addend, initialized_xminus_subtrahend, &
             initialized_xmultiply_multiplier, initialized_xdivide_divisor, initialized_xpower, &
             initialized_xvariable_power, initialized_xvariable_add, initialized_xvariable_mul, &
@@ -890,36 +891,28 @@ contains
                 lowered = mir_validate_function_body(body, message)
                 return
             end if
-            if (route == 0_int32 .and. initialized_xvariable_add) then
-                if (.not. parse_bounded_signed_initializer_literal(trim(assignments(1)%value), &
-                    initializer_value, message)) return
-                call emit_frontend_ast_v2_initialized_variable_binary(body, initializer_value, opcode_add)
-                lowered = ffc_validate_frontend_ast_v2_initialized_variable_binary_shape(body, initializer_value, &
-                    opcode_add, 'add', message)
-                return
+            initialized_xvariable_binary_opcode = 0_int32
+            initialized_xvariable_binary_name = ''
+            if (initialized_xvariable_add) then
+                initialized_xvariable_binary_opcode = opcode_add
+                initialized_xvariable_binary_name = 'add'
+            else if (initialized_xvariable_mul) then
+                initialized_xvariable_binary_opcode = opcode_mul
+                initialized_xvariable_binary_name = 'multiply'
+            else if (initialized_xvariable_div) then
+                initialized_xvariable_binary_opcode = opcode_div
+                initialized_xvariable_binary_name = 'division'
+            else if (initialized_xvariable_sub) then
+                initialized_xvariable_binary_opcode = opcode_sub
+                initialized_xvariable_binary_name = 'subtraction'
             end if
-            if (route == 0_int32 .and. initialized_xvariable_mul) then
+            if (route == 0_int32 .and. initialized_xvariable_binary_opcode /= 0_int32) then
                 if (.not. parse_bounded_signed_initializer_literal(trim(assignments(1)%value), &
                     initializer_value, message)) return
-                call emit_frontend_ast_v2_initialized_variable_binary(body, initializer_value, opcode_mul)
+                call emit_frontend_ast_v2_initialized_variable_binary(body, initializer_value, &
+                    initialized_xvariable_binary_opcode)
                 lowered = ffc_validate_frontend_ast_v2_initialized_variable_binary_shape(body, initializer_value, &
-                    opcode_mul, 'multiply', message)
-                return
-            end if
-            if (route == 0_int32 .and. initialized_xvariable_div) then
-                if (.not. parse_bounded_signed_initializer_literal(trim(assignments(1)%value), &
-                    initializer_value, message)) return
-                call emit_frontend_ast_v2_initialized_variable_binary(body, initializer_value, opcode_div)
-                lowered = ffc_validate_frontend_ast_v2_initialized_variable_binary_shape(body, initializer_value, &
-                    opcode_div, 'division', message)
-                return
-            end if
-            if (route == 0_int32 .and. initialized_xvariable_sub) then
-                if (.not. parse_bounded_signed_initializer_literal(trim(assignments(1)%value), &
-                    initializer_value, message)) return
-                call emit_frontend_ast_v2_initialized_variable_binary(body, initializer_value, opcode_sub)
-                lowered = ffc_validate_frontend_ast_v2_initialized_variable_binary_shape(body, initializer_value, &
-                    opcode_sub, 'subtraction', message)
+                    initialized_xvariable_binary_opcode, initialized_xvariable_binary_name, message)
                 return
             end if
             if (route == 0_int32 .and. initialized_xminus_subtrahend) then
