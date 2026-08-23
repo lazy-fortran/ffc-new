@@ -102,6 +102,10 @@ name = "mir_block_table_opcode_count"
 source-dir = "test"
 
 [[test]]
+name = "mir_block_table_opcode_histogram"
+source-dir = "test"
+
+[[test]]
 name = "mir_block_table_constructor"
 source-dir = "test"
 

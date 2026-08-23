@@ -83,6 +83,7 @@ module ffc_mir
     public :: mir_function_block_table_range_at
     public :: mir_function_block_table_instruction_at
     public :: mir_function_block_table_opcode_count_at
+    public :: mir_function_block_table_opcode_histogram_at
     public :: mir_validate_function_witness
     public :: mir_validate_value
     public :: mir_validate_instruction
@@ -712,6 +713,43 @@ contains
         end do
         valid = .true.
     end function mir_function_block_table_opcode_count_at
+
+    logical function mir_function_block_table_opcode_histogram_at(body, table, block_index, &
+            histogram, total, message) result(valid)
+        type(mir_function_body_t), intent(in) :: body
+        type(mir_block_table_t), intent(in) :: table
+        integer(int32), intent(in) :: block_index
+        integer(int32), intent(out) :: histogram(mir_opcode_histogram_size)
+        integer(int32), intent(out) :: total
+        character(len=:), allocatable, intent(out), optional :: message
+
+        integer(int32) :: first_instruction
+        integer(int32) :: block_instruction_count
+        integer(int32) :: index
+        integer(int32) :: opcode
+
+        histogram = 0_int32
+        total = 0_int32
+        call clear_message(message)
+        valid = .false.
+        if (.not. mir_validate_function_block_table(body, table, message)) return
+        if (block_index < 0_int32) then
+            call set_message(message, "block index must be non-negative")
+            return
+        end if
+        if (block_index >= int(size(table%ranges), int32)) then
+            call set_message(message, "block index is outside block table")
+            return
+        end if
+        first_instruction = table%ranges(block_index + 1_int32)%first_instruction
+        block_instruction_count = table%ranges(block_index + 1_int32)%instruction_count
+        do index = first_instruction + 1_int32, first_instruction + block_instruction_count
+            opcode = body%instructions(index)%opcode
+            histogram(opcode) = histogram(opcode) + 1_int32
+            total = total + 1_int32
+        end do
+        valid = .true.
+    end function mir_function_block_table_opcode_histogram_at
 
     logical function mir_validate_function_witness(body, message) result(valid)
         type(mir_function_body_t), intent(in) :: body
