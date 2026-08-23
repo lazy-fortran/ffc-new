@@ -1100,30 +1100,29 @@ contains
             if (route == 0_int32 .and. initialized_xvariable_add) then
                 if (.not. parse_bounded_signed_initializer_literal(trim(assignments(1)%value), &
                     initializer_value, message)) return
-                call emit_frontend_ast_v2_initialized_variable_add(body, initializer_value)
-                lowered = ffc_validate_frontend_ast_v2_initialized_variable_add_shape(body, &
-                    initializer_value, message)
+                call emit_frontend_ast_v2_initialized_variable_binary(body, initializer_value, opcode_add)
+                lowered = ffc_validate_frontend_ast_v2_initialized_variable_binary_shape(body, initializer_value, &
+                    opcode_add, 'add', message)
                 return
             end if
             if (route == 0_int32 .and. initialized_xvariable_mul) then
                 if (.not. parse_bounded_signed_initializer_literal(trim(assignments(1)%value), &
                     initializer_value, message)) return
-                call emit_frontend_ast_v2_initialized_variable_mul(body, initializer_value)
-                lowered = ffc_validate_frontend_ast_v2_initialized_variable_mul_shape(body, &
-                    initializer_value, message)
+                call emit_frontend_ast_v2_initialized_variable_binary(body, initializer_value, opcode_mul)
+                lowered = ffc_validate_frontend_ast_v2_initialized_variable_mul_shape(body, initializer_value, message)
                 return
             end if
             if (route == 0_int32 .and. initialized_xvariable_div) then
                 if (.not. parse_bounded_signed_initializer_literal(trim(assignments(1)%value), &
                     initializer_value, message)) return
-                call emit_frontend_ast_v2_initialized_variable_div(body, initializer_value)
+                call emit_frontend_ast_v2_initialized_variable_binary(body, initializer_value, opcode_div)
                 lowered = ffc_validate_frontend_ast_v2_initialized_variable_div_shape(body, initializer_value, message)
                 return
             end if
             if (route == 0_int32 .and. initialized_xvariable_sub) then
                 if (.not. parse_bounded_signed_initializer_literal(trim(assignments(1)%value), &
                     initializer_value, message)) return
-                call emit_frontend_ast_v2_initialized_variable_sub(body, initializer_value)
+                call emit_frontend_ast_v2_initialized_variable_binary(body, initializer_value, opcode_sub)
                 lowered = ffc_validate_frontend_ast_v2_initialized_variable_sub_shape(body, initializer_value, message)
                 return
             end if
@@ -2568,17 +2567,17 @@ contains
             '(assignment-expression (kind binary-expression) (operator –) (left-operand x) (right-operand x))'
     end function is_variable_sub_expression
 
-    subroutine emit_frontend_ast_v2_initialized_variable_add(body, initializer_value)
+    subroutine emit_frontend_ast_v2_initialized_variable_binary(body, initializer_value, binary_opcode)
         type(mir_function_body_t), intent(inout) :: body
-
         integer(int32), intent(in) :: initializer_value
+        integer(int32), intent(in) :: binary_opcode
         integer(int32) :: expected_opcodes(9), expected_results(9)
         integer :: index
 
         deallocate (body%instructions)
         allocate (body%instructions(9))
         body%function%instruction_count = 9_int32
-        expected_opcodes = [opcode_const, opcode_store, opcode_load, opcode_load, opcode_add, &
+        expected_opcodes = [opcode_const, opcode_store, opcode_load, opcode_load, binary_opcode, &
             opcode_store, opcode_load, opcode_output, opcode_return]
         expected_results = [0_int32, 1_int32, 2_int32, 3_int32, 4_int32, 4_int32, 6_int32, 6_int32, 6_int32]
         do index = 1, 9
@@ -2599,12 +2598,14 @@ contains
         body%instructions(4)%storage_key = 'x'
         body%instructions(6)%storage_key = 'x'
         body%instructions(7)%storage_key = 'x'
-    end subroutine emit_frontend_ast_v2_initialized_variable_add
+    end subroutine emit_frontend_ast_v2_initialized_variable_binary
 
-    logical function ffc_validate_frontend_ast_v2_initialized_variable_add_shape(body, &
-            initializer_value, message) result(valid)
+    logical function ffc_validate_frontend_ast_v2_initialized_variable_binary_shape(body, &
+            initializer_value, binary_opcode, operation_name, message) result(valid)
         type(mir_function_body_t), intent(in) :: body
         integer(int32), intent(in) :: initializer_value
+        integer(int32), intent(in) :: binary_opcode
+        character(len=*), intent(in) :: operation_name
         character(len=:), allocatable, intent(out), optional :: message
         integer(int32) :: expected_opcodes(9), expected_results(9)
         integer :: index
@@ -2613,10 +2614,11 @@ contains
         valid = .false.
         if (.not. mir_validate_function_body(body, message)) return
         if (body%function%instruction_count /= 9_int32) then
-            call set_message(message, 'frontend-ast-v2 initialized variable add instruction count changed')
+            call set_message(message, 'frontend-ast-v2 initialized variable '//trim(operation_name)// &
+                ' instruction count changed')
             return
         end if
-        expected_opcodes = [opcode_const, opcode_store, opcode_load, opcode_load, opcode_add, &
+        expected_opcodes = [opcode_const, opcode_store, opcode_load, opcode_load, binary_opcode, &
             opcode_store, opcode_load, opcode_output, opcode_return]
         expected_results = [0_int32, 1_int32, 2_int32, 3_int32, 4_int32, 4_int32, 6_int32, 6_int32, 6_int32]
         do index = 1, 9
@@ -2624,72 +2626,53 @@ contains
                 body%instructions(index)%result%id /= expected_results(index) .or. &
                 body%instructions(index)%result%kind /= value_kind_integer .or. &
                 trim(body%instructions(index)%result%type_name) /= 'i32') then
-                call set_message(message, 'frontend-ast-v2 initialized variable add MIR shape changed')
+                call set_message(message, 'frontend-ast-v2 initialized variable '//trim(operation_name)// &
+                    ' MIR shape changed')
                 return
             end if
             if (index <= 6) then
                 if (trim(body%instructions(index)%source_rule) /= 'frontend-ast-v2/execution-part') then
                     call set_message(message, &
-                        'frontend-ast-v2 initialized variable add execution provenance changed')
+                        'frontend-ast-v2 initialized variable '//trim(operation_name)// &
+                        ' execution provenance changed')
                     return
                 end if
             else if (trim(body%instructions(index)%source_rule) /= 'frontend-ast-v2/print-stmt') then
-                call set_message(message, 'frontend-ast-v2 initialized variable add print provenance changed')
+                call set_message(message, 'frontend-ast-v2 initialized variable '//trim(operation_name)// &
+                    ' print provenance changed')
                 return
             end if
         end do
         if (body%instructions(1)%literal_value /= initializer_value) then
-            call set_message(message, 'frontend-ast-v2 initialized variable add initializer shape changed')
+            call set_message(message, 'frontend-ast-v2 initialized variable '//trim(operation_name)// &
+                ' initializer shape changed')
             return
         end if
         do index = 1, 9
             if (index == 2 .or. index == 3 .or. index == 4 .or. index == 6 .or. index == 7) then
                 if (.not. allocated(body%instructions(index)%storage_key)) then
-                    call set_message(message, 'frontend-ast-v2 initialized variable add storage shape changed')
+                    call set_message(message, 'frontend-ast-v2 initialized variable '//trim(operation_name)// &
+                        ' storage shape changed')
                     return
                 end if
                 if (trim(body%instructions(index)%storage_key) /= 'x') then
-                    call set_message(message, 'frontend-ast-v2 initialized variable add storage shape changed')
+                    call set_message(message, 'frontend-ast-v2 initialized variable '//trim(operation_name)// &
+                        ' storage shape changed')
                     return
                 end if
             else if (allocated(body%instructions(index)%storage_key)) then
-                call set_message(message, 'frontend-ast-v2 initialized variable add storage shape changed')
+                call set_message(message, 'frontend-ast-v2 initialized variable '//trim(operation_name)// &
+                    ' storage shape changed')
                 return
             end if
         end do
         valid = .true.
-    end function ffc_validate_frontend_ast_v2_initialized_variable_add_shape
+    end function ffc_validate_frontend_ast_v2_initialized_variable_binary_shape
 
     subroutine emit_frontend_ast_v2_initialized_variable_mul(body, initializer_value)
         type(mir_function_body_t), intent(inout) :: body
         integer(int32), intent(in) :: initializer_value
-        integer(int32) :: expected_opcodes(9), expected_results(9)
-        integer :: index
-
-        deallocate (body%instructions)
-        allocate (body%instructions(9))
-        body%function%instruction_count = 9_int32
-        expected_opcodes = [opcode_const, opcode_store, opcode_load, opcode_load, opcode_mul, &
-            opcode_store, opcode_load, opcode_output, opcode_return]
-        expected_results = [0_int32, 1_int32, 2_int32, 3_int32, 4_int32, 4_int32, 6_int32, 6_int32, 6_int32]
-        do index = 1, 9
-            body%instructions(index)%id = int(index - 1, int32)
-            body%instructions(index)%opcode = expected_opcodes(index)
-            body%instructions(index)%result%id = expected_results(index)
-            body%instructions(index)%result%kind = value_kind_integer
-            body%instructions(index)%result%type_name = 'i32'
-            if (index <= 6) then
-                body%instructions(index)%source_rule = 'frontend-ast-v2/execution-part'
-            else
-                body%instructions(index)%source_rule = 'frontend-ast-v2/print-stmt'
-            end if
-        end do
-        body%instructions(1)%literal_value = initializer_value
-        body%instructions(2)%storage_key = 'x'
-        body%instructions(3)%storage_key = 'x'
-        body%instructions(4)%storage_key = 'x'
-        body%instructions(6)%storage_key = 'x'
-        body%instructions(7)%storage_key = 'x'
+        call emit_frontend_ast_v2_initialized_variable_binary(body, initializer_value, opcode_mul)
     end subroutine emit_frontend_ast_v2_initialized_variable_mul
 
     logical function ffc_validate_frontend_ast_v2_initialized_variable_mul_shape(body, &
@@ -2697,91 +2680,15 @@ contains
         type(mir_function_body_t), intent(in) :: body
         integer(int32), intent(in) :: initializer_value
         character(len=:), allocatable, intent(out), optional :: message
-        integer(int32) :: expected_opcodes(9), expected_results(9)
-        integer :: index
 
-        call clear_message(message)
-        valid = .false.
-        if (.not. mir_validate_function_body(body, message)) return
-        if (body%function%instruction_count /= 9_int32) then
-            call set_message(message, 'frontend-ast-v2 initialized variable multiply instruction count changed')
-            return
-        end if
-        expected_opcodes = [opcode_const, opcode_store, opcode_load, opcode_load, opcode_mul, &
-            opcode_store, opcode_load, opcode_output, opcode_return]
-        expected_results = [0_int32, 1_int32, 2_int32, 3_int32, 4_int32, 4_int32, 6_int32, 6_int32, 6_int32]
-        do index = 1, 9
-            if (body%instructions(index)%opcode /= expected_opcodes(index) .or. &
-                body%instructions(index)%result%id /= expected_results(index) .or. &
-                body%instructions(index)%result%kind /= value_kind_integer .or. &
-                trim(body%instructions(index)%result%type_name) /= 'i32') then
-                call set_message(message, 'frontend-ast-v2 initialized variable multiply MIR shape changed')
-                return
-            end if
-            if (index <= 6) then
-                if (trim(body%instructions(index)%source_rule) /= 'frontend-ast-v2/execution-part') then
-                    call set_message(message, &
-                        'frontend-ast-v2 initialized variable multiply execution provenance changed')
-                    return
-                end if
-            else if (trim(body%instructions(index)%source_rule) /= 'frontend-ast-v2/print-stmt') then
-                call set_message(message, &
-                    'frontend-ast-v2 initialized variable multiply print provenance changed')
-                return
-            end if
-        end do
-        if (body%instructions(1)%literal_value /= initializer_value) then
-            call set_message(message, 'frontend-ast-v2 initialized variable multiply initializer shape changed')
-            return
-        end if
-        do index = 1, 9
-            if (index == 2 .or. index == 3 .or. index == 4 .or. index == 6 .or. index == 7) then
-                if (.not. allocated(body%instructions(index)%storage_key)) then
-                    call set_message(message, 'frontend-ast-v2 initialized variable multiply storage shape changed')
-                    return
-                end if
-                if (trim(body%instructions(index)%storage_key) /= 'x') then
-                    call set_message(message, 'frontend-ast-v2 initialized variable multiply storage shape changed')
-                    return
-                end if
-            else if (allocated(body%instructions(index)%storage_key)) then
-                call set_message(message, 'frontend-ast-v2 initialized variable multiply storage shape changed')
-                return
-            end if
-        end do
-        valid = .true.
+        valid = ffc_validate_frontend_ast_v2_initialized_variable_binary_shape(body, initializer_value, &
+            opcode_mul, 'multiply', message)
     end function ffc_validate_frontend_ast_v2_initialized_variable_mul_shape
 
     subroutine emit_frontend_ast_v2_initialized_variable_sub(body, initializer_value)
         type(mir_function_body_t), intent(inout) :: body
         integer(int32), intent(in) :: initializer_value
-        integer(int32) :: expected_opcodes(9), expected_results(9)
-        integer :: index
-
-        deallocate (body%instructions)
-        allocate (body%instructions(9))
-        body%function%instruction_count = 9_int32
-        expected_opcodes = [opcode_const, opcode_store, opcode_load, opcode_load, opcode_sub, &
-            opcode_store, opcode_load, opcode_output, opcode_return]
-        expected_results = [0_int32, 1_int32, 2_int32, 3_int32, 4_int32, 4_int32, 6_int32, 6_int32, 6_int32]
-        do index = 1, 9
-            body%instructions(index)%id = int(index - 1, int32)
-            body%instructions(index)%opcode = expected_opcodes(index)
-            body%instructions(index)%result%id = expected_results(index)
-            body%instructions(index)%result%kind = value_kind_integer
-            body%instructions(index)%result%type_name = 'i32'
-            if (index <= 6) then
-                body%instructions(index)%source_rule = 'frontend-ast-v2/execution-part'
-            else
-                body%instructions(index)%source_rule = 'frontend-ast-v2/print-stmt'
-            end if
-        end do
-        body%instructions(1)%literal_value = initializer_value
-        body%instructions(2)%storage_key = 'x'
-        body%instructions(3)%storage_key = 'x'
-        body%instructions(4)%storage_key = 'x'
-        body%instructions(6)%storage_key = 'x'
-        body%instructions(7)%storage_key = 'x'
+        call emit_frontend_ast_v2_initialized_variable_binary(body, initializer_value, opcode_sub)
     end subroutine emit_frontend_ast_v2_initialized_variable_sub
 
     logical function ffc_validate_frontend_ast_v2_initialized_variable_sub_shape(body, &
@@ -2789,94 +2696,15 @@ contains
         type(mir_function_body_t), intent(in) :: body
         integer(int32), intent(in) :: initializer_value
         character(len=:), allocatable, intent(out), optional :: message
-        integer(int32) :: expected_opcodes(9), expected_results(9)
-        integer :: index
 
-        call clear_message(message)
-        valid = .false.
-        if (.not. mir_validate_function_body(body, message)) return
-        if (body%function%instruction_count /= 9_int32) then
-            call set_message(message, 'frontend-ast-v2 initialized variable subtraction instruction count changed')
-            return
-        end if
-        expected_opcodes = [opcode_const, opcode_store, opcode_load, opcode_load, opcode_sub, &
-            opcode_store, opcode_load, opcode_output, opcode_return]
-        expected_results = [0_int32, 1_int32, 2_int32, 3_int32, 4_int32, 4_int32, 6_int32, 6_int32, 6_int32]
-        do index = 1, 9
-            if (body%instructions(index)%opcode /= expected_opcodes(index) .or. &
-                body%instructions(index)%result%id /= expected_results(index) .or. &
-                body%instructions(index)%result%kind /= value_kind_integer .or. &
-                trim(body%instructions(index)%result%type_name) /= 'i32') then
-                call set_message(message, 'frontend-ast-v2 initialized variable subtraction MIR shape changed')
-                return
-            end if
-            if (index <= 6) then
-                if (trim(body%instructions(index)%source_rule) /= 'frontend-ast-v2/execution-part') then
-                    call set_message(message, &
-                        'frontend-ast-v2 initialized variable subtraction execution provenance changed')
-                    return
-                end if
-            else if (trim(body%instructions(index)%source_rule) /= 'frontend-ast-v2/print-stmt') then
-                call set_message(message, &
-                    'frontend-ast-v2 initialized variable subtraction print provenance changed')
-                return
-            end if
-        end do
-        if (body%instructions(1)%literal_value /= initializer_value) then
-            call set_message(message, 'frontend-ast-v2 initialized variable subtraction initializer shape changed')
-            return
-        end if
-        do index = 1, 9
-            if (index == 2 .or. index == 3 .or. index == 4 .or. index == 6 .or. index == 7) then
-                if (.not. allocated(body%instructions(index)%storage_key)) then
-                    call set_message(message, &
-                        'frontend-ast-v2 initialized variable subtraction storage shape changed')
-                    return
-                end if
-                if (trim(body%instructions(index)%storage_key) /= 'x') then
-                    call set_message(message, &
-                        'frontend-ast-v2 initialized variable subtraction storage shape changed')
-                    return
-                end if
-            else if (allocated(body%instructions(index)%storage_key)) then
-                call set_message(message, &
-                    'frontend-ast-v2 initialized variable subtraction storage shape changed')
-                return
-            end if
-        end do
-        valid = .true.
+        valid = ffc_validate_frontend_ast_v2_initialized_variable_binary_shape(body, initializer_value, &
+            opcode_sub, 'subtraction', message)
     end function ffc_validate_frontend_ast_v2_initialized_variable_sub_shape
 
     subroutine emit_frontend_ast_v2_initialized_variable_div(body, initializer_value)
         type(mir_function_body_t), intent(inout) :: body
         integer(int32), intent(in) :: initializer_value
-        integer(int32) :: expected_opcodes(9), expected_results(9)
-        integer :: index
-
-        deallocate (body%instructions)
-        allocate (body%instructions(9))
-        body%function%instruction_count = 9_int32
-        expected_opcodes = [opcode_const, opcode_store, opcode_load, opcode_load, opcode_div, &
-            opcode_store, opcode_load, opcode_output, opcode_return]
-        expected_results = [0_int32, 1_int32, 2_int32, 3_int32, 4_int32, 4_int32, 6_int32, 6_int32, 6_int32]
-        do index = 1, 9
-            body%instructions(index)%id = int(index - 1, int32)
-            body%instructions(index)%opcode = expected_opcodes(index)
-            body%instructions(index)%result%id = expected_results(index)
-            body%instructions(index)%result%kind = value_kind_integer
-            body%instructions(index)%result%type_name = 'i32'
-            if (index <= 6) then
-                body%instructions(index)%source_rule = 'frontend-ast-v2/execution-part'
-            else
-                body%instructions(index)%source_rule = 'frontend-ast-v2/print-stmt'
-            end if
-        end do
-        body%instructions(1)%literal_value = initializer_value
-        body%instructions(2)%storage_key = 'x'
-        body%instructions(3)%storage_key = 'x'
-        body%instructions(4)%storage_key = 'x'
-        body%instructions(6)%storage_key = 'x'
-        body%instructions(7)%storage_key = 'x'
+        call emit_frontend_ast_v2_initialized_variable_binary(body, initializer_value, opcode_div)
     end subroutine emit_frontend_ast_v2_initialized_variable_div
 
     logical function ffc_validate_frontend_ast_v2_initialized_variable_div_shape(body, &
@@ -2884,57 +2712,9 @@ contains
         type(mir_function_body_t), intent(in) :: body
         integer(int32), intent(in) :: initializer_value
         character(len=:), allocatable, intent(out), optional :: message
-        integer(int32) :: expected_opcodes(9), expected_results(9)
-        integer :: index
 
-        call clear_message(message)
-        valid = .false.
-        if (.not. mir_validate_function_body(body, message)) return
-        if (body%function%instruction_count /= 9_int32) then
-            call set_message(message, 'frontend-ast-v2 initialized variable division instruction count changed')
-            return
-        end if
-        expected_opcodes = [opcode_const, opcode_store, opcode_load, opcode_load, opcode_div, &
-            opcode_store, opcode_load, opcode_output, opcode_return]
-        expected_results = [0_int32, 1_int32, 2_int32, 3_int32, 4_int32, 4_int32, 6_int32, 6_int32, 6_int32]
-        do index = 1, 9
-            if (body%instructions(index)%opcode /= expected_opcodes(index) .or. &
-                body%instructions(index)%result%id /= expected_results(index) .or. &
-                body%instructions(index)%result%kind /= value_kind_integer .or. &
-                trim(body%instructions(index)%result%type_name) /= 'i32') then
-                call set_message(message, 'frontend-ast-v2 initialized variable division MIR shape changed')
-                return
-            end if
-            if (index <= 6) then
-                if (trim(body%instructions(index)%source_rule) /= 'frontend-ast-v2/execution-part') then
-                    call set_message(message, 'frontend-ast-v2 initialized variable division execution provenance changed')
-                    return
-                end if
-            else if (trim(body%instructions(index)%source_rule) /= 'frontend-ast-v2/print-stmt') then
-                call set_message(message, 'frontend-ast-v2 initialized variable division print provenance changed')
-                return
-            end if
-        end do
-        if (body%instructions(1)%literal_value /= initializer_value) then
-            call set_message(message, 'frontend-ast-v2 initialized variable division initializer shape changed')
-            return
-        end if
-        do index = 1, 9
-            if (index == 2 .or. index == 3 .or. index == 4 .or. index == 6 .or. index == 7) then
-                if (.not. allocated(body%instructions(index)%storage_key)) then
-                    call set_message(message, 'frontend-ast-v2 initialized variable division storage shape changed')
-                    return
-                end if
-                if (trim(body%instructions(index)%storage_key) /= 'x') then
-                    call set_message(message, 'frontend-ast-v2 initialized variable division storage shape changed')
-                    return
-                end if
-            else if (allocated(body%instructions(index)%storage_key)) then
-                call set_message(message, 'frontend-ast-v2 initialized variable division storage shape changed')
-                return
-            end if
-        end do
-        valid = .true.
+        valid = ffc_validate_frontend_ast_v2_initialized_variable_binary_shape(body, initializer_value, &
+            opcode_div, 'division', message)
     end function ffc_validate_frontend_ast_v2_initialized_variable_div_shape
 
     subroutine emit_frontend_ast_v2_initialized_variable_power(body, initializer_value)
