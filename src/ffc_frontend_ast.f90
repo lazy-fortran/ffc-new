@@ -880,15 +880,9 @@ contains
                     call set_message(message, 'unsupported-frontend-ast-v2-execution-part')
                     return
                 end if
-                if (.not. parse_bounded_binary_expression(trim(assignments(2)%value), '+', &
-                    bounded_integer_addend_minimum, bounded_integer_addend_maximum, 'addend', addend_value, &
-                    message)) return
-                if (.not. parse_bounded_signed_initializer_literal(trim(assignments(1)%value), &
-                    initializer_value, message)) return
-                call emit_frontend_ast_v1_integer_expression(body, 21_int32)
-                body%instructions(1)%literal_value = initializer_value
-                body%instructions(4)%literal_value = addend_value
-                lowered = mir_validate_function_body(body, message)
+                lowered = lower_frontend_ast_v2_initialized_literal_binary(body, &
+                    trim(assignments(1)%value), trim(assignments(2)%value), '+', &
+                    bounded_integer_addend_minimum, bounded_integer_addend_maximum, 'addend', 21_int32, message)
                 return
             end if
             initialized_xvariable_binary_opcode = 0_int32
@@ -916,39 +910,23 @@ contains
                 return
             end if
             if (route == 0_int32 .and. initialized_xminus_subtrahend) then
-                if (.not. parse_bounded_binary_expression(trim(assignments(2)%value), '–', &
-                    bounded_integer_subtrahend_minimum, bounded_integer_subtrahend_maximum, 'subtrahend', &
-                    subtrahend_value, message)) return
-                if (.not. parse_bounded_signed_initializer_literal(trim(assignments(1)%value), &
-                    initializer_value, message)) return
-                call emit_frontend_ast_v1_integer_expression(body, 29_int32)
-                body%instructions(1)%literal_value = initializer_value
-                body%instructions(4)%literal_value = subtrahend_value
-                lowered = mir_validate_function_body(body, message)
+                lowered = lower_frontend_ast_v2_initialized_literal_binary(body, &
+                    trim(assignments(1)%value), trim(assignments(2)%value), '–', &
+                    bounded_integer_subtrahend_minimum, bounded_integer_subtrahend_maximum, 'subtrahend', 29_int32, &
+                    message)
                 return
             end if
             if (route == 0_int32 .and. initialized_xmultiply_multiplier) then
-                if (.not. parse_bounded_binary_expression(trim(assignments(2)%value), '*', &
-                    bounded_integer_multiplier_minimum, bounded_integer_multiplier_maximum, 'multiplier', &
-                    multiplier_value, message)) return
-                if (.not. parse_bounded_signed_initializer_literal(trim(assignments(1)%value), &
-                    initializer_value, message)) return
-                call emit_frontend_ast_v1_integer_expression(body, 28_int32)
-                body%instructions(1)%literal_value = initializer_value
-                body%instructions(4)%literal_value = multiplier_value
-                lowered = mir_validate_function_body(body, message)
+                lowered = lower_frontend_ast_v2_initialized_literal_binary(body, &
+                    trim(assignments(1)%value), trim(assignments(2)%value), '*', &
+                    bounded_integer_multiplier_minimum, bounded_integer_multiplier_maximum, 'multiplier', 28_int32, &
+                    message)
                 return
             end if
             if (route == 0_int32 .and. initialized_xdivide_divisor) then
-                if (.not. parse_bounded_binary_expression(trim(assignments(2)%value), '/', &
-                    bounded_integer_divisor_minimum, bounded_integer_divisor_maximum, 'divisor', divisor_value, &
-                    message)) return
-                if (.not. parse_bounded_signed_initializer_literal(trim(assignments(1)%value), &
-                    initializer_value, message)) return
-                call emit_frontend_ast_v1_integer_expression(body, 30_int32)
-                body%instructions(1)%literal_value = initializer_value
-                body%instructions(4)%literal_value = divisor_value
-                lowered = mir_validate_function_body(body, message)
+                lowered = lower_frontend_ast_v2_initialized_literal_binary(body, &
+                    trim(assignments(1)%value), trim(assignments(2)%value), '/', &
+                    bounded_integer_divisor_minimum, bounded_integer_divisor_maximum, 'divisor', 30_int32, message)
                 return
             end if
             if (route == 0_int32 .and. initialized_xpower) then
@@ -1912,6 +1890,24 @@ contains
         matches = trim(serialized) == &
             '(assignment-expression (kind binary-expression) (operator –) (left-operand x) (right-operand x))'
     end function is_variable_sub_expression
+
+    logical function lower_frontend_ast_v2_initialized_literal_binary(body, initializer_text, expression_text, &
+            operator_token, minimum, maximum, diagnostic_label, route, message) result(lowered)
+        type(mir_function_body_t), intent(inout) :: body
+        character(len=*), intent(in) :: initializer_text, expression_text, operator_token, diagnostic_label
+        integer(int32), intent(in) :: minimum, maximum, route
+        character(len=:), allocatable, intent(out), optional :: message
+        integer(int32) :: initializer_value, binary_value
+
+        lowered = .false.
+        if (.not. parse_bounded_binary_expression(expression_text, operator_token, minimum, maximum, &
+            diagnostic_label, binary_value, message)) return
+        if (.not. parse_bounded_signed_initializer_literal(initializer_text, initializer_value, message)) return
+        call emit_frontend_ast_v1_integer_expression(body, route)
+        body%instructions(1)%literal_value = initializer_value
+        body%instructions(4)%literal_value = binary_value
+        lowered = mir_validate_function_body(body, message)
+    end function lower_frontend_ast_v2_initialized_literal_binary
 
     subroutine emit_frontend_ast_v2_initialized_variable_binary(body, initializer_value, binary_opcode)
         type(mir_function_body_t), intent(inout) :: body
