@@ -2,7 +2,7 @@ module ffc_frontend_ast
     use, intrinsic :: iso_fortran_env, only: int32, int64
     use ffc_lowering, only: ffc_lower_program_root, ffc_program_declaration_from_sx, &
         ffc_program_root_from_sx, ffc_program_root_t, ffc_validate_program_root
-    use ffc_mir, only: mir_function_body_t, mir_make_function_witness, opcode_add, opcode_const, &
+    use ffc_mir, only: mir_function_body_t, mir_instruction_t, mir_make_function_witness, opcode_add, opcode_const, &
         opcode_div, opcode_load, opcode_mul, opcode_output, opcode_pow, opcode_return, opcode_store, opcode_sub, &
         mir_type_spec_name, &
         mir_type_spec_value_kind, mir_validate_function_body, value_kind_integer
@@ -480,14 +480,140 @@ contains
         end do
         route_key = trim(route_key)//')'
         route = mir_frontend_ast_v1_integer_expression_route(trim(route_key))
-        if (route == 0_int32) then
+        if (route /= 0_int32) then
+            call mir_make_function_witness(body)
+            call emit_frontend_ast_v1_integer_expression(body, route)
+            lowered = mir_validate_function_body(body, message)
+            return
+        end if
+        lowered = lower_generic_integer_assignment_sequence(assignments, assignment_count, body, message)
+    end function ffc_lower_frontend_ast_v1_assignment_sequence_from_sx
+
+    logical function lower_generic_integer_assignment_sequence(assignments, assignment_count, body, &
+            message) result(lowered)
+        type(ffc_frontend_assignment_v1_t), intent(in) :: assignments(:)
+        integer, intent(in) :: assignment_count
+        type(mir_function_body_t), intent(out) :: body
+        character(len=:), allocatable, intent(out), optional :: message
+
+        type(mir_function_body_t) :: expression_body
+        integer(int32) :: initializer_value, instruction_count, result_id
+        integer :: assignment_index, expression_index, output_index
+        character(len=64) :: source_rule
+
+        call clear_message(message)
+        lowered = .false.
+        if (assignment_count < 2 .or. assignment_count > size(assignments)) then
             call set_message(message, 'unsupported-assignment-sequence')
             return
         end if
+        if (trim(assignments(1)%target) == '') then
+            call set_message(message, 'unsupported-assignment-sequence')
+            return
+        end if
+        do assignment_index = 2, assignment_count
+            if (trim(assignments(assignment_index)%target) /= trim(assignments(1)%target)) then
+                call set_message(message, 'unsupported-assignment-sequence')
+                return
+            end if
+            if (trim(assignments(1)%target) == 'x' .and. &
+                index(trim(assignments(assignment_index)%value), 'operator *') /= 0) then
+                call set_message(message, 'unsupported-assignment-sequence')
+                return
+            end if
+        end do
+        if (trim(assignments(1)%value) == '1') then
+            initializer_value = 1_int32
+        else if (.not. parse_integer_literal_expression(trim(assignments(1)%value), initializer_value, &
+                message)) then
+            call set_message(message, 'unsupported-assignment-sequence')
+            return
+        end if
+
+        instruction_count = 3_int32
+        do assignment_index = 2, assignment_count
+            call mir_make_function_witness(expression_body)
+            if (.not. lower_generic_integer_expression(trim(assignments(assignment_index)%value), &
+                expression_body, message)) then
+                call set_message(message, 'unsupported-assignment-sequence')
+                return
+            end if
+            instruction_count = instruction_count + expression_body%function%instruction_count - 1_int32
+        end do
         call mir_make_function_witness(body)
-        call emit_frontend_ast_v1_integer_expression(body, route)
+        deallocate (body%instructions)
+        allocate (body%instructions(instruction_count))
+        body%function%instruction_count = instruction_count
+        write (source_rule, '(a,i0)') 'frontend-ast-v1/storage-sequence-', assignment_count
+        if (assignment_count == 2) source_rule = 'frontend-ast-v1/storage-sequence'
+
+        output_index = 1
+        result_id = 0_int32
+        call initialize_sequence_instruction(body%instructions(output_index), 0_int32, opcode_const, result_id, &
+            source_rule, initializer_value)
+        output_index = output_index + 1
+        result_id = result_id + 1_int32
+        call initialize_sequence_instruction(body%instructions(output_index), 1_int32, opcode_store, result_id, &
+            source_rule, storage_key=trim(assignments(1)%target))
+        do assignment_index = 2, assignment_count
+            call mir_make_function_witness(expression_body)
+            if (.not. lower_generic_integer_expression(trim(assignments(assignment_index)%value), &
+                expression_body, message)) then
+                call set_message(message, 'unsupported-assignment-sequence')
+                return
+            end if
+            do expression_index = 1, expression_body%function%instruction_count - 1
+                output_index = output_index + 1
+                result_id = result_id + 1_int32
+                call copy_sequence_instruction(expression_body%instructions(expression_index), &
+                    body%instructions(output_index), int(output_index - 1, int32), result_id, source_rule, &
+                    trim(assignments(1)%target))
+                if (body%instructions(output_index)%opcode == opcode_store) then
+                    body%instructions(output_index)%result%id = result_id - 1_int32
+                end if
+            end do
+        end do
+        output_index = output_index + 1
+        call initialize_sequence_instruction(body%instructions(output_index), int(output_index - 1, int32), &
+            opcode_return, result_id - 1_int32, source_rule)
         lowered = mir_validate_function_body(body, message)
-    end function ffc_lower_frontend_ast_v1_assignment_sequence_from_sx
+        if (.not. lowered) then
+            call set_message(message, 'unsupported-assignment-sequence')
+        end if
+    end function lower_generic_integer_assignment_sequence
+
+    subroutine initialize_sequence_instruction(instruction, instruction_id, opcode, result_id, source_rule, literal_value, &
+            storage_key)
+        type(mir_instruction_t), intent(out) :: instruction
+        integer(int32), intent(in) :: instruction_id, opcode, result_id
+        character(len=*), intent(in) :: source_rule
+        integer(int32), intent(in), optional :: literal_value
+        character(len=*), intent(in), optional :: storage_key
+
+        instruction%id = instruction_id
+        instruction%opcode = opcode
+        instruction%result%id = result_id
+        instruction%result%kind = value_kind_integer
+        instruction%result%type_name = 'i32'
+        instruction%source_rule = trim(source_rule)
+        if (present(literal_value)) instruction%literal_value = literal_value
+        if (present(storage_key)) instruction%storage_key = trim(storage_key)
+    end subroutine initialize_sequence_instruction
+
+    subroutine copy_sequence_instruction(source, destination, instruction_id, result_id, source_rule, storage_key)
+        type(mir_instruction_t), intent(in) :: source
+        type(mir_instruction_t), intent(out) :: destination
+        integer(int32), intent(in) :: instruction_id, result_id
+        character(len=*), intent(in) :: source_rule, storage_key
+
+        destination = source
+        destination%id = instruction_id
+        destination%result%id = result_id
+        destination%result%kind = value_kind_integer
+        destination%result%type_name = 'i32'
+        destination%source_rule = trim(source_rule)
+        if (allocated(destination%storage_key)) destination%storage_key = trim(storage_key)
+    end subroutine copy_sequence_instruction
 
     logical function ffc_lower_frontend_ast_v2_from_sx(serialized, body, message) result(lowered)
         character(len=*), intent(in) :: serialized
@@ -3966,7 +4092,7 @@ contains
         variable_div = is_variable_div_expression(trim(assignment%value))
         variable_sub = is_variable_sub_expression(trim(assignment%value))
         valid = .false.
-        if (trim(assignment%target) /= 'x') then
+        if (.not. is_legal_assignment_identifier(trim(assignment%target))) then
             call set_message(message, 'unsupported-frontend-ast-v1-assignment')
             return
         end if
@@ -4001,6 +4127,20 @@ contains
         end if
         valid = .true.
     end function ffc_validate_assignment_v1
+
+    logical function is_legal_assignment_identifier(value) result(valid)
+        character(len=*), intent(in) :: value
+        integer :: position
+
+        valid = len_trim(value) > 0
+        if (.not. valid) return
+        do position = 1, len_trim(value)
+            if (index(' '//char(9)//char(10)//char(13)//'()', value(position:position)) > 0) then
+                valid = .false.
+                return
+            end if
+        end do
+    end function is_legal_assignment_identifier
 
     logical function read_assignment_expression(token, token_count, position, value, message) &
             result(ok)

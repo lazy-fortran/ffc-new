@@ -58,6 +58,7 @@ program test_frontend_ast_v1_assignment_sequence
     call assert_generated_count(8)
     call assert_generated_count(9)
     call assert_generated_count(10)
+    call assert_generic_novel()
     write (*, '(a)') 'frontend AST v1 assignment sequence behavioral checks: ok'
 
 contains
@@ -290,6 +291,31 @@ contains
             '(assignment-count '//trim(adjustl(itoa(assignment_count + 1)))//')'), &
             'wrong-count generated sequence was accepted')
     end subroutine assert_generated_count
+
+    subroutine assert_generic_novel()
+        integer :: index
+
+        if (.not. ffc_lower_frontend_ast_v1_assignment_sequence_from_sx(novel_sequence_sx(), body, message)) then
+            error stop 'novel generic assignment sequence was rejected'
+        end if
+        call assert_true(body%function%instruction_count == 11, 'novel sequence instruction count changed')
+        call assert_true(body%instructions(1)%literal_value == 42, 'novel sequence literal changed')
+        do index = 2, 10
+            if (body%instructions(index)%opcode == opcode_load .or. &
+                body%instructions(index)%opcode == opcode_store) then
+                call assert_storage(index, 'y')
+            end if
+        end do
+        call assert_rejected(replace_text(novel_sequence_sx(), '(right-operand 1)', '(right-operand 2048)'), &
+            'corrupted intermediate assignment was accepted')
+    end subroutine assert_generic_novel
+
+    function novel_sequence_sx() result(value)
+        character(len=4096) :: value
+
+        value = replace_text(replace_text(replace_text(replace_text(sequence_sx(), '(variable x)', '(variable y)'), &
+            '(variable x)', '(variable y)'), '(variable x)', '(variable y)'), '(left-operand 7)', '(left-operand 42)')
+    end function novel_sequence_sx
 
     integer(int32) function generated_opcode(index, assignment_count)
         integer, intent(in) :: index, assignment_count
