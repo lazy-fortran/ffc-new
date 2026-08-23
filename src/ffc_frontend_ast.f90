@@ -553,9 +553,6 @@ module ffc_frontend_ast
     public :: ffc_validate_frontend_ast_v2_print_eight_shape
     public :: ffc_validate_frontend_ast_v2_print_nine_shape
     public :: ffc_validate_frontend_ast_v2_print_ten_shape
-    public :: ffc_validate_frontend_ast_v2_initialized_variable_mul_shape
-    public :: ffc_validate_frontend_ast_v2_initialized_variable_div_shape
-    public :: ffc_validate_frontend_ast_v2_initialized_variable_sub_shape
     public :: ffc_validate_frontend_ast_v2_initialized_power_shape
     public :: ffc_validate_frontend_ast_v2_initialized_variable_power_shape
 
@@ -1109,21 +1106,24 @@ contains
                 if (.not. parse_bounded_signed_initializer_literal(trim(assignments(1)%value), &
                     initializer_value, message)) return
                 call emit_frontend_ast_v2_initialized_variable_binary(body, initializer_value, opcode_mul)
-                lowered = ffc_validate_frontend_ast_v2_initialized_variable_mul_shape(body, initializer_value, message)
+                lowered = ffc_validate_frontend_ast_v2_initialized_variable_binary_shape(body, initializer_value, &
+                    opcode_mul, 'multiply', message)
                 return
             end if
             if (route == 0_int32 .and. initialized_xvariable_div) then
                 if (.not. parse_bounded_signed_initializer_literal(trim(assignments(1)%value), &
                     initializer_value, message)) return
                 call emit_frontend_ast_v2_initialized_variable_binary(body, initializer_value, opcode_div)
-                lowered = ffc_validate_frontend_ast_v2_initialized_variable_div_shape(body, initializer_value, message)
+                lowered = ffc_validate_frontend_ast_v2_initialized_variable_binary_shape(body, initializer_value, &
+                    opcode_div, 'division', message)
                 return
             end if
             if (route == 0_int32 .and. initialized_xvariable_sub) then
                 if (.not. parse_bounded_signed_initializer_literal(trim(assignments(1)%value), &
                     initializer_value, message)) return
                 call emit_frontend_ast_v2_initialized_variable_binary(body, initializer_value, opcode_sub)
-                lowered = ffc_validate_frontend_ast_v2_initialized_variable_sub_shape(body, initializer_value, message)
+                lowered = ffc_validate_frontend_ast_v2_initialized_variable_binary_shape(body, initializer_value, &
+                    opcode_sub, 'subtraction', message)
                 return
             end if
             if (route == 0_int32 .and. initialized_xminus_subtrahend) then
@@ -2668,54 +2668,6 @@ contains
         end do
         valid = .true.
     end function ffc_validate_frontend_ast_v2_initialized_variable_binary_shape
-
-    subroutine emit_frontend_ast_v2_initialized_variable_mul(body, initializer_value)
-        type(mir_function_body_t), intent(inout) :: body
-        integer(int32), intent(in) :: initializer_value
-        call emit_frontend_ast_v2_initialized_variable_binary(body, initializer_value, opcode_mul)
-    end subroutine emit_frontend_ast_v2_initialized_variable_mul
-
-    logical function ffc_validate_frontend_ast_v2_initialized_variable_mul_shape(body, &
-            initializer_value, message) result(valid)
-        type(mir_function_body_t), intent(in) :: body
-        integer(int32), intent(in) :: initializer_value
-        character(len=:), allocatable, intent(out), optional :: message
-
-        valid = ffc_validate_frontend_ast_v2_initialized_variable_binary_shape(body, initializer_value, &
-            opcode_mul, 'multiply', message)
-    end function ffc_validate_frontend_ast_v2_initialized_variable_mul_shape
-
-    subroutine emit_frontend_ast_v2_initialized_variable_sub(body, initializer_value)
-        type(mir_function_body_t), intent(inout) :: body
-        integer(int32), intent(in) :: initializer_value
-        call emit_frontend_ast_v2_initialized_variable_binary(body, initializer_value, opcode_sub)
-    end subroutine emit_frontend_ast_v2_initialized_variable_sub
-
-    logical function ffc_validate_frontend_ast_v2_initialized_variable_sub_shape(body, &
-            initializer_value, message) result(valid)
-        type(mir_function_body_t), intent(in) :: body
-        integer(int32), intent(in) :: initializer_value
-        character(len=:), allocatable, intent(out), optional :: message
-
-        valid = ffc_validate_frontend_ast_v2_initialized_variable_binary_shape(body, initializer_value, &
-            opcode_sub, 'subtraction', message)
-    end function ffc_validate_frontend_ast_v2_initialized_variable_sub_shape
-
-    subroutine emit_frontend_ast_v2_initialized_variable_div(body, initializer_value)
-        type(mir_function_body_t), intent(inout) :: body
-        integer(int32), intent(in) :: initializer_value
-        call emit_frontend_ast_v2_initialized_variable_binary(body, initializer_value, opcode_div)
-    end subroutine emit_frontend_ast_v2_initialized_variable_div
-
-    logical function ffc_validate_frontend_ast_v2_initialized_variable_div_shape(body, &
-            initializer_value, message) result(valid)
-        type(mir_function_body_t), intent(in) :: body
-        integer(int32), intent(in) :: initializer_value
-        character(len=:), allocatable, intent(out), optional :: message
-
-        valid = ffc_validate_frontend_ast_v2_initialized_variable_binary_shape(body, initializer_value, &
-            opcode_div, 'division', message)
-    end function ffc_validate_frontend_ast_v2_initialized_variable_div_shape
 
     subroutine emit_frontend_ast_v2_initialized_variable_power(body, initializer_value)
         type(mir_function_body_t), intent(inout) :: body
