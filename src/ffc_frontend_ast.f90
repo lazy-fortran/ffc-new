@@ -3267,8 +3267,9 @@ contains
         character(len=:), allocatable, intent(out), optional :: message
 
         integer :: kind
-        integer(int32) :: expression_route, literal_value
+        integer(int32) :: literal_value
         character(len=32) :: type_name
+        character(len=:), allocatable :: generic_message
 
         call clear_message(message)
         lowered = ffc_validate_frontend_ast_v1(ast, message)
@@ -3282,22 +3283,8 @@ contains
         body%instructions(2)%result = body%instructions(1)%result
         if (trim(ast%variable%type_spec) == 'integer') then
             if (ast%assignment_count == 1_int64) then
-                expression_route = mir_frontend_ast_v1_integer_expression_route(&
-                    trim(ast%assignment%value))
-                if (expression_route > 0_int32) then
-                    call emit_frontend_ast_v1_integer_expression(body, expression_route)
-                    select case (expression_route)
-                    case (1_int32); lowered = ffc_validate_frontend_ast_v1_int_expr_assignment_shape(&
-                            body, message)
-                    case (2_int32); lowered = ffc_validate_frontend_ast_v1_int_var_assignment_shape(&
-                            body, message)
-                    case (3_int32); lowered = ffc_validate_frontend_ast_v1_int_mul_expr_assignment_shape(&
-                            body, message)
-                    case (4_int32); lowered = ffc_validate_frontend_ast_v1_int_div_expr_assignment_shape(&
-                            body, message)
-                    case (5_int32); lowered = ffc_validate_frontend_ast_v1_int_sub_expr_assignment_shape(&
-                            body, message)
-                    end select
+                if (lower_generic_integer_expression(trim(ast%assignment%value), body, generic_message)) then
+                    lowered = mir_validate_function_body(body, message)
                     return
                 end if
                 if (starts_integer_literal_expression(trim(ast%assignment%value))) then
@@ -3513,6 +3500,89 @@ contains
             end if
         end if
     end subroutine emit_frontend_ast_v1_integer_expression
+
+    logical function lower_generic_integer_expression(expression, body, message) result(lowered)
+        character(len=*), intent(in) :: expression
+        type(mir_function_body_t), intent(inout) :: body
+        character(len=:), allocatable, intent(out), optional :: message
+
+        character(len=frontend_ast_token_length) :: token(frontend_ast_token_capacity)
+        character(len=128) :: expression_kind, kind, operator, left_operand, right_operand
+        integer :: token_count, position, index
+        integer(int32) :: left_value, right_value, operator_code
+        logical :: left_is_variable, right_is_variable
+
+        call clear_message(message)
+        lowered = .false.
+        if (.not. tokenize_frontend_ast_sx(expression, token, token_count, message)) return
+        position = 1
+        if (.not. expect_token(token, token_count, position, '(', message)) return
+        if (position > token_count) return
+        expression_kind = trim(token(position))
+        position = position + 1
+        if (trim(expression_kind) == 'binary-expr') then
+            if (.not. read_named_atom(token, token_count, position, 'operator', operator, message)) return
+            if (.not. read_named_atom(token, token_count, position, 'left', left_operand, message)) return
+            if (.not. read_named_atom(token, token_count, position, 'right', right_operand, message)) return
+        else if (trim(expression_kind) == 'assignment-expression') then
+            if (.not. read_named_atom(token, token_count, position, 'kind', kind, message)) return
+            if (trim(kind) /= 'binary-expression') return
+            if (.not. read_named_atom(token, token_count, position, 'operator', operator, message)) return
+            if (.not. read_named_atom(token, token_count, position, 'left-operand', left_operand, message)) return
+            if (.not. read_named_atom(token, token_count, position, 'right-operand', right_operand, message)) return
+        else
+            return
+        end if
+        if (.not. expect_token(token, token_count, position, ')', message)) return
+        if (position <= token_count) return
+
+        left_is_variable = trim(left_operand) == 'x'
+        right_is_variable = trim(right_operand) == 'x'
+        if (.not. left_is_variable) then
+            if (.not. parse_bounded_decimal_literal(trim(left_operand), left_value, message)) return
+        end if
+        if (.not. right_is_variable) then
+            if (.not. parse_bounded_decimal_literal(trim(right_operand), right_value, message)) return
+        end if
+        select case (trim(operator))
+        case ('+'); operator_code = opcode_add
+        case ('–', '-'); operator_code = opcode_sub
+        case ('*'); operator_code = opcode_mul
+        case ('/'); operator_code = opcode_div
+        case ('**'); operator_code = opcode_pow
+        case default; return
+        end select
+
+        deallocate (body%instructions)
+        allocate (body%instructions(5))
+        body%function%instruction_count = 5
+        do index = 1, 5
+            body%instructions(index)%id = index - 1
+            body%instructions(index)%result%id = merge(2, index - 1, index >= 3)
+            body%instructions(index)%result%kind = value_kind_integer
+            body%instructions(index)%result%type_name = 'i32'
+            body%instructions(index)%source_rule = 'frontend-ast-v1/expression'
+        end do
+        if (left_is_variable) then
+            body%instructions(1)%opcode = opcode_load
+            body%instructions(1)%storage_key = 'x'
+        else
+            body%instructions(1)%opcode = opcode_const
+            body%instructions(1)%literal_value = left_value
+        end if
+        if (right_is_variable) then
+            body%instructions(2)%opcode = opcode_load
+            body%instructions(2)%storage_key = 'x'
+        else
+            body%instructions(2)%opcode = opcode_const
+            body%instructions(2)%literal_value = right_value
+        end if
+        body%instructions(3)%opcode = operator_code
+        body%instructions(4)%opcode = opcode_store
+        body%instructions(4)%storage_key = 'x'
+        body%instructions(5)%opcode = opcode_return
+        lowered = .true.
+    end function lower_generic_integer_expression
 
     logical function ffc_validate_frontend_ast_v1_integer_program_shape(body, message) &
             result(valid)

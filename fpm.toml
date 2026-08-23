@@ -166,6 +166,10 @@ name = "frontend_ast_v1_integer_variable_add"
 source-dir = "test"
 
 [[test]]
+name = "frontend_ast_v1_generic_integer_expression"
+source-dir = "test"
+
+[[test]]
 name = "frontend_ast_v1_assignment_sequence"
 source-dir = "test"
 
