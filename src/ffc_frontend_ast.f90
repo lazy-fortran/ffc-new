@@ -909,9 +909,9 @@ contains
             call mir_make_function_witness(body)
             body%function%name = trim(root%name)
             lowered = lower_frontend_ast_v2_initialized_literal_binary(body, trim(assignments(1)%value), &
-                '(assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand 1))', &
+                trim(assignments(2)%value), &
                 '+', bounded_integer_addend_minimum, bounded_integer_addend_maximum, 'addend', 21_int32, message, &
-                trim(variable%name))
+                trim(variable%name), trim(variable%name))
             return
         end if
         if (route == 18_int32) then
@@ -2065,17 +2065,23 @@ contains
     end function is_variable_sub_expression
 
     logical function lower_frontend_ast_v2_initialized_literal_binary(body, initializer_text, expression_text, &
-            operator_token, minimum, maximum, diagnostic_label, route, message, storage_key) result(lowered)
+            operator_token, minimum, maximum, diagnostic_label, route, message, storage_key, left_operand) result(lowered)
         type(mir_function_body_t), intent(inout) :: body
         character(len=*), intent(in) :: initializer_text, expression_text, operator_token, diagnostic_label
         integer(int32), intent(in) :: minimum, maximum, route
         character(len=:), allocatable, intent(out), optional :: message
         character(len=*), intent(in), optional :: storage_key
+        character(len=*), intent(in), optional :: left_operand
         integer(int32) :: initializer_value, binary_value
 
         lowered = .false.
-        if (.not. parse_bounded_binary_expression(expression_text, operator_token, minimum, maximum, &
-            diagnostic_label, binary_value, message)) return
+        if (present(left_operand)) then
+            if (.not. parse_bounded_binary_expression(expression_text, operator_token, minimum, maximum, &
+                diagnostic_label, binary_value, message, left_operand)) return
+        else if (.not. parse_bounded_binary_expression(expression_text, operator_token, minimum, maximum, &
+                diagnostic_label, binary_value, message)) then
+            return
+        end if
         if (.not. parse_bounded_signed_initializer_literal(initializer_text, initializer_value, message)) return
         call emit_frontend_ast_v1_integer_expression(body, route)
         body%instructions(1)%literal_value = initializer_value
@@ -4114,13 +4120,17 @@ contains
 
         call clear_message(message)
         bounded_addend = parse_bounded_binary_expression(trim(assignment%value), '+', &
-            bounded_integer_addend_minimum, bounded_integer_addend_maximum, 'addend', literal_value)
+            bounded_integer_addend_minimum, bounded_integer_addend_maximum, 'addend', literal_value, &
+            left_operand=trim(assignment%target))
         bounded_subtrahend = parse_bounded_binary_expression(trim(assignment%value), '–', &
-            bounded_integer_subtrahend_minimum, bounded_integer_subtrahend_maximum, 'subtrahend', literal_value)
+            bounded_integer_subtrahend_minimum, bounded_integer_subtrahend_maximum, 'subtrahend', literal_value, &
+            left_operand=trim(assignment%target))
         bounded_multiplier = parse_bounded_binary_expression(trim(assignment%value), '*', &
-            bounded_integer_multiplier_minimum, bounded_integer_multiplier_maximum, 'multiplier', literal_value)
+            bounded_integer_multiplier_minimum, bounded_integer_multiplier_maximum, 'multiplier', literal_value, &
+            left_operand=trim(assignment%target))
         bounded_divisor = parse_bounded_binary_expression(trim(assignment%value), '/', &
-            bounded_integer_divisor_minimum, bounded_integer_divisor_maximum, 'divisor', literal_value)
+            bounded_integer_divisor_minimum, bounded_integer_divisor_maximum, 'divisor', literal_value, &
+            left_operand=trim(assignment%target))
         bounded_power = parse_bounded_power_expression(trim(assignment%value), literal_value)
         variable_power = is_variable_power_expression(trim(assignment%value))
         variable_add = is_variable_add_expression(trim(assignment%value))
@@ -4292,7 +4302,8 @@ contains
                         else if ((trim(operator) == '–' .or. trim(operator) == '-') .and. &
                                 trim(left_operand) == 'x' .and. trim(right_operand) == 'x') then
                             variable_sub_supported = .true.
-                        else if (trim(operator) == '+' .and. trim(left_operand) == 'x') then
+                        else if (trim(operator) == '+' .and. trim(left_operand) /= '1' .and. &
+                                is_legal_assignment_identifier(trim(left_operand))) then
                             if (parse_bounded_decimal_literal(trim(right_operand), addend_value, message)) then
                                 plus_supported = addend_value >= bounded_integer_addend_minimum .and. &
                                     addend_value <= bounded_integer_addend_maximum
@@ -4354,13 +4365,16 @@ contains
                             trim(right_operand) == 'x') then
                             value = '(assignment-expression (kind binary-expression) '// &
                                 '(operator +) (left-operand x) (right-operand x))'
-                        else if (trim(operator) == '+' .and. trim(left_operand) == 'x' .and. &
+                        else if (trim(operator) == '+' .and. trim(left_operand) /= '1' .and. &
+                                is_legal_assignment_identifier(trim(left_operand)) .and. &
                                 trim(right_operand) == '1') then
                             value = '(assignment-expression (kind binary-expression) '// &
-                                '(operator +) (left-operand x) (right-operand 1))'
-                        else if (trim(operator) == '+' .and. trim(left_operand) == 'x') then
+                                '(operator +) (left-operand '//trim(left_operand)//') (right-operand 1))'
+                        else if (trim(operator) == '+' .and. trim(left_operand) /= '1' .and. &
+                                is_legal_assignment_identifier(trim(left_operand))) then
                             value = '(assignment-expression (kind binary-expression) '// &
-                                '(operator +) (left-operand x) (right-operand '//trim(right_operand)//'))'
+                                '(operator +) (left-operand '//trim(left_operand)//') (right-operand '// &
+                                trim(right_operand)//'))'
                         else if (trim(operator) == '*' .and. trim(left_operand) == 'x' .and. &
                                 trim(right_operand) == '2') then
                             value = '(assignment-expression (kind binary-expression) '// &
