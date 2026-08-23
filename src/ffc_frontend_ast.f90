@@ -443,9 +443,7 @@ contains
         character(len=frontend_ast_expression_length) :: assignment_text(10)
         character(len=64) :: count_text
         type(ffc_frontend_assignment_v1_t) :: assignments(10)
-        character(len=frontend_ast_expression_length) :: route_key
         integer :: assignment_count, assignment_index, token_count, position
-        integer(int32) :: route
 
         call clear_message(message)
         lowered = .false.
@@ -471,19 +469,6 @@ contains
         if (.not. expect_token(token, token_count, position, ')', message)) return
         if (position <= token_count) then
             call set_message(message, 'malformed-assignment-sequence')
-            return
-        end if
-        route_key = '(assignment-sequence (assignment-count '//trim(count_text)//')'
-        do assignment_index = 1, assignment_count
-            route_key = trim(route_key)//' ('//trim(sequence_position_name(assignment_index))//' '// &
-                trim(assignments(assignment_index)%target)//' '//trim(assignments(assignment_index)%value)//')'
-        end do
-        route_key = trim(route_key)//')'
-        route = mir_frontend_ast_v1_integer_expression_route(trim(route_key))
-        if (route /= 0_int32) then
-            call mir_make_function_witness(body)
-            call emit_frontend_ast_v1_integer_expression(body, route)
-            lowered = mir_validate_function_body(body, message)
             return
         end if
         lowered = lower_generic_integer_assignment_sequence(assignments, assignment_count, body, message)
@@ -2291,24 +2276,6 @@ contains
         end do
         valid = .true.
     end function ffc_validate_frontend_ast_v2_initialized_variable_power_shape
-
-    character(len=16) function sequence_position_name(position)
-        integer, intent(in) :: position
-
-        select case (position)
-        case (1); sequence_position_name = 'first'
-        case (2); sequence_position_name = 'second'
-        case (3); sequence_position_name = 'third'
-        case (4); sequence_position_name = 'fourth'
-        case (5); sequence_position_name = 'fifth'
-        case (6); sequence_position_name = 'sixth'
-        case (7); sequence_position_name = 'seventh'
-        case (8); sequence_position_name = 'eighth'
-        case (9); sequence_position_name = 'ninth'
-        case (10); sequence_position_name = 'tenth'
-        case default; sequence_position_name = ''
-        end select
-    end function sequence_position_name
 
     logical function ffc_validate_frontend_ast_v1(ast, message) result(valid)
         type(ffc_frontend_ast_v1_t), intent(in) :: ast

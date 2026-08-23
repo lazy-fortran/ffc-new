@@ -306,6 +306,9 @@ contains
                 call assert_storage(index, 'y')
             end if
         end do
+        body%instructions(6)%id = 99_int32
+        call assert_true(.not. mir_validate_function_body(body, message), &
+            'corrupted generic sequence MIR was accepted')
         call assert_rejected(replace_text(novel_sequence_sx(), '(right-operand 1)', '(right-operand 2048)'), &
             'corrupted intermediate assignment was accepted')
     end subroutine assert_generic_novel
