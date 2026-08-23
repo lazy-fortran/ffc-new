@@ -32,7 +32,7 @@ program test_frontend_ast_v2_init_xplus1_range
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(witness('42', '2'), &
         '(operator +)', '(operator %)'), body, message), 'wrong AST operator was accepted')
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(witness('42', '2'), &
-        '(right-operand 2)', '(right-operand x)'), body, message), 'wrong AST right shape was accepted')
+        '(right-operand 2)', '(right-operand y)'), body, message), 'wrong AST right shape was accepted')
     call assert_false(ffc_lower_frontend_ast_v2_from_sx(replace_text(witness('42', '2'), &
         '(assignment-stmt (variable x)', '(assignment-stmt (variable y)'), body, message), &
         'wrong AST assignment name was accepted')
