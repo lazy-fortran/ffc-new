@@ -899,7 +899,9 @@ contains
                 return
             end if
             if (index(trim(expression), 'binary-expression') == 0 .or. &
-                index(trim(expression), 'operator +') == 0 .or. &
+                (index(trim(expression), 'operator +') == 0 .and. &
+                index(trim(expression), 'operator -') == 0 .and. &
+                index(trim(expression), 'operator –') == 0) .or. &
                 index(trim(expression), 'left-operand '//trim(variable%name)) == 0 .or. &
                 index(trim(expression), 'right-operand 1') == 0) then
                 call set_message(message, 'unsupported-frontend-ast-v2-execution-part')
@@ -908,10 +910,16 @@ contains
             addend_value = 1_int32
             call mir_make_function_witness(body)
             body%function%name = trim(root%name)
-            lowered = lower_frontend_ast_v2_initialized_literal_binary(body, trim(assignments(1)%value), &
-                trim(assignments(2)%value), &
-                '+', bounded_integer_addend_minimum, bounded_integer_addend_maximum, 'addend', 21_int32, message, &
-                trim(variable%name), trim(variable%name))
+            if (index(trim(assignments(2)%value), 'operator +') /= 0) then
+                lowered = lower_frontend_ast_v2_initialized_literal_binary(body, trim(assignments(1)%value), &
+                    trim(assignments(2)%value), '+', bounded_integer_addend_minimum, bounded_integer_addend_maximum, &
+                    'addend', 21_int32, message, trim(variable%name), trim(variable%name))
+            else
+                lowered = lower_frontend_ast_v2_initialized_literal_binary(body, trim(assignments(1)%value), &
+                    trim(assignments(2)%value), '–', bounded_integer_subtrahend_minimum, &
+                    bounded_integer_subtrahend_maximum, 'subtrahend', 29_int32, message, trim(variable%name), &
+                    trim(variable%name))
+            end if
             return
         end if
         if (route == 18_int32) then
@@ -4313,7 +4321,8 @@ contains
                                 trim(right_operand) == '3') then
                             subtrahend_supported = .true.
                         else if ((trim(operator) == '–' .or. trim(operator) == '-') .and. &
-                                trim(left_operand) == 'x') then
+                                trim(left_operand) /= '1' .and. trim(left_operand) /= '5' .and. &
+                                is_legal_assignment_identifier(trim(left_operand))) then
                             if (parse_bounded_decimal_literal( &
                                 trim(right_operand), subtrahend_value, message)) then
                                 subtrahend_supported = subtrahend_value >= &
@@ -4411,6 +4420,12 @@ contains
                             value = '(assignment-expression (kind binary-expression) '// &
                                 '(operator –) (left-operand x) (right-operand '// &
                                 trim(right_operand)//'))'
+                        else if ((trim(operator) == '–' .or. trim(operator) == '-') .and. &
+                                trim(left_operand) /= '1' .and. trim(left_operand) /= '5' .and. &
+                                is_legal_assignment_identifier(trim(left_operand))) then
+                            value = '(assignment-expression (kind binary-expression) '// &
+                                '(operator –) (left-operand '//trim(left_operand)//') '// &
+                                '(right-operand '//trim(right_operand)//'))'
                         else if (trim(operator) == '**' .and. trim(left_operand) == 'x') then
                             value = '(assignment-expression (kind binary-expression) '// &
                                 '(operator **) (left-operand x) (right-operand '//trim(right_operand)//'))'

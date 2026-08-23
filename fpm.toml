@@ -198,6 +198,10 @@ name = "frontend_ast_v2_initialized_variable_counter2"
 source-dir = "test"
 
 [[test]]
+name = "frontend_ast_v2_initialized_variable_counter2_subtract"
+source-dir = "test"
+
+[[test]]
 name = "frontend_ast_v2_init_xplus1_range"
 source-dir = "test"
 
