@@ -84,6 +84,7 @@ module ffc_mir
     public :: mir_function_block_table_instruction_at
     public :: mir_function_block_table_opcode_count_at
     public :: mir_function_block_table_opcode_histogram_at
+    public :: mir_function_block_table_opcode_histograms
     public :: mir_validate_function_witness
     public :: mir_validate_value
     public :: mir_validate_instruction
@@ -750,6 +751,56 @@ contains
         end do
         valid = .true.
     end function mir_function_block_table_opcode_histogram_at
+
+    ! Return one histogram per table range.  The first histogram dimension is
+    ! the opcode bin and the second is the zero-based block's source-order
+    ! column; totals use the same second-dimension block ordering.
+    logical function mir_function_block_table_opcode_histograms(body, table, histograms, &
+            totals, block_count, message) result(valid)
+        type(mir_function_body_t), intent(in) :: body
+        type(mir_block_table_t), intent(in) :: table
+        integer(int32), intent(out) :: histograms(:, :)
+        integer(int32), intent(out) :: totals(:)
+        integer(int32), intent(out) :: block_count
+        character(len=:), allocatable, intent(out), optional :: message
+
+        integer(int32) :: block_index
+        integer(int32) :: first_instruction
+        integer(int32) :: block_instruction_count
+        integer(int32) :: instruction_index
+        integer(int32) :: opcode
+
+        histograms = 0_int32
+        totals = 0_int32
+        block_count = 0_int32
+        call clear_message(message)
+        valid = .false.
+        if (.not. mir_validate_function_block_table(body, table, message)) return
+        if (size(histograms, 1) < mir_opcode_histogram_size) then
+            call set_message(message, "histogram output has insufficient opcode capacity")
+            return
+        end if
+        if (size(histograms, 2) < size(table%ranges)) then
+            call set_message(message, "histogram output has insufficient block capacity")
+            return
+        end if
+        if (size(totals) < size(table%ranges)) then
+            call set_message(message, "totals output has insufficient block capacity")
+            return
+        end if
+        block_count = int(size(table%ranges), int32)
+        do block_index = 1, block_count
+            first_instruction = table%ranges(block_index)%first_instruction
+            block_instruction_count = table%ranges(block_index)%instruction_count
+            do instruction_index = first_instruction + 1_int32, &
+                    first_instruction + block_instruction_count
+                opcode = body%instructions(instruction_index)%opcode
+                histograms(opcode, block_index) = histograms(opcode, block_index) + 1_int32
+                totals(block_index) = totals(block_index) + 1_int32
+            end do
+        end do
+        valid = .true.
+    end function mir_function_block_table_opcode_histograms
 
     logical function mir_validate_function_witness(body, message) result(valid)
         type(mir_function_body_t), intent(in) :: body
