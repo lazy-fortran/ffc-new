@@ -8,8 +8,7 @@ program test_frontend_ast_v2_print
         ffc_validate_frontend_ast_v2_print_7_8_9_10_11_shape, &
         ffc_validate_frontend_ast_v2_print_7_8_9_10_11_12_shape, &
         ffc_validate_frontend_ast_v2_print_seven_shape, ffc_validate_frontend_ast_v2_print_eight_shape, &
-        ffc_validate_frontend_ast_v2_print_nine_shape, ffc_validate_frontend_ast_v2_print_ten_shape, &
-        ffc_validate_frontend_ast_v2_print_generic_shape
+        ffc_validate_frontend_ast_v2_print_nine_shape, ffc_validate_frontend_ast_v2_print_ten_shape
     use ffc_mir, only: mir_function_body_t, mir_validate_function_body, opcode_const, &
         opcode_output, opcode_return
     implicit none
@@ -253,17 +252,21 @@ program test_frontend_ast_v2_print
 
     call assert_true(ffc_lower_frontend_ast_v2_from_sx(envelope_generic_sx(), body, message), &
         'PRINT star 17, 18, 19 envelope was rejected')
-    call assert_true(ffc_validate_frontend_ast_v2_print_generic_shape(body, message), &
+    call assert_true(mir_validate_function_body(body, message), &
         'PRINT generic MIR shape was rejected')
     call assert_equal(body%function%instruction_count, 7, 'generic PRINT instruction count changed')
     call assert_equal(body%instructions(1)%literal_value, 17, 'generic first literal changed')
     call assert_equal(body%instructions(3)%literal_value, 18, 'generic second literal changed')
     call assert_equal(body%instructions(5)%literal_value, 19, 'generic third literal changed')
     call assert_true(.not. ffc_lower_frontend_ast_v2_from_sx(&
-        replace_text(envelope_generic_sx(), '(output-value-3 19)', '(output-value-3 20)'), body, message), &
-        'PRINT generic wrong third item was accepted')
+        replace_text(envelope_generic_sx(), &
+            '(output-item (kind integer-literal) (value 19)', &
+            '(output-item (kind real-literal) (value 19)'), body, message), &
+        'PRINT generic wrong third kind was accepted')
     call assert_true(.not. ffc_lower_frontend_ast_v2_from_sx(&
-        replace_text(envelope_generic_sx(), '(output-value-3 19)', '(output-value-3)'), body, message), &
+        replace_text(envelope_generic_sx(), &
+            '(output-item (kind integer-literal) (value 19)', &
+            '(output-item (kind integer-literal)'), body, message), &
         'PRINT generic missing third item was accepted')
     call assert_true(.not. ffc_lower_frontend_ast_v2_from_sx(&
         replace_text(envelope_generic_sx(), '(print-stmt ', '(write-stmt '), body, message), &
@@ -295,10 +298,14 @@ contains
             '(file main.f90) (start-byte 0) (end-byte 46) (source-hash print-test))))) '// &
             '(declaration-count 0) (declaration) (variable-count 0) (variable) '// &
             '(execution-part (print-stmt (format-kind default-char-expr) (format-value *) '// &
-            '(output-kind integer-literal) (output-value 17) (output-count 3) '// &
-            '(output-kind-2 integer-literal) (output-value-2 18) (output-rule-2 R1217) '// &
-            '(output-kind-3 integer-literal) (output-value-3 19) (output-rule-3 R1217) '// &
-            '(statement-rule R1212) (format-rule R1215) (output-rule R1217) '// &
+            '(output-count 3) (output-items '// &
+            '(output-item (kind integer-literal) (value 17) (rule R1217) '// &
+            '(clause 12.6.3) (page 248)) '// &
+            '(output-item (kind integer-literal) (value 18) (rule R1217) '// &
+            '(clause 12.6.3) (page 248)) '// &
+            '(output-item (kind integer-literal) (value 19) (rule R1217) '// &
+            '(clause 12.6.3) (page 248))) '// &
+            '(statement-rule R1212) (format-rule R1215) '// &
             '(source-document J3-24-007) (statement-clause 12.6.1) '// &
             '(format-clause 12.6.2.2) (output-clause 12.6.3) '// &
             '(statement-page 242) (format-page 244) (output-page 248) '// &
