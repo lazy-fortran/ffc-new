@@ -1231,7 +1231,12 @@ contains
         end if
         body%function%name = trim(root%name)
         do assignment_index = 1, body%function%instruction_count
-            body%instructions(assignment_index)%source_rule = 'frontend-ast-v2/execution-part'
+            if (assignment_count == 2) then
+                body%instructions(assignment_index)%source_rule = 'frontend-ast-v2/execution-part'
+            else
+                write (count_text, '(a,i0)') 'frontend-ast-v2/execution-part-', assignment_count
+                body%instructions(assignment_index)%source_rule = trim(count_text)
+            end if
         end do
     end function ffc_lower_frontend_ast_v2_from_sx
 

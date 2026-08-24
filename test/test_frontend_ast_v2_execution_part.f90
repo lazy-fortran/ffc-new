@@ -64,7 +64,7 @@ program test_frontend_ast_v2_execution_part
         call assert_true(body%instructions(instruction_index)%result%id == &
             expected_ids_5(instruction_index), 'v2 count-5 SSA result ID changed')
         call assert_equal(body%instructions(instruction_index)%source_rule, &
-            'frontend-ast-v2/execution-part', 'v2 count-5 source rule changed')
+            'frontend-ast-v2/execution-part-5', 'v2 count-5 source rule changed')
     end do
     call assert_true(body%instructions(1)%literal_value == 7 .and. &
         body%instructions(4)%literal_value == 1 .and. &
@@ -91,7 +91,7 @@ program test_frontend_ast_v2_execution_part
         call assert_true(body%instructions(instruction_index)%result%id == &
             expected_ids_6(instruction_index), 'v2 count-6 SSA result ID changed')
         call assert_equal(body%instructions(instruction_index)%source_rule, &
-            'frontend-ast-v2/execution-part', 'v2 count-6 source rule changed')
+            'frontend-ast-v2/execution-part-6', 'v2 count-6 source rule changed')
     end do
     call assert_true(body%instructions(1)%literal_value == 7 .and. &
         body%instructions(4)%literal_value == 1 .and. &
@@ -116,7 +116,7 @@ program test_frontend_ast_v2_execution_part
         call assert_true(body%instructions(instruction_index)%result%id == &
             expected_ids_3(instruction_index), 'v2 count-3 SSA result ID changed')
         call assert_equal(body%instructions(instruction_index)%source_rule, &
-            'frontend-ast-v2/execution-part', 'v2 count-3 source rule changed')
+            'frontend-ast-v2/execution-part-3', 'v2 count-3 source rule changed')
     end do
     call assert_storage_indices([2, 3, 6, 7, 10])
     call assert_no_storage_indices([1, 4, 5, 8, 9, 11])
