@@ -1233,8 +1233,11 @@ contains
         do assignment_index = 1, body%function%instruction_count
             if (assignment_count == 2) then
                 body%instructions(assignment_index)%source_rule = 'frontend-ast-v2/execution-part'
-            else
+            else if (assignment_count == 5 .or. assignment_count == 6) then
                 write (count_text, '(a,i0)') 'frontend-ast-v2/execution-part-', assignment_count
+                body%instructions(assignment_index)%source_rule = trim(count_text)
+            else
+                write (count_text, '(a,i0)') 'frontend-ast-v1/storage-sequence-', assignment_count
                 body%instructions(assignment_index)%source_rule = trim(count_text)
             end if
         end do
