@@ -2672,43 +2672,13 @@ contains
         type(mir_function_body_t), intent(in) :: body
         character(len=:), allocatable, intent(out), optional :: message
 
-        call clear_message(message)
-        valid = .false.
-        if (.not. mir_validate_function_body(body, message)) return
-        if (body%function%instruction_count /= &
-            instruction_shape_frontend_ast_v1_integer_program_count) then
-            call set_message(message, 'frontend-ast-v1 integer instruction count changed')
-            return
-        end if
-        if (body%instructions(1)%opcode /= &
-            instruction_shape_frontend_ast_v1_integer_program_opcode_0 .or. &
-            body%instructions(2)%opcode /= &
-            instruction_shape_frontend_ast_v1_integer_program_opcode_1) then
-            call set_message(message, 'frontend-ast-v1 integer opcode shape changed')
-            return
-        end if
-        if (body%instructions(1)%result%kind /= &
-            instruction_shape_frontend_ast_v1_integer_program_result_kind .or. &
-            trim(body%instructions(1)%result%type_name) /= &
-            instruction_shape_frontend_ast_v1_integer_program_result_type) then
-            call set_message(message, 'frontend-ast-v1 integer result shape changed')
-            return
-        end if
-        if (body%instructions(2)%result%kind /= &
-            instruction_shape_frontend_ast_v1_integer_program_result_kind .or. &
-            trim(body%instructions(2)%result%type_name) /= &
-            instruction_shape_frontend_ast_v1_integer_program_result_type) then
-            call set_message(message, 'frontend-ast-v1 integer return shape changed')
-            return
-        end if
-        if (trim(body%instructions(1)%source_rule) /= &
-            instruction_shape_frontend_ast_v1_integer_program_source_rule .or. &
-            trim(body%instructions(2)%source_rule) /= &
-            instruction_shape_frontend_ast_v1_integer_program_source_rule) then
-            call set_message(message, 'frontend-ast-v1 integer source rule changed')
-            return
-        end if
-        valid = .true.
+        valid = ffc_validate_frontend_ast_v1_two_instruction_program_shape(body, message, &
+            instruction_shape_frontend_ast_v1_integer_program_count, &
+            [instruction_shape_frontend_ast_v1_integer_program_opcode_0, &
+            instruction_shape_frontend_ast_v1_integer_program_opcode_1], &
+            instruction_shape_frontend_ast_v1_integer_program_result_kind, &
+            instruction_shape_frontend_ast_v1_integer_program_result_type, &
+            instruction_shape_frontend_ast_v1_integer_program_source_rule, 'integer')
     end function ffc_validate_frontend_ast_v1_integer_program_shape
 
     logical function ffc_validate_frontend_ast_v1_integer_assignment_program_shape(body, message) &
@@ -2716,43 +2686,13 @@ contains
         type(mir_function_body_t), intent(in) :: body
         character(len=:), allocatable, intent(out), optional :: message
 
-        call clear_message(message)
-        valid = .false.
-        if (.not. mir_validate_function_body(body, message)) return
-        if (body%function%instruction_count /= &
-            instruction_shape_frontend_ast_v1_int_assign_count) then
-            call set_message(message, 'frontend-ast-v1 integer assignment instruction count changed')
-            return
-        end if
-        if (body%instructions(1)%opcode /= &
-            instruction_shape_frontend_ast_v1_int_assign_opcode_0 .or. &
-            body%instructions(2)%opcode /= &
-            instruction_shape_frontend_ast_v1_int_assign_opcode_1) then
-            call set_message(message, 'frontend-ast-v1 integer assignment opcode shape changed')
-            return
-        end if
-        if (body%instructions(1)%result%kind /= &
-            instruction_shape_frontend_ast_v1_int_assign_result_kind .or. &
-            trim(body%instructions(1)%result%type_name) /= &
-            instruction_shape_frontend_ast_v1_int_assign_result_type) then
-            call set_message(message, 'frontend-ast-v1 integer assignment result shape changed')
-            return
-        end if
-        if (body%instructions(2)%result%kind /= &
-            instruction_shape_frontend_ast_v1_int_assign_result_kind .or. &
-            trim(body%instructions(2)%result%type_name) /= &
-            instruction_shape_frontend_ast_v1_int_assign_result_type) then
-            call set_message(message, 'frontend-ast-v1 integer assignment return shape changed')
-            return
-        end if
-        if (trim(body%instructions(1)%source_rule) /= &
-            instruction_shape_frontend_ast_v1_int_assign_source_rule .or. &
-            trim(body%instructions(2)%source_rule) /= &
-            instruction_shape_frontend_ast_v1_int_assign_source_rule) then
-            call set_message(message, 'frontend-ast-v1 integer assignment source rule changed')
-            return
-        end if
-        valid = .true.
+        valid = ffc_validate_frontend_ast_v1_two_instruction_program_shape(body, message, &
+            instruction_shape_frontend_ast_v1_int_assign_count, &
+            [instruction_shape_frontend_ast_v1_int_assign_opcode_0, &
+            instruction_shape_frontend_ast_v1_int_assign_opcode_1], &
+            instruction_shape_frontend_ast_v1_int_assign_result_kind, &
+            instruction_shape_frontend_ast_v1_int_assign_result_type, &
+            instruction_shape_frontend_ast_v1_int_assign_source_rule, 'integer assignment')
     end function ffc_validate_frontend_ast_v1_integer_assignment_program_shape
 
     logical function ffc_validate_frontend_ast_v1_int_literal_assignment_shape(body, message) &
@@ -3045,48 +2985,65 @@ contains
         valid = .true.
     end function ffc_validate_frontend_ast_v1_int_binary_expr_assignment_shape
 
+    logical function ffc_validate_frontend_ast_v1_two_instruction_program_shape(&
+            body, message, expected_count, expected_opcodes, expected_result_kind, &
+            expected_result_type, expected_source_rule, diagnostic_label) result(valid)
+        type(mir_function_body_t), intent(in) :: body
+        character(len=:), allocatable, intent(out), optional :: message
+        integer(int32), intent(in) :: expected_count
+        integer(int32), intent(in) :: expected_opcodes(2)
+        integer(int32), intent(in) :: expected_result_kind
+        character(len=*), intent(in) :: expected_result_type
+        character(len=*), intent(in) :: expected_source_rule
+        character(len=*), intent(in) :: diagnostic_label
+
+        call clear_message(message)
+        valid = .false.
+        if (.not. mir_validate_function_body(body, message)) return
+        if (body%function%instruction_count /= expected_count) then
+            call set_message(message, 'frontend-ast-v1 ' // trim(diagnostic_label) // &
+                ' instruction count changed')
+            return
+        end if
+        if (body%instructions(1)%opcode /= expected_opcodes(1) .or. &
+            body%instructions(2)%opcode /= expected_opcodes(2)) then
+            call set_message(message, 'frontend-ast-v1 ' // trim(diagnostic_label) // &
+                ' opcode shape changed')
+            return
+        end if
+        if (body%instructions(1)%result%kind /= expected_result_kind .or. &
+            trim(body%instructions(1)%result%type_name) /= expected_result_type) then
+            call set_message(message, 'frontend-ast-v1 ' // trim(diagnostic_label) // &
+                ' result shape changed')
+            return
+        end if
+        if (body%instructions(2)%result%kind /= expected_result_kind .or. &
+            trim(body%instructions(2)%result%type_name) /= expected_result_type) then
+            call set_message(message, 'frontend-ast-v1 ' // trim(diagnostic_label) // &
+                ' return shape changed')
+            return
+        end if
+        if (trim(body%instructions(1)%source_rule) /= expected_source_rule .or. &
+            trim(body%instructions(2)%source_rule) /= expected_source_rule) then
+            call set_message(message, 'frontend-ast-v1 ' // trim(diagnostic_label) // &
+                ' source rule changed')
+            return
+        end if
+        valid = .true.
+    end function ffc_validate_frontend_ast_v1_two_instruction_program_shape
+
     logical function ffc_validate_frontend_ast_v1_logical_program_shape(body, message) &
             result(valid)
         type(mir_function_body_t), intent(in) :: body
         character(len=:), allocatable, intent(out), optional :: message
 
-        call clear_message(message)
-        valid = .false.
-        if (.not. mir_validate_function_body(body, message)) return
-        if (body%function%instruction_count /= &
-            instruction_shape_frontend_ast_v1_logical_program_count) then
-            call set_message(message, 'frontend-ast-v1 logical instruction count changed')
-            return
-        end if
-        if (body%instructions(1)%opcode /= &
-            instruction_shape_frontend_ast_v1_logical_program_opcode_0 .or. &
-            body%instructions(2)%opcode /= &
-            instruction_shape_frontend_ast_v1_logical_program_opcode_1) then
-            call set_message(message, 'frontend-ast-v1 logical opcode shape changed')
-            return
-        end if
-        if (body%instructions(1)%result%kind /= &
-            instruction_shape_frontend_ast_v1_logical_program_result_kind .or. &
-            trim(body%instructions(1)%result%type_name) /= &
-            instruction_shape_frontend_ast_v1_logical_program_result_type) then
-            call set_message(message, 'frontend-ast-v1 logical result shape changed')
-            return
-        end if
-        if (body%instructions(2)%result%kind /= &
-            instruction_shape_frontend_ast_v1_logical_program_result_kind .or. &
-            trim(body%instructions(2)%result%type_name) /= &
-            instruction_shape_frontend_ast_v1_logical_program_result_type) then
-            call set_message(message, 'frontend-ast-v1 logical return shape changed')
-            return
-        end if
-        if (trim(body%instructions(1)%source_rule) /= &
-            instruction_shape_frontend_ast_v1_logical_program_source_rule .or. &
-            trim(body%instructions(2)%source_rule) /= &
-            instruction_shape_frontend_ast_v1_logical_program_source_rule) then
-            call set_message(message, 'frontend-ast-v1 logical source rule changed')
-            return
-        end if
-        valid = .true.
+        valid = ffc_validate_frontend_ast_v1_two_instruction_program_shape(body, message, &
+            instruction_shape_frontend_ast_v1_logical_program_count, &
+            [instruction_shape_frontend_ast_v1_logical_program_opcode_0, &
+            instruction_shape_frontend_ast_v1_logical_program_opcode_1], &
+            instruction_shape_frontend_ast_v1_logical_program_result_kind, &
+            instruction_shape_frontend_ast_v1_logical_program_result_type, &
+            instruction_shape_frontend_ast_v1_logical_program_source_rule, 'logical')
     end function ffc_validate_frontend_ast_v1_logical_program_shape
 
     logical function ffc_validate_frontend_ast_v1_real_program_shape(body, message) &
@@ -3094,34 +3051,13 @@ contains
         type(mir_function_body_t), intent(in) :: body
         character(len=:), allocatable, intent(out), optional :: message
 
-        call clear_message(message)
-        valid = .false.
-        if (.not. mir_validate_function_body(body, message)) return
-        if (body%function%instruction_count /= instruction_shape_frontend_ast_v1_real_program_count) then
-            call set_message(message, 'frontend-ast-v1 real instruction count changed')
-            return
-        end if
-        if (body%instructions(1)%opcode /= instruction_shape_frontend_ast_v1_real_program_opcode_0 .or. &
-            body%instructions(2)%opcode /= instruction_shape_frontend_ast_v1_real_program_opcode_1) then
-            call set_message(message, 'frontend-ast-v1 real opcode shape changed')
-            return
-        end if
-        if (body%instructions(1)%result%kind /= instruction_shape_frontend_ast_v1_real_program_result_kind .or. &
-            trim(body%instructions(1)%result%type_name) /= instruction_shape_frontend_ast_v1_real_program_result_type) then
-            call set_message(message, 'frontend-ast-v1 real result shape changed')
-            return
-        end if
-        if (body%instructions(2)%result%kind /= instruction_shape_frontend_ast_v1_real_program_result_kind .or. &
-            trim(body%instructions(2)%result%type_name) /= instruction_shape_frontend_ast_v1_real_program_result_type) then
-            call set_message(message, 'frontend-ast-v1 real return shape changed')
-            return
-        end if
-        if (trim(body%instructions(1)%source_rule) /= instruction_shape_frontend_ast_v1_real_program_source_rule .or. &
-            trim(body%instructions(2)%source_rule) /= instruction_shape_frontend_ast_v1_real_program_source_rule) then
-            call set_message(message, 'frontend-ast-v1 real source rule changed')
-            return
-        end if
-        valid = .true.
+        valid = ffc_validate_frontend_ast_v1_two_instruction_program_shape(body, message, &
+            instruction_shape_frontend_ast_v1_real_program_count, &
+            [instruction_shape_frontend_ast_v1_real_program_opcode_0, &
+            instruction_shape_frontend_ast_v1_real_program_opcode_1], &
+            instruction_shape_frontend_ast_v1_real_program_result_kind, &
+            instruction_shape_frontend_ast_v1_real_program_result_type, &
+            instruction_shape_frontend_ast_v1_real_program_source_rule, 'real')
     end function ffc_validate_frontend_ast_v1_real_program_shape
 
     logical function ffc_validate_frontend_ast_v1_double_precision_program_shape(body, message) &
@@ -3129,44 +3065,13 @@ contains
         type(mir_function_body_t), intent(in) :: body
         character(len=:), allocatable, intent(out), optional :: message
 
-        call clear_message(message)
-        valid = .false.
-        if (.not. mir_validate_function_body(body, message)) return
-        if (body%function%instruction_count /= &
-            instruction_shape_frontend_ast_v1_dp_program_count) then
-            call set_message(message, 'frontend-ast-v1 double-precision instruction count changed')
-            return
-        end if
-        if (body%instructions(1)%opcode /= &
-            instruction_shape_frontend_ast_v1_dp_program_opcode_0 .or. &
-            body%instructions(2)%opcode /= &
-            instruction_shape_frontend_ast_v1_dp_program_opcode_1) then
-            call set_message(message, 'frontend-ast-v1 double-precision opcode shape changed')
-            return
-        end if
-        if (body%instructions(1)%result%kind /= &
-            instruction_shape_frontend_ast_v1_dp_program_result_kind .or. &
-            trim(body%instructions(1)%result%type_name) /= &
-            instruction_shape_frontend_ast_v1_dp_program_result_type) then
-            call set_message(message, 'frontend-ast-v1 double-precision result shape changed')
-            return
-        end if
-        if (body%instructions(2)%result%kind /= &
-            instruction_shape_frontend_ast_v1_dp_program_result_kind .or. &
-            trim(body%instructions(2)%result%type_name) /= &
-            instruction_shape_frontend_ast_v1_dp_program_result_type) then
-            call set_message(message, 'frontend-ast-v1 double-precision return shape changed')
-            return
-        end if
-        if (trim(body%instructions(1)%source_rule) /= &
-            instruction_shape_frontend_ast_v1_dp_program_source_rule .or. &
-            trim(body%instructions(2)%source_rule) /= &
-            instruction_shape_frontend_ast_v1_dp_program_source_rule) then
-            call set_message(message, &
-                'frontend-ast-v1 double-precision source rule changed')
-            return
-        end if
-        valid = .true.
+        valid = ffc_validate_frontend_ast_v1_two_instruction_program_shape(body, message, &
+            instruction_shape_frontend_ast_v1_dp_program_count, &
+            [instruction_shape_frontend_ast_v1_dp_program_opcode_0, &
+            instruction_shape_frontend_ast_v1_dp_program_opcode_1], &
+            instruction_shape_frontend_ast_v1_dp_program_result_kind, &
+            instruction_shape_frontend_ast_v1_dp_program_result_type, &
+            instruction_shape_frontend_ast_v1_dp_program_source_rule, 'double-precision')
     end function ffc_validate_frontend_ast_v1_double_precision_program_shape
 
     logical function ffc_validate_frontend_ast_v1_complex_program_shape(body, message) &
@@ -3174,43 +3079,13 @@ contains
         type(mir_function_body_t), intent(in) :: body
         character(len=:), allocatable, intent(out), optional :: message
 
-        call clear_message(message)
-        valid = .false.
-        if (.not. mir_validate_function_body(body, message)) return
-        if (body%function%instruction_count /= &
-            instruction_shape_frontend_ast_v1_complex_program_count) then
-            call set_message(message, 'frontend-ast-v1 complex instruction count changed')
-            return
-        end if
-        if (body%instructions(1)%opcode /= &
-            instruction_shape_frontend_ast_v1_complex_program_opcode_0 .or. &
-            body%instructions(2)%opcode /= &
-            instruction_shape_frontend_ast_v1_complex_program_opcode_1) then
-            call set_message(message, 'frontend-ast-v1 complex opcode shape changed')
-            return
-        end if
-        if (body%instructions(1)%result%kind /= &
-            instruction_shape_frontend_ast_v1_complex_program_result_kind .or. &
-            trim(body%instructions(1)%result%type_name) /= &
-            instruction_shape_frontend_ast_v1_complex_program_result_type) then
-            call set_message(message, 'frontend-ast-v1 complex result shape changed')
-            return
-        end if
-        if (body%instructions(2)%result%kind /= &
-            instruction_shape_frontend_ast_v1_complex_program_result_kind .or. &
-            trim(body%instructions(2)%result%type_name) /= &
-            instruction_shape_frontend_ast_v1_complex_program_result_type) then
-            call set_message(message, 'frontend-ast-v1 complex return shape changed')
-            return
-        end if
-        if (trim(body%instructions(1)%source_rule) /= &
-            instruction_shape_frontend_ast_v1_complex_program_source_rule .or. &
-            trim(body%instructions(2)%source_rule) /= &
-            instruction_shape_frontend_ast_v1_complex_program_source_rule) then
-            call set_message(message, 'frontend-ast-v1 complex source rule changed')
-            return
-        end if
-        valid = .true.
+        valid = ffc_validate_frontend_ast_v1_two_instruction_program_shape(body, message, &
+            instruction_shape_frontend_ast_v1_complex_program_count, &
+            [instruction_shape_frontend_ast_v1_complex_program_opcode_0, &
+            instruction_shape_frontend_ast_v1_complex_program_opcode_1], &
+            instruction_shape_frontend_ast_v1_complex_program_result_kind, &
+            instruction_shape_frontend_ast_v1_complex_program_result_type, &
+            instruction_shape_frontend_ast_v1_complex_program_source_rule, 'complex')
     end function ffc_validate_frontend_ast_v1_complex_program_shape
 
     logical function ffc_validate_frontend_ast_v1_character_program_shape(body, message) &
@@ -3218,43 +3093,13 @@ contains
         type(mir_function_body_t), intent(in) :: body
         character(len=:), allocatable, intent(out), optional :: message
 
-        call clear_message(message)
-        valid = .false.
-        if (.not. mir_validate_function_body(body, message)) return
-        if (body%function%instruction_count /= &
-            instruction_shape_frontend_ast_v1_character_program_count) then
-            call set_message(message, 'frontend-ast-v1 character instruction count changed')
-            return
-        end if
-        if (body%instructions(1)%opcode /= &
-            instruction_shape_frontend_ast_v1_character_program_opcode_0 .or. &
-            body%instructions(2)%opcode /= &
-            instruction_shape_frontend_ast_v1_character_program_opcode_1) then
-            call set_message(message, 'frontend-ast-v1 character opcode shape changed')
-            return
-        end if
-        if (body%instructions(1)%result%kind /= &
-            instruction_shape_frontend_ast_v1_character_program_result_kind .or. &
-            trim(body%instructions(1)%result%type_name) /= &
-            instruction_shape_frontend_ast_v1_character_program_result_type) then
-            call set_message(message, 'frontend-ast-v1 character result shape changed')
-            return
-        end if
-        if (body%instructions(2)%result%kind /= &
-            instruction_shape_frontend_ast_v1_character_program_result_kind .or. &
-            trim(body%instructions(2)%result%type_name) /= &
-            instruction_shape_frontend_ast_v1_character_program_result_type) then
-            call set_message(message, 'frontend-ast-v1 character return shape changed')
-            return
-        end if
-        if (trim(body%instructions(1)%source_rule) /= &
-            instruction_shape_frontend_ast_v1_character_program_source_rule .or. &
-            trim(body%instructions(2)%source_rule) /= &
-            instruction_shape_frontend_ast_v1_character_program_source_rule) then
-            call set_message(message, 'frontend-ast-v1 character source rule changed')
-            return
-        end if
-        valid = .true.
+        valid = ffc_validate_frontend_ast_v1_two_instruction_program_shape(body, message, &
+            instruction_shape_frontend_ast_v1_character_program_count, &
+            [instruction_shape_frontend_ast_v1_character_program_opcode_0, &
+            instruction_shape_frontend_ast_v1_character_program_opcode_1], &
+            instruction_shape_frontend_ast_v1_character_program_result_kind, &
+            instruction_shape_frontend_ast_v1_character_program_result_type, &
+            instruction_shape_frontend_ast_v1_character_program_source_rule, 'character')
     end function ffc_validate_frontend_ast_v1_character_program_shape
 
     logical function ffc_validate_frontend_ast_v2_stop_7_shape(body, message) &
