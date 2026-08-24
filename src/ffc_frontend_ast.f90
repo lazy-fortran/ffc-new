@@ -994,10 +994,10 @@ contains
                 bounded_integer_divisor_minimum, bounded_integer_divisor_maximum, 'divisor', divisor_value)
             initialized_xpower = parse_bounded_power_expression(trim(assignments(2)%value), power_value)
             initialized_xvariable_power = is_variable_power_expression(trim(assignments(2)%value))
-            initialized_xvariable_add = is_variable_add_expression(trim(assignments(2)%value))
-            initialized_xvariable_mul = is_variable_mul_expression(trim(assignments(2)%value))
-            initialized_xvariable_div = is_variable_div_expression(trim(assignments(2)%value))
-            initialized_xvariable_sub = is_variable_sub_expression(trim(assignments(2)%value))
+            initialized_xvariable_add = is_variable_binary_expression(trim(assignments(2)%value), '+')
+            initialized_xvariable_mul = is_variable_binary_expression(trim(assignments(2)%value), '*')
+            initialized_xvariable_div = is_variable_binary_expression(trim(assignments(2)%value), '/')
+            initialized_xvariable_sub = is_variable_binary_expression(trim(assignments(2)%value), '–')
         end if
         if (len_trim(print_statement) > 0) then
             if (index(print_statement, '( output-count 7 )') == 0 .and. &
@@ -1987,33 +1987,12 @@ contains
         valid = .true.
     end function ffc_validate_frontend_ast_v2_print_variable_items_shape
 
-    logical function is_variable_add_expression(serialized) result(matches)
-        character(len=*), intent(in) :: serialized
+    logical function is_variable_binary_expression(serialized, operator_token) result(matches)
+        character(len=*), intent(in) :: serialized, operator_token
 
-        matches = trim(serialized) == &
-            '(assignment-expression (kind binary-expression) (operator +) (left-operand x) (right-operand x))'
-    end function is_variable_add_expression
-
-    logical function is_variable_mul_expression(serialized) result(matches)
-        character(len=*), intent(in) :: serialized
-
-        matches = trim(serialized) == &
-            '(assignment-expression (kind binary-expression) (operator *) (left-operand x) (right-operand x))'
-    end function is_variable_mul_expression
-
-    logical function is_variable_div_expression(serialized) result(matches)
-        character(len=*), intent(in) :: serialized
-
-        matches = trim(serialized) == &
-            '(assignment-expression (kind binary-expression) (operator /) (left-operand x) (right-operand x))'
-    end function is_variable_div_expression
-
-    logical function is_variable_sub_expression(serialized) result(matches)
-        character(len=*), intent(in) :: serialized
-
-        matches = trim(serialized) == &
-            '(assignment-expression (kind binary-expression) (operator –) (left-operand x) (right-operand x))'
-    end function is_variable_sub_expression
+        matches = trim(serialized) == '(assignment-expression (kind binary-expression) (operator '// &
+            trim(operator_token)//') (left-operand x) (right-operand x))'
+    end function is_variable_binary_expression
 
     logical function lower_frontend_ast_v2_initialized_literal_binary(body, initializer_text, expression_text, &
             operator_token, minimum, maximum, diagnostic_label, route, message, storage_key, left_operand) result(lowered)
@@ -4084,10 +4063,10 @@ contains
             left_operand=trim(assignment%target))
         bounded_power = parse_bounded_power_expression(trim(assignment%value), literal_value)
         variable_power = is_variable_power_expression(trim(assignment%value))
-        variable_add = is_variable_add_expression(trim(assignment%value))
-        variable_mul = is_variable_mul_expression(trim(assignment%value))
-        variable_div = is_variable_div_expression(trim(assignment%value))
-        variable_sub = is_variable_sub_expression(trim(assignment%value))
+        variable_add = is_variable_binary_expression(trim(assignment%value), '+')
+        variable_mul = is_variable_binary_expression(trim(assignment%value), '*')
+        variable_div = is_variable_binary_expression(trim(assignment%value), '/')
+        variable_sub = is_variable_binary_expression(trim(assignment%value), '–')
         valid = .false.
         if (.not. is_legal_assignment_identifier(trim(assignment%target))) then
             call set_message(message, 'unsupported-frontend-ast-v1-assignment')
