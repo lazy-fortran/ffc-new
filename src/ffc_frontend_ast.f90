@@ -623,8 +623,9 @@ contains
         integer :: assignment_count, assignment_index, token_count, position
         integer(int64) :: declaration_count, variable_count
         integer(int32) :: initializer_value, addend_value, subtrahend_value, multiplier_value, &
-            divisor_value, power_value, route, initialized_xvariable_binary_opcode
+            divisor_value, power_value, route, initialized_xvariable_binary_opcode, print_result_kind
         character(len=11) :: initialized_xvariable_binary_name
+        character(len=:), allocatable :: print_result_type, print_source_rule
         logical :: initialized_xplus_addend, initialized_xminus_subtrahend, &
             initialized_xmultiply_multiplier, initialized_xdivide_divisor, initialized_xpower, &
             initialized_xvariable_power, initialized_xvariable_add, initialized_xvariable_mul, &
@@ -1164,36 +1165,26 @@ contains
                         return
                     end if
                 end do
-                do assignment_index = 11, 60
+                do assignment_index = 11, 100
                     if (frontend_ast_v2_print_variable_item_count_match(print_statement, assignment_index)) then
-                        call emit_frontend_ast_v2_print_variable_items_11_to_60(body, assignment_index)
+                        if (assignment_index <= 60) then
+                            print_result_kind = instruction_shape_v2_pow_print_41_60_result_kind
+                            print_result_type = instruction_shape_v2_pow_print_41_60_result_type
+                            print_source_rule = instruction_shape_v2_pow_print_41_60_source_rule
+                        else if (assignment_index <= 80) then
+                            print_result_kind = instruction_shape_v2_pow_print_61_80_result_kind
+                            print_result_type = instruction_shape_v2_pow_print_61_80_result_type
+                            print_source_rule = instruction_shape_v2_pow_print_61_80_source_rule
+                        else
+                            print_result_kind = instruction_shape_v2_pow_print_81_100_result_kind
+                            print_result_type = instruction_shape_v2_pow_print_81_100_result_type
+                            print_source_rule = instruction_shape_v2_pow_print_81_100_source_rule
+                        end if
+                        call emit_frontend_ast_v2_print_variable_count(body, assignment_index, print_result_kind, &
+                            print_result_type, print_source_rule)
                         lowered = ffc_validate_frontend_ast_v2_print_variable_items_shape(body, assignment_index, &
                             int(2 * assignment_index + 7, int32), &
-                            instruction_shape_v2_pow_print_41_60_result_kind, &
-                            instruction_shape_v2_pow_print_41_60_result_type, &
-                            instruction_shape_v2_pow_print_41_60_source_rule, message)
-                        return
-                    end if
-                end do
-                do assignment_index = 61, 80
-                    if (frontend_ast_v2_print_variable_item_count_match(print_statement, assignment_index)) then
-                        call emit_frontend_ast_v2_print_variable_items_61_to_80(body, assignment_index)
-                        lowered = ffc_validate_frontend_ast_v2_print_variable_items_shape(body, assignment_index, &
-                            int(2 * assignment_index + 7, int32), &
-                            instruction_shape_v2_pow_print_61_80_result_kind, &
-                            instruction_shape_v2_pow_print_61_80_result_type, &
-                            instruction_shape_v2_pow_print_61_80_source_rule, message)
-                        return
-                    end if
-                end do
-                do assignment_index = 81, 100
-                    if (frontend_ast_v2_print_variable_item_count_match(print_statement, assignment_index)) then
-                        call emit_frontend_ast_v2_print_variable_items_81_to_100(body, assignment_index)
-                        lowered = ffc_validate_frontend_ast_v2_print_variable_items_shape(body, assignment_index, &
-                            int(2 * assignment_index + 7, int32), &
-                            instruction_shape_v2_pow_print_81_100_result_kind, &
-                            instruction_shape_v2_pow_print_81_100_result_type, &
-                            instruction_shape_v2_pow_print_81_100_source_rule, message)
+                            print_result_kind, print_result_type, print_source_rule, message)
                         return
                     end if
                 end do
@@ -1896,76 +1887,6 @@ contains
         body%instructions(4)%opcode = opcode_output
         body%instructions(5)%opcode = opcode_return
     end subroutine emit_frontend_ast_v2_print_z_initializer
-
-    subroutine emit_frontend_ast_v2_print_variable_items_11_to_60(body, item_count)
-        type(mir_function_body_t), intent(inout) :: body
-        integer, intent(in) :: item_count
-        integer(int32) :: opcodes(2 * item_count + 7)
-        integer :: output_index
-
-        opcodes = opcode_load
-        opcodes(1) = opcode_const
-        opcodes(2) = opcode_store
-        opcodes(3) = opcode_load
-        opcodes(4) = opcode_const
-        opcodes(5) = opcode_pow
-        opcodes(6) = opcode_store
-        do output_index = 1, item_count
-            opcodes(7 + 2 * (output_index - 1)) = opcode_load
-            opcodes(8 + 2 * (output_index - 1)) = opcode_output
-        end do
-        opcodes(2 * item_count + 7) = opcode_return
-        call emit_frontend_ast_v2_print_variable_items(body, item_count, 3, 2, int(size(opcodes), int32), opcodes, &
-            instruction_shape_v2_pow_print_41_60_result_kind, &
-            instruction_shape_v2_pow_print_41_60_result_type, &
-            instruction_shape_v2_pow_print_41_60_source_rule)
-    end subroutine emit_frontend_ast_v2_print_variable_items_11_to_60
-
-    subroutine emit_frontend_ast_v2_print_variable_items_61_to_80(body, item_count)
-        type(mir_function_body_t), intent(inout) :: body
-        integer, intent(in) :: item_count
-        integer(int32) :: opcodes(2 * item_count + 7)
-        integer :: output_index
-
-        opcodes = opcode_load
-        opcodes(1) = opcode_const
-        opcodes(2) = opcode_store
-        opcodes(3) = opcode_load
-        opcodes(4) = opcode_const
-        opcodes(5) = opcode_pow
-        opcodes(6) = opcode_store
-        do output_index = 1, item_count
-            opcodes(7 + 2 * (output_index - 1)) = opcode_load
-            opcodes(8 + 2 * (output_index - 1)) = opcode_output
-        end do
-        opcodes(2 * item_count + 7) = opcode_return
-        call emit_frontend_ast_v2_print_variable_items(body, item_count, 3, 2, int(size(opcodes), int32), opcodes, &
-            instruction_shape_v2_pow_print_61_80_result_kind, &
-            instruction_shape_v2_pow_print_61_80_result_type, instruction_shape_v2_pow_print_61_80_source_rule)
-    end subroutine emit_frontend_ast_v2_print_variable_items_61_to_80
-
-    subroutine emit_frontend_ast_v2_print_variable_items_81_to_100(body, item_count)
-        type(mir_function_body_t), intent(inout) :: body
-        integer, intent(in) :: item_count
-        integer(int32) :: opcodes(2 * item_count + 7)
-        integer :: output_index
-
-        opcodes = opcode_load
-        opcodes(1) = opcode_const
-        opcodes(2) = opcode_store
-        opcodes(3) = opcode_load
-        opcodes(4) = opcode_const
-        opcodes(5) = opcode_pow
-        opcodes(6) = opcode_store
-        do output_index = 1, item_count
-            opcodes(7 + 2 * (output_index - 1)) = opcode_load
-            opcodes(8 + 2 * (output_index - 1)) = opcode_output
-        end do
-        opcodes(2 * item_count + 7) = opcode_return
-        call emit_frontend_ast_v2_print_variable_items(body, item_count, 3, 2, int(size(opcodes), int32), opcodes, &
-            instruction_shape_v2_pow_print_81_100_result_kind, &
-            instruction_shape_v2_pow_print_81_100_result_type, instruction_shape_v2_pow_print_81_100_source_rule)
-    end subroutine emit_frontend_ast_v2_print_variable_items_81_to_100
 
     subroutine emit_frontend_ast_v2_print_variable_count(body, item_count, result_kind, result_type, source_rule)
         type(mir_function_body_t), intent(inout) :: body
