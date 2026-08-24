@@ -1254,22 +1254,20 @@ contains
                 return
             end if
         end if
-        write (count_text, '(i0)') assignment_count
-        route_key = '(execution-part (assignment-sequence (assignment-count '// &
-            trim(count_text)//')'
-        do assignment_index = 1, assignment_count
-            route_key = trim(route_key)//' (assignment x '//trim(assignments(assignment_index)%value)//')'
-        end do
-        route_key = trim(route_key)//') )'
-        route = mir_frontend_ast_v1_integer_expression_route(route_key)
-        if (route == 0_int32) then
+        lowered = lower_generic_integer_assignment_sequence(assignments, assignment_count, body, message)
+        if (.not. lowered) then
             call set_message(message, 'unsupported-frontend-ast-v2-execution-part')
             return
         end if
-        call mir_make_function_witness(body)
         body%function%name = trim(root%name)
-        call emit_frontend_ast_v1_integer_expression(body, route)
-        lowered = mir_validate_function_body(body, message)
+        do assignment_index = 1, body%function%instruction_count
+            if (assignment_count == 2) then
+                body%instructions(assignment_index)%source_rule = 'frontend-ast-v2/execution-part'
+            else
+                write (count_text, '(a,i0)') 'frontend-ast-v2/execution-part-', assignment_count
+                body%instructions(assignment_index)%source_rule = trim(count_text)
+            end if
+        end do
     end function ffc_lower_frontend_ast_v2_from_sx
 
     logical function read_v2_execution_part(token, token_count, position, expression, &
