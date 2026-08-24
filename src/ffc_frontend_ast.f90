@@ -2952,51 +2952,14 @@ contains
         type(mir_function_body_t), intent(in) :: body
         character(len=:), allocatable, intent(out), optional :: message
 
-        call clear_message(message)
-        valid = .false.
-        if (.not. mir_validate_function_body(body, message)) return
-        if (body%function%instruction_count /= &
-            instruction_shape_frontend_ast_v1_int_mul_assign_count) then
-            call set_message(message, 'frontend-ast-v1 integer multiply expression instruction count changed')
-            return
-        end if
-        if (body%instructions(1)%opcode /= &
-            instruction_shape_frontend_ast_v1_int_mul_assign_opcode_0 .or. &
-            body%instructions(2)%opcode /= &
-            instruction_shape_frontend_ast_v1_int_mul_assign_opcode_1 .or. &
-            body%instructions(3)%opcode /= &
-            instruction_shape_frontend_ast_v1_int_mul_assign_opcode_2) then
-            call set_message(message, 'frontend-ast-v1 integer multiply expression opcode shape changed')
-            return
-        end if
-        if (body%instructions(1)%result%kind /= &
-            instruction_shape_frontend_ast_v1_int_mul_assign_result_kind .or. &
-            trim(body%instructions(1)%result%type_name) /= &
-            instruction_shape_frontend_ast_v1_int_mul_assign_result_type) then
-            call set_message(message, 'frontend-ast-v1 integer multiply expression result shape changed')
-            return
-        end if
-        if (body%instructions(2)%result%kind /= &
-            instruction_shape_frontend_ast_v1_int_mul_assign_result_kind .or. &
-            trim(body%instructions(2)%result%type_name) /= &
-            instruction_shape_frontend_ast_v1_int_mul_assign_result_type .or. &
-            body%instructions(3)%result%kind /= &
-            instruction_shape_frontend_ast_v1_int_mul_assign_result_kind .or. &
-            trim(body%instructions(3)%result%type_name) /= &
-            instruction_shape_frontend_ast_v1_int_mul_assign_result_type) then
-            call set_message(message, 'frontend-ast-v1 integer multiply expression return shape changed')
-            return
-        end if
-        if (trim(body%instructions(1)%source_rule) /= &
-            instruction_shape_frontend_ast_v1_int_mul_assign_source_rule .or. &
-            trim(body%instructions(2)%source_rule) /= &
-            instruction_shape_frontend_ast_v1_int_mul_assign_source_rule .or. &
-            trim(body%instructions(3)%source_rule) /= &
-            instruction_shape_frontend_ast_v1_int_mul_assign_source_rule) then
-            call set_message(message, 'frontend-ast-v1 integer multiply expression source rule changed')
-            return
-        end if
-        valid = .true.
+        valid = ffc_validate_frontend_ast_v1_int_binary_expr_assignment_shape(body, message, &
+            instruction_shape_frontend_ast_v1_int_mul_assign_count, &
+            [instruction_shape_frontend_ast_v1_int_mul_assign_opcode_0, &
+            instruction_shape_frontend_ast_v1_int_mul_assign_opcode_1, &
+            instruction_shape_frontend_ast_v1_int_mul_assign_opcode_2], &
+            instruction_shape_frontend_ast_v1_int_mul_assign_result_kind, &
+            instruction_shape_frontend_ast_v1_int_mul_assign_result_type, &
+            instruction_shape_frontend_ast_v1_int_mul_assign_source_rule, 'multiply')
     end function ffc_validate_frontend_ast_v1_int_mul_expr_assignment_shape
 
     logical function ffc_validate_frontend_ast_v1_int_div_expr_assignment_shape(&
@@ -3004,51 +2967,14 @@ contains
         type(mir_function_body_t), intent(in) :: body
         character(len=:), allocatable, intent(out), optional :: message
 
-        call clear_message(message)
-        valid = .false.
-        if (.not. mir_validate_function_body(body, message)) return
-        if (body%function%instruction_count /= &
-            instruction_shape_frontend_ast_v1_int_div_assign_count) then
-            call set_message(message, 'frontend-ast-v1 integer division expression instruction count changed')
-            return
-        end if
-        if (body%instructions(1)%opcode /= &
-            instruction_shape_frontend_ast_v1_int_div_assign_opcode_0 .or. &
-            body%instructions(2)%opcode /= &
-            instruction_shape_frontend_ast_v1_int_div_assign_opcode_1 .or. &
-            body%instructions(3)%opcode /= &
-            instruction_shape_frontend_ast_v1_int_div_assign_opcode_2) then
-            call set_message(message, 'frontend-ast-v1 integer division expression opcode shape changed')
-            return
-        end if
-        if (body%instructions(1)%result%kind /= &
-            instruction_shape_frontend_ast_v1_int_div_assign_result_kind .or. &
-            trim(body%instructions(1)%result%type_name) /= &
-            instruction_shape_frontend_ast_v1_int_div_assign_result_type) then
-            call set_message(message, 'frontend-ast-v1 integer division expression result shape changed')
-            return
-        end if
-        if (body%instructions(2)%result%kind /= &
-            instruction_shape_frontend_ast_v1_int_div_assign_result_kind .or. &
-            trim(body%instructions(2)%result%type_name) /= &
-            instruction_shape_frontend_ast_v1_int_div_assign_result_type .or. &
-            body%instructions(3)%result%kind /= &
-            instruction_shape_frontend_ast_v1_int_div_assign_result_kind .or. &
-            trim(body%instructions(3)%result%type_name) /= &
-            instruction_shape_frontend_ast_v1_int_div_assign_result_type) then
-            call set_message(message, 'frontend-ast-v1 integer division expression return shape changed')
-            return
-        end if
-        if (trim(body%instructions(1)%source_rule) /= &
-            instruction_shape_frontend_ast_v1_int_div_assign_source_rule .or. &
-            trim(body%instructions(2)%source_rule) /= &
-            instruction_shape_frontend_ast_v1_int_div_assign_source_rule .or. &
-            trim(body%instructions(3)%source_rule) /= &
-            instruction_shape_frontend_ast_v1_int_div_assign_source_rule) then
-            call set_message(message, 'frontend-ast-v1 integer division expression source rule changed')
-            return
-        end if
-        valid = .true.
+        valid = ffc_validate_frontend_ast_v1_int_binary_expr_assignment_shape(body, message, &
+            instruction_shape_frontend_ast_v1_int_div_assign_count, &
+            [instruction_shape_frontend_ast_v1_int_div_assign_opcode_0, &
+            instruction_shape_frontend_ast_v1_int_div_assign_opcode_1, &
+            instruction_shape_frontend_ast_v1_int_div_assign_opcode_2], &
+            instruction_shape_frontend_ast_v1_int_div_assign_result_kind, &
+            instruction_shape_frontend_ast_v1_int_div_assign_result_type, &
+            instruction_shape_frontend_ast_v1_int_div_assign_source_rule, 'division')
     end function ffc_validate_frontend_ast_v1_int_div_expr_assignment_shape
 
     logical function ffc_validate_frontend_ast_v1_int_sub_expr_assignment_shape(&
@@ -3056,52 +2982,68 @@ contains
         type(mir_function_body_t), intent(in) :: body
         character(len=:), allocatable, intent(out), optional :: message
 
+        valid = ffc_validate_frontend_ast_v1_int_binary_expr_assignment_shape(body, message, &
+            instruction_shape_frontend_ast_v1_int_sub_assign_count, &
+            [instruction_shape_frontend_ast_v1_int_sub_assign_opcode_0, &
+            instruction_shape_frontend_ast_v1_int_sub_assign_opcode_1, &
+            instruction_shape_frontend_ast_v1_int_sub_assign_opcode_2], &
+            instruction_shape_frontend_ast_v1_int_sub_assign_result_kind, &
+            instruction_shape_frontend_ast_v1_int_sub_assign_result_type, &
+            instruction_shape_frontend_ast_v1_int_sub_assign_source_rule, 'subtract')
+    end function ffc_validate_frontend_ast_v1_int_sub_expr_assignment_shape
+
+    logical function ffc_validate_frontend_ast_v1_int_binary_expr_assignment_shape(&
+            body, message, expected_count, expected_opcodes, expected_result_kind, &
+            expected_result_type, expected_source_rule, diagnostic_label) result(valid)
+        type(mir_function_body_t), intent(in) :: body
+        character(len=:), allocatable, intent(out), optional :: message
+        integer(int32), intent(in) :: expected_count
+        integer(int32), intent(in) :: expected_opcodes(3)
+        integer(int32), intent(in) :: expected_result_kind
+        character(len=*), intent(in) :: expected_result_type
+        character(len=*), intent(in) :: expected_source_rule
+        character(len=*), intent(in) :: diagnostic_label
+
+        integer :: index
+
         call clear_message(message)
         valid = .false.
         if (.not. mir_validate_function_body(body, message)) return
-        if (body%function%instruction_count /= &
-            instruction_shape_frontend_ast_v1_int_sub_assign_count) then
-            call set_message(message, 'frontend-ast-v1 integer subtract expression instruction count changed')
+        if (body%function%instruction_count /= expected_count) then
+            call set_message(message, 'frontend-ast-v1 integer ' // trim(diagnostic_label) // &
+                ' expression instruction count changed')
             return
         end if
-        if (body%instructions(1)%opcode /= &
-            instruction_shape_frontend_ast_v1_int_sub_assign_opcode_0 .or. &
-            body%instructions(2)%opcode /= &
-            instruction_shape_frontend_ast_v1_int_sub_assign_opcode_1 .or. &
-            body%instructions(3)%opcode /= &
-            instruction_shape_frontend_ast_v1_int_sub_assign_opcode_2) then
-            call set_message(message, 'frontend-ast-v1 integer subtract expression opcode shape changed')
+        do index = 1, 3
+            if (body%instructions(index)%opcode /= expected_opcodes(index)) then
+                call set_message(message, 'frontend-ast-v1 integer ' // trim(diagnostic_label) // &
+                    ' expression opcode shape changed')
+                return
+            end if
+        end do
+        if (body%instructions(1)%result%kind /= expected_result_kind .or. &
+            trim(body%instructions(1)%result%type_name) /= trim(expected_result_type)) then
+            call set_message(message, 'frontend-ast-v1 integer ' // trim(diagnostic_label) // &
+                ' expression result shape changed')
             return
         end if
-        if (body%instructions(1)%result%kind /= &
-            instruction_shape_frontend_ast_v1_int_sub_assign_result_kind .or. &
-            trim(body%instructions(1)%result%type_name) /= &
-            instruction_shape_frontend_ast_v1_int_sub_assign_result_type) then
-            call set_message(message, 'frontend-ast-v1 integer subtract expression result shape changed')
-            return
-        end if
-        if (body%instructions(2)%result%kind /= &
-            instruction_shape_frontend_ast_v1_int_sub_assign_result_kind .or. &
-            trim(body%instructions(2)%result%type_name) /= &
-            instruction_shape_frontend_ast_v1_int_sub_assign_result_type .or. &
-            body%instructions(3)%result%kind /= &
-            instruction_shape_frontend_ast_v1_int_sub_assign_result_kind .or. &
-            trim(body%instructions(3)%result%type_name) /= &
-            instruction_shape_frontend_ast_v1_int_sub_assign_result_type) then
-            call set_message(message, 'frontend-ast-v1 integer subtract expression return shape changed')
-            return
-        end if
-        if (trim(body%instructions(1)%source_rule) /= &
-            instruction_shape_frontend_ast_v1_int_sub_assign_source_rule .or. &
-            trim(body%instructions(2)%source_rule) /= &
-            instruction_shape_frontend_ast_v1_int_sub_assign_source_rule .or. &
-            trim(body%instructions(3)%source_rule) /= &
-            instruction_shape_frontend_ast_v1_int_sub_assign_source_rule) then
-            call set_message(message, 'frontend-ast-v1 integer subtract expression source rule changed')
-            return
-        end if
+        do index = 2, 3
+            if (body%instructions(index)%result%kind /= expected_result_kind .or. &
+                trim(body%instructions(index)%result%type_name) /= trim(expected_result_type)) then
+                call set_message(message, 'frontend-ast-v1 integer ' // trim(diagnostic_label) // &
+                    ' expression return shape changed')
+                return
+            end if
+        end do
+        do index = 1, 3
+            if (trim(body%instructions(index)%source_rule) /= trim(expected_source_rule)) then
+                call set_message(message, 'frontend-ast-v1 integer ' // trim(diagnostic_label) // &
+                    ' expression source rule changed')
+                return
+            end if
+        end do
         valid = .true.
-    end function ffc_validate_frontend_ast_v1_int_sub_expr_assignment_shape
+    end function ffc_validate_frontend_ast_v1_int_binary_expr_assignment_shape
 
     logical function ffc_validate_frontend_ast_v1_logical_program_shape(body, message) &
             result(valid)
