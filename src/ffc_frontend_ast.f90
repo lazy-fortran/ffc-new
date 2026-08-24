@@ -1218,33 +1218,12 @@ contains
             return
         end if
         do assignment_index = 1, assignment_count
-            if (trim(root%source_file) /= trim(assignments(assignment_index)%source_file)) then
+            if (trim(root%source_file) /= trim(assignments(assignment_index)%source_file) .or. &
+                trim(root%source_hash) /= trim(assignments(assignment_index)%source_hash)) then
                 call set_message(message, 'frontend-ast-v2-invalid-provenance')
                 return
             end if
         end do
-        do assignment_index = 2, assignment_count
-            if (trim(assignments(1)%source_hash) /= trim(assignments(assignment_index)%source_hash)) then
-                call set_message(message, 'frontend-ast-v2-invalid-provenance')
-                return
-            end if
-        end do
-        if (assignment_count == 2) then
-            if (trim(assignments(1)%source_hash) /= 'l3-raw-program-two-assignment-v1') then
-                call set_message(message, 'frontend-ast-v2-invalid-provenance')
-                return
-            end if
-        else if (assignment_count == 5) then
-            if (trim(assignments(1)%source_hash) /= 'l3-raw-program-five-assignment-v1') then
-                call set_message(message, 'frontend-ast-v2-invalid-provenance')
-                return
-            end if
-        else
-            if (trim(assignments(1)%source_hash) /= 'l3-raw-program-six-assignment-v1') then
-                call set_message(message, 'frontend-ast-v2-invalid-provenance')
-                return
-            end if
-        end if
         lowered = lower_generic_integer_assignment_sequence(assignments, assignment_count, body, message)
         if (.not. lowered) then
             call set_message(message, 'unsupported-frontend-ast-v2-execution-part')
@@ -1323,8 +1302,7 @@ contains
         if (.not. read_named_atom(token, token_count, position, 'assignment-count', count_text, &
             message)) return
         if (.not. parse_count(count_text, count, message)) return
-        if (count /= 1_int64 .and. count /= 2_int64 .and. count /= 5_int64 .and. &
-            count /= 6_int64) then
+        if (count < 1_int64 .or. count > 6_int64) then
             call set_message(message, 'invalid-frontend-ast-v2-assignment-count')
             parsed = .false.
             return

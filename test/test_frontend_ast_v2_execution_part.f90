@@ -14,6 +14,8 @@ program test_frontend_ast_v2_execution_part
     integer(int32) :: expected_ids_5(19)
     integer(int32) :: expected_opcodes_6(23)
     integer(int32) :: expected_ids_6(23)
+    integer(int32) :: expected_opcodes_3(11)
+    integer(int32) :: expected_ids_3(11)
     integer :: instruction_index
 
     expected_opcodes = [opcode_const, opcode_store, opcode_load, opcode_const, opcode_add, &
@@ -100,6 +102,25 @@ program test_frontend_ast_v2_execution_part
     call assert_storage_indices([2, 3, 6, 7, 10, 11, 14, 15, 18, 19, 22])
     call assert_no_storage_indices([1, 4, 5, 8, 9, 12, 13, 16, 17, 20, 21, 23])
 
+    expected_opcodes_3 = [opcode_const, opcode_store, opcode_load, opcode_const, opcode_add, &
+        opcode_store, opcode_load, opcode_const, opcode_add, opcode_store, opcode_return]
+    expected_ids_3 = [0_int32, 1_int32, 2_int32, 3_int32, 4_int32, 4_int32, 6_int32, &
+        7_int32, 8_int32, 8_int32, 8_int32]
+    if (.not. ffc_lower_frontend_ast_v2_from_sx(envelope_sx_three(), body, message)) then
+        if (allocated(message)) write (*, '(a)') trim(message)
+        error stop 'generic three-assignment program-unit-v2 envelope was rejected'
+    end if
+    do instruction_index = 1, 11
+        call assert_true(body%instructions(instruction_index)%opcode == &
+            expected_opcodes_3(instruction_index), 'v2 count-3 opcode order changed')
+        call assert_true(body%instructions(instruction_index)%result%id == &
+            expected_ids_3(instruction_index), 'v2 count-3 SSA result ID changed')
+        call assert_equal(body%instructions(instruction_index)%source_rule, &
+            'frontend-ast-v2/execution-part-3', 'v2 count-3 source rule changed')
+    end do
+    call assert_storage_indices([2, 3, 6, 7, 10])
+    call assert_no_storage_indices([1, 4, 5, 8, 9, 11])
+
     call assert_rejected(replace_text(envelope_sx(), 'program-unit-v2', 'program-unit'), &
         'wrong envelope was accepted')
     call assert_rejected(replace_text(envelope_sx(), '(type-spec integer)', &
@@ -148,11 +169,11 @@ contains
             '(assignment (assignment-stmt (variable x) (expression (assignment-expression '// &
             '(kind integer-literal) (operator ) (left-operand 7) (right-operand ))) '// &
             '(span (source-span (file main.f90) (start-byte 28) (end-byte 34) '// &
-            '(source-hash l3-raw-program-two-assignment-v1))))) '// &
+            '(source-hash v2-test))))) '// &
             '(assignment (assignment-stmt (variable x) (expression (assignment-expression '// &
             '(kind binary-expression) (operator +) (left-operand x) (right-operand 1))) '// &
             '(span (source-span (file main.f90) (start-byte 36) (end-byte 46) '// &
-            '(source-hash l3-raw-program-two-assignment-v1))))))))'
+            '(source-hash v2-test))))))))'
     end function envelope_sx
 
     function stop_envelope_sx() result(value)
@@ -181,23 +202,23 @@ contains
             '(assignment (assignment-stmt (variable x) (expression (assignment-expression '// &
             '(kind integer-literal) (operator ) (left-operand 7) (right-operand ))) '// &
             '(span (source-span (file main.f90) (start-byte 28) (end-byte 34) '// &
-            '(source-hash l3-raw-program-five-assignment-v1))))) '// &
+            '(source-hash v2-test))))) '// &
             '(assignment (assignment-stmt (variable x) (expression (assignment-expression '// &
             '(kind binary-expression) (operator +) (left-operand x) (right-operand 1))) '// &
             '(span (source-span (file main.f90) (start-byte 36) (end-byte 46) '// &
-            '(source-hash l3-raw-program-five-assignment-v1))))) '// &
+            '(source-hash v2-test))))) '// &
             '(assignment (assignment-stmt (variable x) (expression (assignment-expression '// &
             '(kind binary-expression) (operator +) (left-operand x) (right-operand 1))) '// &
             '(span (source-span (file main.f90) (start-byte 48) (end-byte 58) '// &
-            '(source-hash l3-raw-program-five-assignment-v1))))) '// &
+            '(source-hash v2-test))))) '// &
             '(assignment (assignment-stmt (variable x) (expression (assignment-expression '// &
             '(kind binary-expression) (operator +) (left-operand x) (right-operand 1))) '// &
             '(span (source-span (file main.f90) (start-byte 60) (end-byte 70) '// &
-            '(source-hash l3-raw-program-five-assignment-v1))))) '// &
+            '(source-hash v2-test))))) '// &
             '(assignment (assignment-stmt (variable x) (expression (assignment-expression '// &
             '(kind binary-expression) (operator +) (left-operand x) (right-operand 1))) '// &
             '(span (source-span (file main.f90) (start-byte 72) (end-byte 82) '// &
-            '(source-hash l3-raw-program-five-assignment-v1))))))))'
+            '(source-hash v2-test))))))))'
     end function envelope_sx_five
 
     function envelope_sx_six() result(value)
@@ -205,26 +226,40 @@ contains
 
         value = envelope_sx_five()
         value = replace_text(value, '(assignment-count 5)', '(assignment-count 6)')
-        value = replace_text(value, 'l3-raw-program-five-assignment-v1', &
-            'l3-raw-program-six-assignment-v1')
-        value = replace_text(value, 'l3-raw-program-five-assignment-v1', &
-            'l3-raw-program-six-assignment-v1')
-        value = replace_text(value, 'l3-raw-program-five-assignment-v1', &
-            'l3-raw-program-six-assignment-v1')
-        value = replace_text(value, 'l3-raw-program-five-assignment-v1', &
-            'l3-raw-program-six-assignment-v1')
-        value = replace_text(value, 'l3-raw-program-five-assignment-v1', &
-            'l3-raw-program-six-assignment-v1')
         value = replace_last(value, &
             '(span (source-span (file main.f90) (start-byte 72) (end-byte 82) '// &
-            '(source-hash l3-raw-program-six-assignment-v1)))))', &
+            '(source-hash v2-test)))))', &
             '(span (source-span (file main.f90) (start-byte 72) (end-byte 82) '// &
-            '(source-hash l3-raw-program-six-assignment-v1))))) '// &
+            '(source-hash v2-test))))) '// &
             '(assignment (assignment-stmt (variable x) (expression (assignment-expression '// &
             '(kind binary-expression) (operator +) (left-operand x) (right-operand 1))) '// &
             '(span (source-span (file main.f90) (start-byte 84) (end-byte 94) '// &
-            '(source-hash l3-raw-program-six-assignment-v1)))))')
+            '(source-hash v2-test)))))')
     end function envelope_sx_six
+
+    function envelope_sx_three() result(value)
+        character(len=8192) :: value
+        integer :: assignment_start, assignment_end, balance, loop_index
+
+        value = envelope_sx_five()
+        value = replace_text(value, '(assignment-count 5)', '(assignment-count 3)')
+        assignment_start = 0
+        do loop_index = 1, 3
+            assignment_start = index(value(assignment_start + 1:), &
+                '(assignment (assignment-stmt') + assignment_start
+        end do
+        balance = 0
+        assignment_end = assignment_start
+        do loop_index = assignment_start, len_trim(value)
+            if (value(loop_index:loop_index) == '(') balance = balance + 1
+            if (value(loop_index:loop_index) == ')') balance = balance - 1
+            if (balance == 0) then
+                assignment_end = loop_index
+                exit
+            end if
+        end do
+        value = value(:assignment_end)//')))'
+    end function envelope_sx_three
 
     subroutine assert_storage_indices(indices)
         integer, intent(in) :: indices(:)
