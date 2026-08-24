@@ -2423,110 +2423,89 @@ contains
                     message)
                 return
             end if
-            body%function%instruction_count = instruction_shape_frontend_ast_v1_integer_program_count
-            body%instructions(1)%opcode = instruction_shape_frontend_ast_v1_integer_program_opcode_0
-            body%instructions(2)%opcode = instruction_shape_frontend_ast_v1_integer_program_opcode_1
-            body%instructions(1)%result%kind = instruction_shape_frontend_ast_v1_integer_program_result_kind
-            body%instructions(1)%result%type_name = instruction_shape_frontend_ast_v1_integer_program_result_type
-            body%instructions(2)%result = body%instructions(1)%result
-            body%instructions(1)%source_rule = &
-                instruction_shape_frontend_ast_v1_integer_program_source_rule
-            body%instructions(2)%source_rule = &
-                instruction_shape_frontend_ast_v1_integer_program_source_rule
-            lowered = ffc_validate_frontend_ast_v1_integer_program_shape(body, message)
+            lowered = lower_frontend_ast_v1_scalar_program(body, message, &
+                instruction_shape_frontend_ast_v1_integer_program_count, &
+                [instruction_shape_frontend_ast_v1_integer_program_opcode_0, &
+                instruction_shape_frontend_ast_v1_integer_program_opcode_1], &
+                instruction_shape_frontend_ast_v1_integer_program_result_kind, &
+                instruction_shape_frontend_ast_v1_integer_program_result_type, &
+                instruction_shape_frontend_ast_v1_integer_program_source_rule, 'integer')
             return
         end if
         if (trim(ast%variable%type_spec) == 'logical') then
-            body%function%instruction_count = &
-                instruction_shape_frontend_ast_v1_logical_program_count
-            body%instructions(1)%opcode = &
-                instruction_shape_frontend_ast_v1_logical_program_opcode_0
-            body%instructions(2)%opcode = &
-                instruction_shape_frontend_ast_v1_logical_program_opcode_1
-            body%instructions(1)%result%kind = &
-                instruction_shape_frontend_ast_v1_logical_program_result_kind
-            body%instructions(1)%result%type_name = &
-                instruction_shape_frontend_ast_v1_logical_program_result_type
-            body%instructions(2)%result = body%instructions(1)%result
-            body%instructions(1)%source_rule = &
-                instruction_shape_frontend_ast_v1_logical_program_source_rule
-            body%instructions(2)%source_rule = &
-                instruction_shape_frontend_ast_v1_logical_program_source_rule
-            lowered = ffc_validate_frontend_ast_v1_logical_program_shape(body, message)
+            lowered = lower_frontend_ast_v1_scalar_program(body, message, &
+                instruction_shape_frontend_ast_v1_logical_program_count, &
+                [instruction_shape_frontend_ast_v1_logical_program_opcode_0, &
+                instruction_shape_frontend_ast_v1_logical_program_opcode_1], &
+                instruction_shape_frontend_ast_v1_logical_program_result_kind, &
+                instruction_shape_frontend_ast_v1_logical_program_result_type, &
+                instruction_shape_frontend_ast_v1_logical_program_source_rule, 'logical')
             return
         end if
         if (trim(ast%variable%type_spec) == 'real') then
-            body%function%instruction_count = instruction_shape_frontend_ast_v1_real_program_count
-            body%instructions(1)%opcode = instruction_shape_frontend_ast_v1_real_program_opcode_0
-            body%instructions(2)%opcode = instruction_shape_frontend_ast_v1_real_program_opcode_1
-            body%instructions(1)%result%kind = instruction_shape_frontend_ast_v1_real_program_result_kind
-            body%instructions(1)%result%type_name = instruction_shape_frontend_ast_v1_real_program_result_type
-            body%instructions(2)%result = body%instructions(1)%result
-            body%instructions(1)%source_rule = instruction_shape_frontend_ast_v1_real_program_source_rule
-            body%instructions(2)%source_rule = instruction_shape_frontend_ast_v1_real_program_source_rule
-            lowered = ffc_validate_frontend_ast_v1_real_program_shape(body, message)
+            lowered = lower_frontend_ast_v1_scalar_program(body, message, &
+                instruction_shape_frontend_ast_v1_real_program_count, &
+                [instruction_shape_frontend_ast_v1_real_program_opcode_0, &
+                instruction_shape_frontend_ast_v1_real_program_opcode_1], &
+                instruction_shape_frontend_ast_v1_real_program_result_kind, &
+                instruction_shape_frontend_ast_v1_real_program_result_type, &
+                instruction_shape_frontend_ast_v1_real_program_source_rule, 'real')
             return
         end if
         if (trim(ast%variable%type_spec) == 'double-precision') then
-            body%function%instruction_count = &
-                instruction_shape_frontend_ast_v1_dp_program_count
-            body%instructions(1)%opcode = &
-                instruction_shape_frontend_ast_v1_dp_program_opcode_0
-            body%instructions(2)%opcode = &
-                instruction_shape_frontend_ast_v1_dp_program_opcode_1
-            body%instructions(1)%result%kind = &
-                instruction_shape_frontend_ast_v1_dp_program_result_kind
-            body%instructions(1)%result%type_name = &
-                instruction_shape_frontend_ast_v1_dp_program_result_type
-            body%instructions(2)%result = body%instructions(1)%result
-            body%instructions(1)%source_rule = &
-                instruction_shape_frontend_ast_v1_dp_program_source_rule
-            body%instructions(2)%source_rule = &
-                instruction_shape_frontend_ast_v1_dp_program_source_rule
-            lowered = ffc_validate_frontend_ast_v1_double_precision_program_shape(body, message)
+            lowered = lower_frontend_ast_v1_scalar_program(body, message, &
+                instruction_shape_frontend_ast_v1_dp_program_count, &
+                [instruction_shape_frontend_ast_v1_dp_program_opcode_0, &
+                instruction_shape_frontend_ast_v1_dp_program_opcode_1], &
+                instruction_shape_frontend_ast_v1_dp_program_result_kind, &
+                instruction_shape_frontend_ast_v1_dp_program_result_type, &
+                instruction_shape_frontend_ast_v1_dp_program_source_rule, 'double-precision')
             return
         end if
         if (trim(ast%variable%type_spec) == 'complex') then
-            body%function%instruction_count = &
-                instruction_shape_frontend_ast_v1_complex_program_count
-            body%instructions(1)%opcode = &
-                instruction_shape_frontend_ast_v1_complex_program_opcode_0
-            body%instructions(2)%opcode = &
-                instruction_shape_frontend_ast_v1_complex_program_opcode_1
-            body%instructions(1)%result%kind = &
-                instruction_shape_frontend_ast_v1_complex_program_result_kind
-            body%instructions(1)%result%type_name = &
-                instruction_shape_frontend_ast_v1_complex_program_result_type
-            body%instructions(2)%result = body%instructions(1)%result
-            body%instructions(1)%source_rule = &
-                instruction_shape_frontend_ast_v1_complex_program_source_rule
-            body%instructions(2)%source_rule = &
-                instruction_shape_frontend_ast_v1_complex_program_source_rule
-            lowered = ffc_validate_frontend_ast_v1_complex_program_shape(body, message)
+            lowered = lower_frontend_ast_v1_scalar_program(body, message, &
+                instruction_shape_frontend_ast_v1_complex_program_count, &
+                [instruction_shape_frontend_ast_v1_complex_program_opcode_0, &
+                instruction_shape_frontend_ast_v1_complex_program_opcode_1], &
+                instruction_shape_frontend_ast_v1_complex_program_result_kind, &
+                instruction_shape_frontend_ast_v1_complex_program_result_type, &
+                instruction_shape_frontend_ast_v1_complex_program_source_rule, 'complex')
             return
         end if
         if (trim(ast%variable%type_spec) == 'character') then
-            body%function%instruction_count = &
-                instruction_shape_frontend_ast_v1_character_program_count
-            body%instructions(1)%opcode = &
-                instruction_shape_frontend_ast_v1_character_program_opcode_0
-            body%instructions(2)%opcode = &
-                instruction_shape_frontend_ast_v1_character_program_opcode_1
-            body%instructions(1)%result%kind = &
-                instruction_shape_frontend_ast_v1_character_program_result_kind
-            body%instructions(1)%result%type_name = &
-                instruction_shape_frontend_ast_v1_character_program_result_type
-            body%instructions(2)%result = body%instructions(1)%result
-            body%instructions(1)%source_rule = &
-                instruction_shape_frontend_ast_v1_character_program_source_rule
-            body%instructions(2)%source_rule = &
-                instruction_shape_frontend_ast_v1_character_program_source_rule
-            lowered = ffc_validate_frontend_ast_v1_character_program_shape(body, message)
+            lowered = lower_frontend_ast_v1_scalar_program(body, message, &
+                instruction_shape_frontend_ast_v1_character_program_count, &
+                [instruction_shape_frontend_ast_v1_character_program_opcode_0, &
+                instruction_shape_frontend_ast_v1_character_program_opcode_1], &
+                instruction_shape_frontend_ast_v1_character_program_result_kind, &
+                instruction_shape_frontend_ast_v1_character_program_result_type, &
+                instruction_shape_frontend_ast_v1_character_program_source_rule, 'character')
             return
         end if
         body%instructions(1)%source_rule = 'frontend-ast-v1/program'
         body%instructions(2)%source_rule = 'frontend-ast-v1/program'
     end function ffc_lower_frontend_ast_v1
+
+    logical function lower_frontend_ast_v1_scalar_program(body, message, expected_count, &
+            expected_opcodes, expected_result_kind, expected_result_type, expected_source_rule, &
+            diagnostic_label) result(lowered)
+        type(mir_function_body_t), intent(inout) :: body
+        character(len=:), allocatable, intent(out), optional :: message
+        integer(int32), intent(in) :: expected_count, expected_opcodes(2), expected_result_kind
+        character(len=*), intent(in) :: expected_result_type, expected_source_rule, diagnostic_label
+
+        body%function%instruction_count = expected_count
+        body%instructions(1)%opcode = expected_opcodes(1)
+        body%instructions(2)%opcode = expected_opcodes(2)
+        body%instructions(1)%result%kind = expected_result_kind
+        body%instructions(1)%result%type_name = expected_result_type
+        body%instructions(2)%result = body%instructions(1)%result
+        body%instructions(1)%source_rule = expected_source_rule
+        body%instructions(2)%source_rule = expected_source_rule
+        lowered = ffc_validate_frontend_ast_v1_two_instruction_program_shape(body, message, &
+            expected_count, expected_opcodes, expected_result_kind, expected_result_type, &
+            expected_source_rule, diagnostic_label)
+    end function lower_frontend_ast_v1_scalar_program
 
     subroutine emit_frontend_ast_v1_integer_expression(body, route)
         type(mir_function_body_t), intent(inout) :: body
