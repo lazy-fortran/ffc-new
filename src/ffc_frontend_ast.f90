@@ -442,7 +442,9 @@ contains
         character(len=frontend_ast_token_length) :: token(frontend_ast_token_capacity)
         character(len=frontend_ast_expression_length) :: assignment_text(10)
         character(len=64) :: count_text
+        character(len=64) :: canonical_count
         type(ffc_frontend_assignment_v1_t) :: assignments(10)
+        integer(int64) :: parsed_count
         integer :: assignment_count, assignment_index, token_count, position
 
         call clear_message(message)
@@ -453,13 +455,17 @@ contains
         if (.not. expect_token(token, token_count, position, 'assignment-sequence', message)) return
         if (.not. read_named_atom(token, token_count, position, 'assignment-count', count_text, &
             message)) return
-        if (trim(count_text) /= '2' .and. trim(count_text) /= '3' .and. trim(count_text) /= '4' .and. &
-            trim(count_text) /= '5' .and. trim(count_text) /= '6' .and. trim(count_text) /= '7' .and. &
-            trim(count_text) /= '8' .and. trim(count_text) /= '9' .and. trim(count_text) /= '10') then
+        if (.not. parse_count(count_text, parsed_count, message)) then
             call set_message(message, 'unsupported-assignment-sequence')
             return
         end if
-        read (count_text, *) assignment_count
+        write (canonical_count, '(i0)') parsed_count
+        if (trim(count_text) /= trim(canonical_count) .or. parsed_count < 2_int64 .or. &
+            parsed_count > int(size(assignments), int64)) then
+            call set_message(message, 'unsupported-assignment-sequence')
+            return
+        end if
+        assignment_count = int(parsed_count)
         do assignment_index = 1, assignment_count
             if (.not. read_named_expression(token, token_count, position, 'assignment', &
                 assignment_text(assignment_index), message)) return
