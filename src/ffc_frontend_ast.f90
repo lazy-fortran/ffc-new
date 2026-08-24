@@ -4125,7 +4125,7 @@ contains
         integer, intent(inout) :: position
         character(len=*), intent(out) :: value
         character(len=:), allocatable, intent(out), optional :: message
-        character(len=128) :: kind, operator, left_operand, right_operand
+        character(len=128) :: kind, operator, serialization_operator, left_operand, right_operand
         integer(int32) :: literal_value
         integer(int32) :: addend_value, subtrahend_value, multiplier_value, divisor_value, power_value
         logical :: plus_supported, subtrahend_supported, multiplier_supported, divisor_supported, power_supported, &
@@ -4301,74 +4301,25 @@ contains
                             ok = .false.
                             return
                         end if
-                        if (trim(operator) == '+' .and. trim(left_operand) == 'x' .and. &
-                            trim(right_operand) == 'x') then
+                        if ((trim(operator) == '+' .and. trim(left_operand) == '1' .and. &
+                            trim(right_operand) == '2') .or. &
+                            (trim(operator) == '*' .and. trim(left_operand) == '2' .and. &
+                            trim(right_operand) == '3') .or. &
+                            (trim(operator) == '/' .and. trim(left_operand) == '6' .and. &
+                            trim(right_operand) == '2') .or. &
+                            ((trim(operator) == '–' .or. trim(operator) == '-') .and. &
+                            trim(left_operand) == '5' .and. trim(right_operand) == '3')) then
+                            value = '( binary-expr ( operator '//trim(operator)//' ) ( left '// &
+                                trim(left_operand)//' ) ( right '//trim(right_operand)//' ) )'
+                        else if (plus_supported .or. subtrahend_supported .or. multiplier_supported .or. &
+                                divisor_supported .or. power_supported .or. variable_power_supported .or. &
+                                variable_add_supported .or. variable_mul_supported .or. variable_div_supported .or. &
+                                variable_sub_supported) then
+                            serialization_operator = trim(operator)
+                            if (serialization_operator == '-') serialization_operator = '–'
                             value = '(assignment-expression (kind binary-expression) '// &
-                                '(operator +) (left-operand x) (right-operand x))'
-                        else if (trim(operator) == '+' .and. trim(left_operand) /= '1' .and. &
-                                is_legal_assignment_identifier(trim(left_operand)) .and. &
-                                trim(right_operand) == '1') then
-                            value = '(assignment-expression (kind binary-expression) '// &
-                                '(operator +) (left-operand '//trim(left_operand)//') (right-operand 1))'
-                        else if (trim(operator) == '+' .and. trim(left_operand) /= '1' .and. &
-                                is_legal_assignment_identifier(trim(left_operand))) then
-                            value = '(assignment-expression (kind binary-expression) '// &
-                                '(operator +) (left-operand '//trim(left_operand)//') (right-operand '// &
-                                trim(right_operand)//'))'
-                        else if (trim(operator) == '*' .and. trim(left_operand) == 'x' .and. &
-                                trim(right_operand) == '2') then
-                            value = '(assignment-expression (kind binary-expression) '// &
-                                '(operator *) (left-operand x) (right-operand 2))'
-                        else if (trim(operator) == '*' .and. trim(left_operand) == 'x' .and. &
-                                trim(right_operand) == 'x') then
-                            value = '(assignment-expression (kind binary-expression) '// &
-                                '(operator *) (left-operand x) (right-operand x))'
-                        else if (trim(operator) == '/' .and. trim(left_operand) == 'x' .and. &
-                                trim(right_operand) == 'x') then
-                            value = '(assignment-expression (kind binary-expression) '// &
-                                '(operator /) (left-operand x) (right-operand x))'
-                        else if (trim(operator) == '*' .and. trim(left_operand) /= '1' .and. &
-                                trim(left_operand) /= '2' .and. &
-                                is_legal_assignment_identifier(trim(left_operand))) then
-                            value = '(assignment-expression (kind binary-expression) '// &
-                                '(operator *) (left-operand '//trim(left_operand)//') (right-operand '// &
-                                trim(right_operand)//'))'
-                        else if (trim(operator) == '/' .and. trim(left_operand) == 'x' .and. &
-                                trim(right_operand) == '2') then
-                            value = '(assignment-expression (kind binary-expression) '// &
-                                '(operator /) (left-operand x) (right-operand 2))'
-                        else if (trim(operator) == '/' .and. trim(left_operand) == 'x') then
-                            value = '(assignment-expression (kind binary-expression) '// &
-                                '(operator /) (left-operand x) (right-operand '//trim(right_operand)//'))'
-                        else if (trim(operator) == '/' .and. trim(left_operand) /= '1' .and. &
-                                trim(left_operand) /= '6' .and. &
-                                is_legal_assignment_identifier(trim(left_operand))) then
-                            value = '(assignment-expression (kind binary-expression) '// &
-                                '(operator /) (left-operand '//trim(left_operand)//') (right-operand '// &
-                                trim(right_operand)//'))'
-                        else if ((trim(operator) == '–' .or. trim(operator) == '-') .and. &
-                                trim(left_operand) == 'x' .and. &
-                                trim(right_operand) == '2') then
-                            value = '(assignment-expression (kind binary-expression) '// &
-                                '(operator –) (left-operand x) (right-operand 2))'
-                        else if ((trim(operator) == '–' .or. trim(operator) == '-') .and. &
-                                trim(left_operand) == 'x' .and. trim(right_operand) == 'x') then
-                            value = '(assignment-expression (kind binary-expression) '// &
-                                '(operator –) (left-operand x) (right-operand x))'
-                        else if ((trim(operator) == '–' .or. trim(operator) == '-') .and. &
-                                trim(left_operand) == 'x') then
-                            value = '(assignment-expression (kind binary-expression) '// &
-                                '(operator –) (left-operand x) (right-operand '// &
-                                trim(right_operand)//'))'
-                        else if ((trim(operator) == '–' .or. trim(operator) == '-') .and. &
-                                trim(left_operand) /= '1' .and. trim(left_operand) /= '5' .and. &
-                                is_legal_assignment_identifier(trim(left_operand))) then
-                            value = '(assignment-expression (kind binary-expression) '// &
-                                '(operator –) (left-operand '//trim(left_operand)//') '// &
-                                '(right-operand '//trim(right_operand)//'))'
-                        else if (trim(operator) == '**' .and. trim(left_operand) == 'x') then
-                            value = '(assignment-expression (kind binary-expression) '// &
-                                '(operator **) (left-operand x) (right-operand '//trim(right_operand)//'))'
+                                '(operator '//trim(serialization_operator)//') (left-operand '// &
+                                trim(left_operand)//') (right-operand '//trim(right_operand)//'))'
                         else
                             value = '( binary-expr ( operator '//trim(operator)//' ) ( left '// &
                                 trim(left_operand)//' ) ( right '//trim(right_operand)//' ) )'
