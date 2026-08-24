@@ -617,7 +617,7 @@ contains
         type(ffc_program_root_t) :: root, declaration
         type(ffc_frontend_variable_declaration_v1_t) :: variable
         type(mir_function_body_t) :: generic_expression_body
-        type(ffc_frontend_assignment_v1_t) :: assignments(6)
+        type(ffc_frontend_assignment_v1_t) :: assignments(10)
         character(len=frontend_ast_expression_length) :: route_key
         character(len=frontend_ast_expression_length) :: print_statement
         integer :: assignment_count, assignment_index, token_count, position
@@ -1281,7 +1281,7 @@ contains
     logical function parse_v2_assignment_sequence(serialized, assignments, assignment_count, message) &
             result(parsed)
         character(len=*), intent(in) :: serialized
-        type(ffc_frontend_assignment_v1_t), intent(out) :: assignments(5)
+        type(ffc_frontend_assignment_v1_t), intent(out) :: assignments(10)
         integer, intent(out) :: assignment_count
         character(len=:), allocatable, intent(out), optional :: message
 
@@ -1302,7 +1302,7 @@ contains
         if (.not. read_named_atom(token, token_count, position, 'assignment-count', count_text, &
             message)) return
         if (.not. parse_count(count_text, count, message)) return
-        if (count < 1_int64 .or. count > 6_int64) then
+        if (count < 1_int64 .or. count > 10_int64) then
             call set_message(message, 'invalid-frontend-ast-v2-assignment-count')
             parsed = .false.
             return
